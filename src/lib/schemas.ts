@@ -24,6 +24,41 @@ export const signupSchema = z
 
 export type SignupSchema = z.infer<typeof signupSchema>;
 
+export const employmentHistorySchema = z
+  .object({
+    employerName: z.string().min(1, 'Employer name is required.'),
+    jobTitle: z.string().min(1, 'Job title is required.'),
+    startDate: z.date({ required_error: 'Start date is required.' }),
+    endDate: z.date().nullable(),
+    isCurrent: z.boolean().default(false),
+    aircraftTypes: z.string().min(1, 'Aircraft types are required.'),
+    totalHours: z.coerce
+      .number({ invalid_type_error: 'Must be a number.' })
+      .min(1, 'Hours are required.'),
+    duties: z.string().min(1, 'Duties are required.'),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.isCurrent && !data.endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date is required if this is not a current employer.',
+        path: ['endDate'],
+      });
+    }
+    if (
+      !data.isCurrent &&
+      data.endDate &&
+      data.startDate &&
+      data.startDate > data.endDate
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date must be after start date.',
+        path: ['endDate'],
+      });
+    }
+  });
+
 export const applicationFormSchema = z.object({
   flightTime: z.object({
     total: z.coerce
@@ -40,8 +75,13 @@ export const applicationFormSchema = z.object({
       .min(1, 'PIC hours are required.'),
   }),
   typeRatings: z
-    .array(z.object({ value: z.string().min(1, 'Type rating cannot be empty.') }))
+    .array(
+      z.object({ value: z.string().min(1, 'Type rating cannot be empty.') })
+    )
     .min(1, 'At least one type rating is required.'),
+  employmentHistory: z
+    .array(employmentHistorySchema)
+    .min(1, 'At least one employment entry is required.'),
   safetyQuestions: z.object({
     incidents: z.enum(['yes', 'no'], {
       required_error: 'You must select an answer.',

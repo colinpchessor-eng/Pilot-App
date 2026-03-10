@@ -62,6 +62,7 @@ export function SignupForm() {
         createdAt: serverTimestamp(),
         flightTime: { total: 0, multiCrew: 0, pic: 0 },
         typeRatings: [],
+        employmentHistory: [],
         safetyQuestions: {
           incidents: null,
           accidents: null,

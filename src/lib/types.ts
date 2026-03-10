@@ -1,4 +1,14 @@
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
+
+export type EmploymentHistory = {
+  employerName: string;
+  jobTitle: string;
+  startDate: Timestamp;
+  endDate: Timestamp | null;
+  aircraftTypes: string;
+  totalHours: number;
+  duties: string;
+};
 
 export type ApplicantData = {
   uid: string;
@@ -12,6 +22,7 @@ export type ApplicantData = {
     pic: number;
   };
   typeRatings: { value: string }[];
+  employmentHistory: EmploymentHistory[];
   safetyQuestions: {
     incidents: 'yes' | 'no' | null;
     accidents: 'yes' | 'no' | null;

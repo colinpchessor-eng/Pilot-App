@@ -34,6 +34,7 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
+  Calendar as CalendarIcon,
   Check,
   FileUp,
   Loader2,
@@ -64,10 +65,21 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { useUser } from '@/firebase';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { format } from 'date-fns';
+import { Calendar } from './ui/calendar';
+import { Textarea } from './ui/textarea';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from './ui/accordion';
 
 const TABS = [
   { value: 'flight-time', label: 'Flight Time' },
   { value: 'type-ratings', label: 'Type Ratings' },
+  { value: 'employment-history', label: 'Employment' },
   { value: 'safety', label: 'Safety Questionnaire' },
   { value: 'resume', label: 'Resume' },
   { value: 'submit', label: 'Review & Submit' },
@@ -91,6 +103,12 @@ export function ApplicationForm({
     defaultValues: {
       flightTime: applicantData.flightTime,
       typeRatings: applicantData.typeRatings,
+      employmentHistory: (applicantData.employmentHistory || []).map((eh) => ({
+        ...eh,
+        startDate: eh.startDate.toDate(),
+        endDate: eh.endDate ? eh.endDate.toDate() : null,
+        isCurrent: !eh.endDate,
+      })),
       safetyQuestions: applicantData.safetyQuestions,
       resumeFileName: applicantData.resumeFileName ?? undefined,
       trainingCommitment: applicantData.trainingCommitment ?? false,
@@ -98,9 +116,22 @@ export function ApplicationForm({
     mode: 'onChange',
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const {
+    fields: typeRatingFields,
+    append: appendTypeRating,
+    remove: removeTypeRating,
+  } = useFieldArray({
     control: form.control,
     name: 'typeRatings',
+  });
+
+  const {
+    fields: employmentFields,
+    append: appendEmployment,
+    remove: removeEmployment,
+  } = useFieldArray({
+    control: form.control,
+    name: 'employmentHistory',
   });
 
   const handleTabChange = async (direction: 'next' | 'prev') => {
@@ -184,7 +215,7 @@ export function ApplicationForm({
     });
     return () => subscription.unsubscribe();
   }, [form, user]);
-  
+
   const isSubmitted = !!applicantData.submittedAt;
 
   return (
@@ -197,7 +228,7 @@ export function ApplicationForm({
             </h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {isSubmitted ? (
-                 <>
+                <>
                   <Check className="h-4 w-4 text-green-500" />
                   <span>Submitted</span>
                 </>
@@ -220,7 +251,7 @@ export function ApplicationForm({
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               {TABS.map((tab) => (
                 <TabsTrigger key={tab.value} value={tab.value}>
                   {tab.label}
@@ -302,7 +333,7 @@ export function ApplicationForm({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {fields.map((field, index) => (
+                  {typeRatingFields.map((field, index) => (
                     <FormField
                       key={field.id}
                       control={form.control}
@@ -317,7 +348,7 @@ export function ApplicationForm({
                               type="button"
                               variant="ghost"
                               size="icon"
-                              onClick={() => remove(index)}
+                              onClick={() => removeTypeRating(index)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -330,7 +361,7 @@ export function ApplicationForm({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => append({ value: '' })}
+                    onClick={() => appendTypeRating({ value: '' })}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Rating
@@ -338,6 +369,315 @@ export function ApplicationForm({
                   {form.formState.errors.typeRatings && (
                     <p className="text-sm font-medium text-destructive">
                       {form.formState.errors.typeRatings.message}
+                    </p>
+                  )}
+                </CardContent>
+              </TabsContent>
+
+              <TabsContent value="employment-history">
+                <CardHeader>
+                  <CardTitle>Employment History</CardTitle>
+                  <CardDescription>
+                    Please provide your employment history. Start with your most
+                    recent employer.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Accordion
+                    type="multiple"
+                    className="w-full space-y-4"
+                    defaultValue={
+                      employmentFields.length > 0 ? [employmentFields[0].id] : []
+                    }
+                  >
+                    {employmentFields.map((field, index) => {
+                      const employerName = form.watch(
+                        `employmentHistory.${index}.employerName`
+                      );
+                      const jobTitle = form.watch(
+                        `employmentHistory.${index}.jobTitle`
+                      );
+                      const isCurrent = form.watch(
+                        `employmentHistory.${index}.isCurrent`
+                      );
+
+                      return (
+                        <AccordionItem
+                          value={field.id}
+                          key={field.id}
+                          className="rounded-lg border px-4"
+                        >
+                          <AccordionTrigger>
+                            <div className="flex-1 text-left">
+                              <p className="font-semibold">
+                                {employerName || `Employer #${index + 1}`}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {jobTitle || 'Job Title'}
+                              </p>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-4">
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name={`employmentHistory.${index}.employerName`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Employer Name</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="e.g. FedEx"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`employmentHistory.${index}.jobTitle`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Job Title</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="e.g. First Officer"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                                <FormField
+                                  control={form.control}
+                                  name={`employmentHistory.${index}.startDate`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                      <FormLabel>Start Date</FormLabel>
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <FormControl>
+                                            <Button
+                                              variant={'outline'}
+                                              className={cn(
+                                                'w-full pl-3 text-left font-normal',
+                                                !field.value &&
+                                                  'text-muted-foreground'
+                                              )}
+                                            >
+                                              {field.value ? (
+                                                format(field.value, 'PPP')
+                                              ) : (
+                                                <span>Pick a date</span>
+                                              )}
+                                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
+                                          </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                          className="w-auto p-0"
+                                          align="start"
+                                        >
+                                          <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            disabled={(date) =>
+                                              date > new Date() ||
+                                              date < new Date('1950-01-01')
+                                            }
+                                            initialFocus
+                                          />
+                                        </PopoverContent>
+                                      </Popover>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`employmentHistory.${index}.isCurrent`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-2 pb-2">
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value}
+                                          onCheckedChange={(checked) => {
+                                            field.onChange(checked);
+                                            if (checked) {
+                                              form.setValue(
+                                                `employmentHistory.${index}.endDate`,
+                                                null
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel>
+                                        I currently work here
+                                      </FormLabel>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              {!isCurrent && (
+                                <FormField
+                                  control={form.control}
+                                  name={`employmentHistory.${index}.endDate`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                      <FormLabel>End Date</FormLabel>
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <FormControl>
+                                            <Button
+                                              variant={'outline'}
+                                              className={cn(
+                                                'w-full pl-3 text-left font-normal',
+                                                !field.value &&
+                                                  'text-muted-foreground'
+                                              )}
+                                            >
+                                              {field.value ? (
+                                                format(field.value, 'PPP')
+                                              ) : (
+                                                <span>Pick a date</span>
+                                              )}
+                                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
+                                          </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                          className="w-auto p-0"
+                                          align="start"
+                                        >
+                                          <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            disabled={(date) =>
+                                              date > new Date() ||
+                                              date <
+                                                form.getValues(
+                                                  `employmentHistory.${index}.startDate`
+                                                )
+                                            }
+                                            initialFocus
+                                          />
+                                        </PopoverContent>
+                                      </Popover>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              )}
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name={`employmentHistory.${index}.aircraftTypes`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Aircraft Flown</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="e.g. B777, MD-11"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`employmentHistory.${index}.totalHours`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>
+                                        Total Hours with Employer
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          type="number"
+                                          placeholder="e.g. 1200"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              <FormField
+                                control={form.control}
+                                name={`employmentHistory.${index}.duties`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>
+                                      Positions Held & Duties
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Textarea
+                                        placeholder="Describe your roles and responsibilities..."
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <div className="flex justify-end">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeEmployment(index)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      appendEmployment({
+                        employerName: '',
+                        jobTitle: '',
+                        startDate: new Date(),
+                        endDate: null,
+                        isCurrent: false,
+                        aircraftTypes: '',
+                        totalHours: 0,
+                        duties: '',
+                      })
+                    }
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Employer
+                  </Button>
+                  {form.formState.errors.employmentHistory && (
+                    <p className="text-sm font-medium text-destructive">
+                      {typeof form.formState.errors.employmentHistory === 'string'
+                        ? form.formState.errors.employmentHistory
+                        : form.formState.errors.employmentHistory.message}
                     </p>
                   )}
                 </CardContent>

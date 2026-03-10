@@ -38,6 +38,12 @@
         "typeRatings": {
           "type": "array"
         },
+        "employmentHistory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/backend/entities/EmploymentHistory"
+          }
+        },
         "safetyQuestions": {
           "type": "object",
           "properties": {
@@ -94,6 +100,45 @@
         "uid",
         "email",
         "createdAt"
+      ]
+    },
+    "EmploymentHistory": {
+      "title": "Employment History",
+      "description": "Represents a single entry in a user's employment history.",
+      "type": "object",
+      "properties": {
+        "employerName": {
+          "type": "string"
+        },
+        "jobTitle": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "object"
+        },
+        "endDate": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "aircraftTypes": {
+          "type": "string"
+        },
+        "totalHours": {
+          "type": "number"
+        },
+        "duties": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "employerName",
+        "jobTitle",
+        "startDate",
+        "aircraftTypes",
+        "totalHours",
+        "duties"
       ]
     }
   },
