@@ -8,6 +8,9 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const SendWelcomeEmailInputSchema = z.object({
   email: z.string().describe('The email address of the new user.'),
@@ -26,11 +29,14 @@ const sendWelcomeEmailFlow = ai.defineFlow(
     outputSchema: z.void(),
   },
   async (input) => {
-    // In a real application, you would integrate with an email sending service
-    // like SendGrid, Resend, or AWS SES.
-    // For now, we will just log to the console to simulate sending an email.
-    console.log(`
-      --- Sending Welcome Email ---
+    const fromAddress = process.env.EMAIL_FROM;
+
+    if (!process.env.RESEND_API_KEY || !fromAddress) {
+      console.warn(
+        'Email sending is not configured. RESEND_API_KEY or EMAIL_FROM is missing. Skipping email.'
+      );
+      console.log(`
+      --- SKIPPED Welcome Email ---
       To: ${input.email}
       Subject: Welcome to the FedEx Pilot Application Portal!
       
@@ -43,5 +49,21 @@ const sendWelcomeEmailFlow = ai.defineFlow(
       The FedEx Pilot Recruitment Team
       ---------------------------
     `);
+      return;
+    }
+
+    try {
+      await resend.emails.send({
+        from: fromAddress,
+        to: input.email,
+        subject: 'Welcome to the FedEx Pilot Application Portal!',
+        text: `Hi ${input.name || 'there'},\n\nThank you for creating an account. We're excited to have you on board.\nYou can now log in and start your application.\n\nBest,\nThe FedEx Pilot Recruitment Team`,
+      });
+      console.log(`Welcome email sent to ${input.email} via Resend.`);
+    } catch (error) {
+      console.error('Failed to send welcome email via Resend:', error);
+      // Re-throwing the error to let the caller know something went wrong.
+      throw new Error('Failed to send email.');
+    }
   }
 );
