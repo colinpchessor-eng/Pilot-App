@@ -26,7 +26,7 @@ export default function DashboardPage() {
     loading: appDataLoading,
     error,
   } = useDoc<ApplicantData>(userDocRef);
-  
+
   const loading = userLoading || appDataLoading;
 
   if (loading) {
@@ -62,9 +62,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p>
-              It looks like we couldn't find your application data. This can happen
-              if your profile wasn't created correctly. Please sign out and sign
-              up again. If the problem persists, contact support.
+              It looks like we couldn't find your application data. This can
+              happen if your profile wasn't created correctly. Please sign out
+              and sign up again. If the problem persists, contact support.
             </p>
           </CardContent>
         </Card>
@@ -72,11 +72,29 @@ export default function DashboardPage() {
     );
   }
 
-  const applicationStatus = applicantData.submittedAt
+  const isSubmitted = !!applicantData.submittedAt;
+  const hasStarted =
+    !isSubmitted &&
+    (applicantData.flightTime.total > 0 ||
+      applicantData.typeRatings.length > 0 ||
+      Object.values(applicantData.safetyQuestions).some((q) => q !== null));
+
+  const applicationStatus = isSubmitted
     ? 'Submitted'
-    : 'In Progress';
-    
-  const fullName = [applicantData.firstName, applicantData.lastName].filter(Boolean).join(' ');
+    : hasStarted
+    ? 'In Progress'
+    : 'Not Started';
+
+  const fullName = [applicantData.firstName, applicantData.lastName]
+    .filter(Boolean)
+    .join(' ');
+
+  let buttonText = 'Start Application';
+  if (applicationStatus === 'Submitted') {
+    buttonText = 'View Submitted Application';
+  } else if (applicationStatus === 'In Progress') {
+    buttonText = 'Continue Your Application';
+  }
 
   return (
     <div className="container mx-auto max-w-3xl py-10">
@@ -100,7 +118,7 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground">Email</p>
               <p className="font-medium">{applicantData.email}</p>
             </div>
-             <Separator />
+            <Separator />
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Member Since</p>
               <p className="font-medium">
@@ -109,29 +127,38 @@ export default function DashboardPage() {
                   : 'N/A'}
               </p>
             </div>
-             <Separator />
+            <Separator />
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">Application Status</p>
-              <Badge variant={applicationStatus === 'Submitted' ? 'default' : 'secondary'}>
+              <p className="text-sm text-muted-foreground">
+                Application Status
+              </p>
+              <Badge
+                variant={
+                  applicationStatus === 'Submitted' ? 'default' : 'secondary'
+                }
+              >
                 {applicationStatus}
               </Badge>
             </div>
-             {applicantData.submittedAt && (
-                <>
+            {applicantData.submittedAt && (
+              <>
                 <Separator />
                 <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Submitted On</p>
-                    <p className="font-medium">{format(applicantData.submittedAt.toDate(), 'MMMM d, yyyy')}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Submitted On
+                  </p>
+                  <p className="font-medium">
+                    {format(
+                      applicantData.submittedAt.toDate(),
+                      'MMMM d, yyyy'
+                    )}
+                  </p>
                 </div>
-                </>
-             )}
+              </>
+            )}
           </div>
           <Button asChild size="lg" className="w-full">
-            <Link href="/dashboard/application">
-              {applicationStatus === 'Submitted'
-                ? 'View Submitted Application'
-                : 'Continue Your Application'}
-            </Link>
+            <Link href="/dashboard/application">{buttonText}</Link>
           </Button>
         </CardContent>
       </Card>
