@@ -78,7 +78,7 @@ import {
 
 const TABS = [
   { value: 'flight-time', label: 'Flight Time' },
-  { value: 'type-ratings', label: 'Type Ratings' },
+  { value: 'type-ratings', label: 'Ratings & Certs' },
   { value: 'employment-history', label: 'Employment' },
   { value: 'safety', label: 'Safety Questionnaire' },
   { value: 'resume', label: 'Resume' },
@@ -96,6 +96,7 @@ export function ApplicationForm({
   const [isUploading, setIsUploading] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = React.useState(false);
+  const [ratingsEditable, setRatingsEditable] = React.useState(false);
   const { toast } = useToast();
 
   const form = useForm<ApplicationFormValues>({
@@ -332,49 +333,69 @@ export function ApplicationForm({
 
               <TabsContent value="type-ratings">
                 <CardHeader>
-                  <CardTitle>Aircraft Type Ratings</CardTitle>
+                  <CardTitle>Aeronautical Ratings and Certificates</CardTitle>
                   <CardDescription>
-                    List all your current aircraft type ratings.
+                    Confirm your ratings and certificates, or update them if
+                    they have changed.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {typeRatingFields.map((field, index) => (
-                    <FormField
-                      key={field.id}
-                      control={form.control}
-                      name={`typeRatings.${index}.value`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center gap-2">
-                            <FormControl>
-                              <Input placeholder="e.g. B-737" {...field} />
-                            </FormControl>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeTypeRating(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
+                  {ratingsEditable ? (
+                    <>
+                      {typeRatingFields.map((field, index) => (
+                        <FormField
+                          key={field.id}
+                          control={form.control}
+                          name={`typeRatings.${index}.value`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center gap-2">
+                                <FormControl>
+                                  <Input
+                                    placeholder="e.g. B-737 or Commercial Pilot License"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeTypeRating(index)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => appendTypeRating({ value: '' })}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Rating / Certificate
+                      </Button>
+                      {form.formState.errors.typeRatings && (
+                        <p className="text-sm font-medium text-destructive">
+                          {form.formState.errors.typeRatings.message}
+                        </p>
                       )}
-                    />
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => appendTypeRating({ value: '' })}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Rating
-                  </Button>
-                  {form.formState.errors.typeRatings && (
-                    <p className="text-sm font-medium text-destructive">
-                      {form.formState.errors.typeRatings.message}
-                    </p>
+                    </>
+                  ) : (
+                    <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed p-8 text-center">
+                      <Button
+                        type="button"
+                        className="h-auto whitespace-normal py-4 px-8 text-lg"
+                        variant="outline"
+                        onClick={() => setRatingsEditable(true)}
+                      >
+                        My ratings and certificates haven't changed in the
+                        last three years.
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </TabsContent>
