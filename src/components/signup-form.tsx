@@ -24,8 +24,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { triggerWelcomeEmail } from '@/app/actions';
 
 export function SignupForm() {
@@ -62,9 +60,9 @@ export function SignupForm() {
         flightTime: { total: 0, multiCrew: 0, pic: 0 },
         typeRatings: [],
         safetyQuestions: {
-          incidents: undefined,
-          accidents: undefined,
-          faaAction: undefined,
+          incidents: null,
+          accidents: null,
+          faaAction: null,
         },
         resumeFileName: null,
         submittedAt: null,
@@ -72,18 +70,10 @@ export function SignupForm() {
       };
 
       const userDocRef = doc(firestore, 'users', user.uid);
-      
-      setDoc(userDocRef, userProfile).catch((serverError) => {
-          const permissionError = new FirestorePermissionError({
-            path: userDocRef.path,
-            operation: 'create',
-            requestResourceData: userProfile,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-        });
+      await setDoc(userDocRef, userProfile);
 
-      // We don't want to block the UI for this, so we don't await it.
-      triggerWelcomeEmail(user.email!, user.displayName);
+      // We can await this now as well to ensure it completes.
+      await triggerWelcomeEmail(user.email!, user.displayName);
 
       toast({
         title: 'Account Created!',
@@ -92,13 +82,20 @@ export function SignupForm() {
       router.push('/dashboard');
     } catch (error) {
       const authError = error as AuthError;
+      let description = 'An unexpected error occurred. Please try again.';
+
+      if (authError.code === 'auth/email-already-in-use') {
+        description = 'This email is already registered.';
+      } else if (authError.message) {
+        description = authError.message;
+      } else if (error instanceof Error) {
+        description = error.message;
+      }
+
       toast({
         variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description:
-          authError.code === 'auth/email-already-in-use'
-            ? 'This email is already registered.'
-            : authError.message,
+        title: 'Signup Failed',
+        description,
       });
     } finally {
       setLoading(false);

@@ -12,9 +12,9 @@ export type ApplicantData = {
   };
   typeRatings: { value: string }[];
   safetyQuestions: {
-    incidents: 'yes' | 'no' | undefined;
-    accidents: 'yes' | 'no' | undefined;
-    faaAction: 'yes' | 'no' | undefined;
+    incidents: 'yes' | 'no' | null;
+    accidents: 'yes' | 'no' | null;
+    faaAction: 'yes' | 'no' | null;
   };
   resumeFileName: string | null;
   submittedAt: FieldValue | null;

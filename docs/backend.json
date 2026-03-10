@@ -15,7 +15,7 @@
           "description": "The user's email address."
         },
         "name": {
-          "type": "string",
+          "type": ["string", "null"],
           "description": "The user's full name."
         },
         "createdAt": {
@@ -30,13 +30,27 @@
           "type": "array"
         },
         "safetyQuestions": {
-          "type": "object"
+          "type": "object",
+          "properties": {
+            "incidents": {
+              "type": ["string", "null"],
+              "enum": ["yes", "no"]
+            },
+            "accidents": {
+              "type": ["string", "null"],
+              "enum": ["yes", "no"]
+            },
+            "faaAction": {
+              "type": ["string", "null"],
+              "enum": ["yes", "no"]
+            }
+          }
         },
         "resumeFileName": {
-          "type": "string"
+          "type": ["string", "null"]
         },
         "submittedAt": {
-          "type": "string",
+          "type": ["string", "null"],
           "format": "date-time"
         },
         "trainingCommitment": {
