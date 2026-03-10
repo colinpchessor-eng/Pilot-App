@@ -10,8 +10,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const SendWelcomeEmailInputSchema = z.object({
   email: z.string().describe('The email address of the new user.'),
   name: z.string().nullable().describe('The name of the new user.'),
@@ -53,6 +51,7 @@ const sendWelcomeEmailFlow = ai.defineFlow(
     }
 
     try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from: fromAddress,
         to: input.email,
