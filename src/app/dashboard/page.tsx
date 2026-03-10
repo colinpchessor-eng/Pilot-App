@@ -1,30 +1,38 @@
 'use client';
-import { ApplicationForm } from '@/components/application-form';
+
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import type { ApplicantData } from '@/lib/types';
 import { doc } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
 
   const userDocRef = user ? doc(firestore, 'users', user.uid) : undefined;
   const {
     data: applicantData,
-    loading,
+    loading: appDataLoading,
     error,
   } = useDoc<ApplicantData>(userDocRef);
+  
+  const loading = userLoading || appDataLoading;
 
   if (loading) {
     return (
       <div className="container py-10 text-center">
-        <p>Loading application data...</p>
+        <p>Loading your profile...</p>
       </div>
     );
   }
@@ -50,12 +58,13 @@ export default function DashboardPage() {
       <div className="container py-10">
         <Card>
           <CardHeader>
-            <CardTitle>Error</CardTitle>
+            <CardTitle>Welcome!</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
-              Could not find application data for your account. Please contact
-              support.
+              It looks like we couldn't find your application data. This can happen
+              if your profile wasn't created correctly. Please sign out and sign
+              up again. If the problem persists, contact support.
             </p>
           </CardContent>
         </Card>
@@ -63,9 +72,67 @@ export default function DashboardPage() {
     );
   }
 
+  const applicationStatus = applicantData.submittedAt
+    ? 'Submitted'
+    : 'In Progress';
+
   return (
-    <div className="container mx-auto max-w-5xl py-8">
-      <ApplicationForm applicantData={applicantData} />
+    <div className="container mx-auto max-w-3xl py-10">
+      <Card className="shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold">
+            Welcome, {applicantData.name || user?.email}!
+          </CardTitle>
+          <CardDescription>
+            Here's a summary of your pilot application profile.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Name</p>
+              <p className="font-medium">{applicantData.name || 'N/A'}</p>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p className="font-medium">{applicantData.email}</p>
+            </div>
+             <Separator />
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Member Since</p>
+              <p className="font-medium">
+                {applicantData.createdAt
+                  ? format(applicantData.createdAt.toDate(), 'MMMM d, yyyy')
+                  : 'N/A'}
+              </p>
+            </div>
+             <Separator />
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Application Status</p>
+              <Badge variant={applicationStatus === 'Submitted' ? 'default' : 'secondary'}>
+                {applicationStatus}
+              </Badge>
+            </div>
+             {applicantData.submittedAt && (
+                <>
+                <Separator />
+                <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Submitted On</p>
+                    <p className="font-medium">{format(applicantData.submittedAt.toDate(), 'MMMM d, yyyy')}</p>
+                </div>
+                </>
+             )}
+          </div>
+          <Button asChild size="lg" className="w-full">
+            <Link href="/dashboard/application">
+              {applicationStatus === 'Submitted'
+                ? 'View Submitted Application'
+                : 'Continue Your Application'}
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
