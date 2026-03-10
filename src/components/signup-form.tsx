@@ -72,7 +72,6 @@ export function SignupForm() {
       const userDocRef = doc(firestore, 'users', user.uid);
       await setDoc(userDocRef, userProfile);
 
-      // We can await this now as well to ensure it completes.
       await triggerWelcomeEmail(user.email!, user.displayName);
 
       toast({
@@ -81,15 +80,20 @@ export function SignupForm() {
       });
       router.push('/dashboard');
     } catch (error) {
-      const authError = error as AuthError;
       let description = 'An unexpected error occurred. Please try again.';
 
-      if (authError.code === 'auth/email-already-in-use') {
-        description = 'This email is already registered.';
-      } else if (authError.message) {
-        description = authError.message;
-      } else if (error instanceof Error) {
-        description = error.message;
+      if (error instanceof Error) {
+        // Check if it's a Firebase Auth error
+        if ('code' in error && typeof error.code === 'string' && error.code.startsWith('auth/')) {
+            const authError = error as AuthError;
+            if (authError.code === 'auth/email-already-in-use') {
+                description = 'This email is already registered.';
+            } else {
+                description = authError.message; 
+            }
+        } else {
+            description = error.message;
+        }
       }
 
       toast({

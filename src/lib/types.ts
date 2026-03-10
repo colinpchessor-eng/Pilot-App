@@ -1,10 +1,10 @@
-import { FieldValue } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 
 export type ApplicantData = {
   uid: string;
   email: string | null;
   name: string | null;
-  createdAt: FieldValue;
+  createdAt: Timestamp;
   flightTime: {
     total: number;
     multiCrew: number;
@@ -17,6 +17,6 @@ export type ApplicantData = {
     faaAction: 'yes' | 'no' | null;
   };
   resumeFileName: string | null;
-  submittedAt: FieldValue | null;
+  submittedAt: Timestamp | null;
   trainingCommitment: boolean;
 };

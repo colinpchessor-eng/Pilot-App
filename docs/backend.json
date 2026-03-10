@@ -19,8 +19,7 @@
           "description": "The user's full name."
         },
         "createdAt": {
-          "type": "string",
-          "format": "date-time",
+          "type": "object",
           "description": "The timestamp when the profile was created."
         },
         "flightTime": {
