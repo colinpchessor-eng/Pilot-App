@@ -14,9 +14,19 @@
           "format": "email",
           "description": "The user's email address."
         },
-        "name": {
-          "type": ["string", "null"],
-          "description": "The user's full name."
+        "firstName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The user's first name."
+        },
+        "lastName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The user's last name."
         },
         "createdAt": {
           "type": "object",
@@ -32,35 +42,66 @@
           "type": "object",
           "properties": {
             "incidents": {
-              "type": ["string", "null"],
-              "enum": ["yes", "no"]
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
             },
             "accidents": {
-              "type": ["string", "null"],
-              "enum": ["yes", "no"]
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
             },
             "faaAction": {
-              "type": ["string", "null"],
-              "enum": ["yes", "no"]
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
             }
           }
         },
         "resumeFileName": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "submittedAt": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "date-time"
         },
         "trainingCommitment": {
           "type": "boolean"
         }
       },
-      "required": ["uid", "email", "createdAt"]
+      "required": [
+        "uid",
+        "email",
+        "createdAt"
+      ]
     }
   },
   "auth": {
-    "providers": ["email-password", "google.com"]
+    "providers": [
+      "email-password",
+      "google.com"
+    ]
   },
   "firestore": {
     "/users/{userId}": {

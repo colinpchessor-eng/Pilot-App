@@ -75,13 +75,15 @@ export default function DashboardPage() {
   const applicationStatus = applicantData.submittedAt
     ? 'Submitted'
     : 'In Progress';
+    
+  const fullName = [applicantData.firstName, applicantData.lastName].filter(Boolean).join(' ');
 
   return (
     <div className="container mx-auto max-w-3xl py-10">
       <Card className="shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">
-            Welcome, {applicantData.name || user?.email}!
+            Welcome, {fullName || user?.email}!
           </CardTitle>
           <CardDescription>
             Here's a summary of your pilot application profile.
@@ -91,7 +93,7 @@ export default function DashboardPage() {
           <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Name</p>
-              <p className="font-medium">{applicantData.name || 'N/A'}</p>
+              <p className="font-medium">{fullName || 'N/A'}</p>
             </div>
             <Separator />
             <div className="flex items-center justify-between">

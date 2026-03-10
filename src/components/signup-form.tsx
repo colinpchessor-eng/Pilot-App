@@ -36,6 +36,8 @@ export function SignupForm() {
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -55,7 +57,8 @@ export function SignupForm() {
       const userProfile = {
         uid: user.uid,
         email: user.email,
-        name: user.displayName,
+        firstName: values.firstName,
+        lastName: values.lastName,
         createdAt: serverTimestamp(),
         flightTime: { total: 0, multiCrew: 0, pic: 0 },
         typeRatings: [],
@@ -72,7 +75,8 @@ export function SignupForm() {
       const userDocRef = doc(firestore, 'users', user.uid);
       await setDoc(userDocRef, userProfile);
 
-      await triggerWelcomeEmail(user.email!, user.displayName);
+      const fullName = `${values.firstName} ${values.lastName}`.trim();
+      await triggerWelcomeEmail(user.email!, fullName);
 
       toast({
         title: 'Account Created!',
@@ -109,6 +113,34 @@ export function SignupForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="John" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Doe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name="email"

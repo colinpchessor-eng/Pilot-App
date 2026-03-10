@@ -3,7 +3,8 @@ import { Timestamp } from "firebase/firestore";
 export type ApplicantData = {
   uid: string;
   email: string | null;
-  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
   createdAt: Timestamp;
   flightTime: {
     total: number;
