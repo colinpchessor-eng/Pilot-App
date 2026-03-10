@@ -4,25 +4,17 @@ import { ReactNode } from 'react';
 import { initializeFirebase } from '.';
 import { FirebaseProvider, type FirebaseContextValue } from './provider';
 
-let firebasePromise: Promise<FirebaseContextValue> | null = null;
-
-function getFirebaseClient() {
-  if (firebasePromise) {
-    return firebasePromise;
+// This pattern ensures that Firebase is initialized only once on the client.
+let firebaseInstance: FirebaseContextValue | null = null;
+function getFirebaseInstance() {
+  if (!firebaseInstance) {
+    firebaseInstance = initializeFirebase();
   }
-
-  firebasePromise = new Promise((resolve) => {
-    const firebase = initializeFirebase();
-    resolve(firebase);
-  });
-
-  return firebasePromise;
+  return firebaseInstance;
 }
 
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
-  const firebase = getFirebaseClient();
-  return (
-    // @ts-expect-error Server Component
-    <FirebaseProvider value={firebase}>{children}</FirebaseProvider>
-  );
+  const firebase = getFirebaseInstance();
+
+  return <FirebaseProvider value={firebase}>{children}</FirebaseProvider>;
 }
