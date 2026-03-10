@@ -1,0 +1,49 @@
+import { z } from 'zod';
+
+export const loginSchema = z.object({
+  recordLocator: z.string().min(1, { message: 'Record Locator is required.' }),
+  atpNumber: z.string().min(1, { message: 'ATP Number is required.' }),
+});
+
+export type LoginSchema = z.infer<typeof loginSchema>;
+
+export const applicationFormSchema = z.object({
+  flightTime: z.object({
+    total: z.coerce
+      .number({ invalid_type_error: 'Must be a number.' })
+      .min(1, 'Total flight hours are required.'),
+    multiCrew: z.coerce
+      .number({ invalid_type_error: 'Must be a number.' })
+      .min(
+        500,
+        'A minimum of 500 hours of Civilian Multi-Crew flight time is required.'
+      ),
+    pic: z.coerce
+      .number({ invalid_type_error: 'Must be a number.' })
+      .min(1, 'PIC hours are required.'),
+  }),
+  typeRatings: z
+    .array(z.object({ value: z.string().min(1, 'Type rating cannot be empty.') }))
+    .min(1, 'At least one type rating is required.'),
+  safetyQuestions: z.object({
+    incidents: z.enum(['yes', 'no'], {
+      required_error: 'You must select an answer.',
+    }),
+    accidents: z.enum(['yes', 'no'], {
+      required_error: 'You must select an answer.',
+    }),
+    faaAction: z.enum(['yes', 'no'], {
+      required_error: 'You must select an answer.',
+    }),
+  }),
+  resumeFileName: z
+    .string({ required_error: 'Resume is required for submission.' })
+    .min(1, 'Resume is required for submission.'),
+  trainingCommitment: z.literal(true, {
+    errorMap: () => ({
+      message: 'You must agree to the training commitment to submit.',
+    }),
+  }),
+});
+
+export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
