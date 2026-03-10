@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { triggerWelcomeEmail } from '@/app/actions';
 
 export function SignupForm() {
   const router = useRouter();
@@ -80,6 +81,9 @@ export function SignupForm() {
           });
           errorEmitter.emit('permission-error', permissionError);
         });
+
+      // We don't want to block the UI for this, so we don't await it.
+      triggerWelcomeEmail(user.email!, user.displayName);
 
       toast({
         title: 'Account Created!',

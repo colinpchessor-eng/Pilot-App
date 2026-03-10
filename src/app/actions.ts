@@ -4,6 +4,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { initializeFirebase } from '@/firebase';
+import { sendWelcomeEmail } from '@/ai/flows/send-welcome-email';
 
 export async function saveApplication(userId: string, data: any) {
   const { firestore } = initializeFirebase();
@@ -75,4 +76,17 @@ export async function submitApplication(userId: string, data: any) {
   });
 
   return { success: true, message: 'Application submitted successfully!' };
+}
+
+export async function triggerWelcomeEmail(email: string, name: string | null) {
+  console.log(`Triggering welcome email for ${email}`);
+  try {
+    // This will call the Genkit flow to "send" the email.
+    // In a real app, this would integrate with an email service.
+    await sendWelcomeEmail({ email, name });
+    return { success: true, message: 'Welcome email process triggered.' };
+  } catch (error) {
+    console.error('Failed to trigger welcome email flow:', error);
+    return { success: false, message: 'Failed to trigger welcome email.' };
+  }
 }
