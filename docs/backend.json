@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's application data and profile information.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID from Firebase Auth."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the profile was created."
+        },
+        "flightTime": {
+          "type": "object"
+        },
+        "typeRatings": {
+          "type": "array"
+        },
+        "safetyQuestions": {
+          "type": "object"
+        },
+        "resumeFileName": {
+          "type": "string"
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "trainingCommitment": {
+          "type": "boolean"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": ["email-password", "google.com"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/backend/entities/UserProfile"
+      },
+      "description": "Stores user profile and application data, keyed by user's auth UID."
+    }
+  }
+}

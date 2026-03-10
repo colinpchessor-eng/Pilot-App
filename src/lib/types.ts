@@ -1,7 +1,10 @@
+import { FieldValue } from "firebase/firestore";
+
 export type ApplicantData = {
-  id: string; // Document ID
-  recordLocator: string;
-  atpNumber: string;
+  uid: string;
+  email: string | null;
+  name: string | null;
+  createdAt: FieldValue;
   flightTime: {
     total: number;
     multiCrew: number;
@@ -14,6 +17,6 @@ export type ApplicantData = {
     faaAction: 'yes' | 'no' | undefined;
   };
   resumeFileName: string | null;
-  submittedAt: Date | null;
+  submittedAt: FieldValue | null;
   trainingCommitment: boolean;
 };

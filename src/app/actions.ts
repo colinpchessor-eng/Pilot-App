@@ -1,66 +1,41 @@
 'use server';
 
-import { redirect } from 'next/navigation';
-import { z } from 'zod';
-import { loginSchema } from '@/lib/schemas';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { initializeFirebase } from '@/firebase';
 
-// Mock database of applicants
-const MOCK_APPLICANTS = [
-  { recordLocator: 'ABCDEF', atpNumber: '12345' },
-  { recordLocator: 'GHIJKL', atpNumber: '67890' },
-];
+export async function saveApplication(userId: string, data: any) {
+  const { firestore } = initializeFirebase();
+  console.log(`Saving application progress for ${userId}:`, data);
 
-export type LoginFormState = {
-  message: string;
-};
+  const docRef = doc(firestore, 'users', userId);
 
-export async function login(
-  prevState: LoginFormState,
-  formData: FormData
-): Promise<LoginFormState> {
-  try {
-    const validatedFields = loginSchema.parse({
-      recordLocator: formData.get('recordLocator'),
-      atpNumber: formData.get('atpNumber'),
+  setDoc(docRef, data, { merge: true }).catch((serverError) => {
+    const permissionError = new FirestorePermissionError({
+      path: docRef.path,
+      operation: 'update',
+      requestResourceData: data,
     });
+    errorEmitter.emit('permission-error', permissionError);
+    return {
+      success: false,
+      message: 'Failed to save progress due to permissions.',
+    };
+  });
 
-    const applicant = MOCK_APPLICANTS.find(
-      (a) =>
-        a.recordLocator.toLowerCase() ===
-          validatedFields.recordLocator.toLowerCase() &&
-        a.atpNumber === validatedFields.atpNumber
-    );
-
-    if (!applicant) {
-      return { message: 'Invalid Record Locator or ATP Number.' };
-    }
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { message: error.errors.map((e) => e.message).join(' ') };
-    }
-    return { message: 'An unexpected error occurred. Please try again.' };
-  }
-
-  redirect(`/dashboard/${formData.get('recordLocator')}`);
-}
-
-export async function saveApplication(recordLocator: string, data: any) {
-  console.log(`Saving application progress for ${recordLocator}:`, data);
-  // In a real app, this would update the document in Firestore:
-  // const db = getFirestore();
-  // await db.collection('applicants').doc(applicantId).update(data);
   return { success: true, message: 'Progress saved successfully.' };
 }
 
-export async function uploadResume(recordLocator: string, formData: FormData) {
+export async function uploadResume(userId: string, formData: FormData) {
   const file = formData.get('resume') as File;
   if (!file || file.size === 0) {
     return { success: false, message: 'No file selected.' };
   }
 
-  console.log(`Uploading resume for ${recordLocator}: ${file.name}`);
+  console.log(`Uploading resume for ${userId}: ${file.name}`);
   // In a real app, this would upload to Firebase Storage and return the URL
-  // const storageRef = ref(storage, `${recordLocator}/${file.name}`);
+  // const storageRef = ref(storage, `${userId}/${file.name}`);
   // await uploadBytes(storageRef, file);
   // const downloadURL = await getDownloadURL(storageRef);
   // return { success: true, fileName: file.name, url: downloadURL };
@@ -75,17 +50,29 @@ export async function uploadResume(recordLocator: string, formData: FormData) {
   };
 }
 
-export async function submitApplication(recordLocator: string, data: any) {
-  console.log(`Submitting application for ${recordLocator}:`, data);
-  // In a real app, this would set the submission timestamp and status
-  // const db = getFirestore();
-  // await db.collection('applicants').doc(applicantId).update({
-  //   ...data,
-  //   submittedAt: new Date(),
-  //   status: 'Submitted'
-  // });
+export async function submitApplication(userId: string, data: any) {
+  console.log(`Submitting application for ${userId}:`, data);
+  const { firestore } = initializeFirebase();
+  const docRef = doc(firestore, 'users', userId);
 
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  const submissionData = {
+    ...data,
+    submittedAt: serverTimestamp(),
+    status: 'Submitted',
+  };
+
+  setDoc(docRef, submissionData, { merge: true }).catch((serverError) => {
+    const permissionError = new FirestorePermissionError({
+      path: docRef.path,
+      operation: 'update',
+      requestResourceData: submissionData,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    return {
+      success: false,
+      message: 'Failed to submit application due to permissions.',
+    };
+  });
 
   return { success: true, message: 'Application submitted successfully!' };
 }

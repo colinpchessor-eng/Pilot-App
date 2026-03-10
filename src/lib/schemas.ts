@@ -1,11 +1,26 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-  recordLocator: z.string().min(1, { message: 'Record Locator is required.' }),
-  atpNumber: z.string().min(1, { message: 'ATP Number is required.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
 });
 
 export type LoginSchema = z.infer<typeof loginSchema>;
+
+export const signupSchema = z
+  .object({
+    email: z.string().email({ message: 'Please enter a valid email address.' }),
+    password: z
+      .string()
+      .min(6, { message: 'Password must be at least 6 characters long.' }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
+export type SignupSchema = z.infer<typeof signupSchema>;
 
 export const applicationFormSchema = z.object({
   flightTime: z.object({

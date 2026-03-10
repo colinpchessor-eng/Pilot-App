@@ -1,5 +1,5 @@
 import { Icons } from '@/components/icons';
-import { LoginForm } from '@/components/login-form';
+import { SignupForm } from '@/components/signup-form';
 import {
   Card,
   CardContent,
@@ -11,7 +11,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 
-export default function Home() {
+export default function SignupPage() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-md">
@@ -19,21 +19,21 @@ export default function Home() {
           <CardHeader className="items-center text-center">
             <Icons.logo className="h-12 w-auto" />
             <CardTitle className="pt-4 text-2xl font-bold">
-              Pilot Application Portal
+              Create an Account
             </CardTitle>
             <CardDescription className="pt-2">
-              Please sign in to access your application.
+              Enter your email and password to get started.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LoginForm />
+            <SignupForm />
           </CardContent>
           <Separator className="my-0" />
           <CardFooter className="p-4">
             <p className="w-full text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/signup" className="font-semibold text-primary hover:underline">
-                Sign up
+              Already have an account?{' '}
+              <Link href="/" className="font-semibold text-primary hover:underline">
+                Sign in
               </Link>
             </p>
           </CardFooter>

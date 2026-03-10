@@ -1,10 +1,13 @@
 'use client';
 
-import { useFormStatus } from 'react-dom';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { login, type LoginFormState } from '@/app/actions';
+import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword, type AuthError } from 'firebase/auth';
+
 import { loginSchema, type LoginSchema } from '@/lib/schemas';
+import { useAuth } from '@/firebase';
 import {
   Form,
   FormControl,
@@ -15,67 +18,59 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { AlertCircle, LogIn } from 'lucide-react';
-import { useEffect, useActionState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? (
-        'Authenticating...'
-      ) : (
-        <>
-          <LogIn className="mr-2 h-4 w-4" />
-          Sign In
-        </>
-      )}
-    </Button>
-  );
-}
+import { Loader2, LogIn } from 'lucide-react';
 
 export function LoginForm() {
-  const [state, formAction] = useActionState<LoginFormState, FormData>(login, {
-    message: '',
-  });
+  const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      recordLocator: '',
-      atpNumber: '',
+      email: '',
+      password: '',
     },
   });
 
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (state.message) {
+  async function onSubmit(values: LoginSchema) {
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      toast({
+        title: 'Signed In!',
+        description: 'Welcome back.',
+      });
+      router.push('/dashboard');
+    } catch (error) {
+      const authError = error as AuthError;
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: state.message,
+        description: 'Invalid email or password. Please try again.',
       });
+    } finally {
+      setLoading(false);
     }
-  }, [state, toast]);
+  }
 
   return (
     <Form {...form}>
-      <form
-        action={formAction}
-        onSubmit={form.handleSubmit(() => formAction(new FormData(form.control._formValues)))}
-        className="space-y-6"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="recordLocator"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Record Locator</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. ABCDEF" {...field} />
+                <Input
+                  type="email"
+                  placeholder="name@example.com"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -83,25 +78,25 @@ export function LoginForm() {
         />
         <FormField
           control={form.control}
-          name="atpNumber"
+          name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>ATP Number</FormLabel>
+              <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="e.g. 12345" {...field} />
+                <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {state.message && (
-          <Alert variant="destructive" className="hidden">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{state.message}</AlertDescription>
-          </Alert>
-        )}
-        <SubmitButton />
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <LogIn className="mr-2 h-4 w-4" />
+          )}
+          Sign In
+        </Button>
       </form>
     </Form>
   );
