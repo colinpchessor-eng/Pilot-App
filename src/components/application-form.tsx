@@ -223,9 +223,14 @@ export function ApplicationForm({
       <form onSubmit={form.handleSubmit(() => setShowSubmitDialog(true))}>
         <fieldset disabled={isSubmitted}>
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Pilot Application
-            </h1>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Pilot Application
+              </h1>
+              <p className="text-muted-foreground">
+                Please review and provide updates from the last 3 years.
+              </p>
+            </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {isSubmitted ? (
                 <>
