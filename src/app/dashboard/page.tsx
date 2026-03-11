@@ -75,33 +75,6 @@ export default function DashboardPage() {
 
   const isSubmitted = !!applicantData.submittedAt;
 
-  if (isSubmitted) {
-    return (
-      <div className="container mx-auto max-w-3xl py-10">
-        <Card className="shadow-xl text-center">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold">Thank You!</CardTitle>
-            <CardDescription>
-              Your application has been successfully submitted.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <p>
-              We appreciate your interest in a pilot position with FedEx. We will
-              review your application and be in touch soon regarding the next
-              steps.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <p className="text-sm text-muted-foreground w-full">
-              You may now close this window.
-            </p>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-
   const hasStarted =
     !isSubmitted &&
     (applicantData.flightTime.total > 0 ||
@@ -112,7 +85,7 @@ export default function DashboardPage() {
         )));
 
   const applicationStatus = isSubmitted
-    ? 'Submitted'
+    ? 'Completed'
     : hasStarted
     ? 'In Progress'
     : 'Not Started';
@@ -122,9 +95,7 @@ export default function DashboardPage() {
     .join(' ');
 
   let buttonText = 'Start Application';
-  if (applicationStatus === 'Submitted') {
-    buttonText = 'View Submitted Application';
-  } else if (applicationStatus === 'In Progress') {
+  if (applicationStatus === 'In Progress') {
     buttonText = 'Continue Your Application';
   }
 
@@ -140,6 +111,15 @@ export default function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {isSubmitted && (
+            <div className="rounded-lg border border-primary/20 bg-primary/10 p-4 text-center">
+              <h3 className="text-2xl font-bold text-primary">Thank You!</h3>
+              <p className="mt-2 text-primary/80">
+                Your application has been successfully submitted. We will be in
+                touch soon.
+              </p>
+            </div>
+          )}
           <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Name</p>
@@ -166,7 +146,7 @@ export default function DashboardPage() {
               </p>
               <Badge
                 variant={
-                  applicationStatus === 'Submitted' ? 'default' : 'secondary'
+                  applicationStatus === 'Completed' ? 'default' : 'secondary'
                 }
               >
                 {applicationStatus}
@@ -189,9 +169,11 @@ export default function DashboardPage() {
               </>
             )}
           </div>
-          <Button asChild size="lg" className="w-full">
-            <Link href="/dashboard/application">{buttonText}</Link>
-          </Button>
+          {!isSubmitted && (
+            <Button asChild size="lg" className="w-full">
+              <Link href="/dashboard/application">{buttonText}</Link>
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
