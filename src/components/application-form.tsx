@@ -534,7 +534,7 @@ export function ApplicationForm({
                           >
                             <Calendar
                               mode="single"
-                              selected={field.value ? field.value : undefined}
+                              selected={field.value ?? undefined}
                               onSelect={field.onChange}
                               disabled={(date) =>
                                 date > new Date() ||
@@ -726,7 +726,7 @@ export function ApplicationForm({
                                             >
                                               <Calendar
                                                 mode="single"
-                                                selected={field.value}
+                                                selected={field.value ?? undefined}
                                                 onSelect={field.onChange}
                                                 disabled={(date) =>
                                                   date > new Date() ||
@@ -801,7 +801,7 @@ export function ApplicationForm({
                                             >
                                               <Calendar
                                                 mode="single"
-                                                selected={field.value ? field.value : undefined}
+                                                selected={field.value ?? undefined}
                                                 onSelect={field.onChange}
                                                 disabled={(date) =>
                                                   date > new Date() ||
