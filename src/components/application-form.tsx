@@ -71,6 +71,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from './ui/accordion';
+import { useRouter } from 'next/navigation';
 
 const TABS = [
   { value: 'flight-time', label: 'Flight Time' },
@@ -133,6 +134,7 @@ export function ApplicationForm({
 }: {
   applicantData: ApplicantData;
 }) {
+  const router = useRouter();
   const { user } = useUser();
   const [activeTab, setActiveTab] = React.useState(TABS[0].value);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -262,6 +264,7 @@ export function ApplicationForm({
         variant: 'default',
         duration: 5000,
       });
+      router.push('/dashboard');
     } else {
       toast({
         variant: 'destructive',
@@ -275,7 +278,27 @@ export function ApplicationForm({
     const errorFields = Object.keys(errors);
     if (errorFields.length === 0) return;
 
-    const firstErrorField = errorFields[0];
+    // This logic finds which tab the first error is on
+    let firstErrorField = errorFields[0] as keyof ApplicationFormValues;
+
+    // Special handling for nested objects
+    if (firstErrorField === 'safetyQuestions' && errors.safetyQuestions) {
+        firstErrorField =
+        'safetyQuestions.' +
+        Object.keys(
+          errors.safetyQuestions
+        )[0] as keyof ApplicationFormValues;
+    }
+    if (firstErrorField === 'flightTime' && errors.flightTime) {
+        firstErrorField =
+        'flightTime.' + Object.keys(errors.flightTime)[0] as keyof ApplicationFormValues;
+    }
+    if (firstErrorField === 'employmentHistory' && errors.employmentHistory) {
+      // Logic to find the specific field in the array can be complex.
+      // For now, we'll just point to the employment history tab.
+      firstErrorField = 'employmentHistory';
+    }
+
 
     const fieldToTabMap: Record<string, { tab: string; label: string }> = {
       flightTime: { tab: 'flight-time', label: 'Flight Time' },
@@ -305,8 +328,11 @@ export function ApplicationForm({
         label: 'Applicant Acknowledgment',
       },
     };
+    
+    // Find the tab for the first error field. We might need to check prefixes for nested fields.
+    const errorKey = Object.keys(fieldToTabMap).find(key => firstErrorField.startsWith(key));
+    const errorLocation = errorKey ? fieldToTabMap[errorKey] : null;
 
-    const errorLocation = fieldToTabMap[firstErrorField];
 
     if (errorLocation) {
       setActiveTab(errorLocation.tab);

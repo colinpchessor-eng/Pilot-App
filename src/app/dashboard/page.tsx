@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -73,11 +74,41 @@ export default function DashboardPage() {
   }
 
   const isSubmitted = !!applicantData.submittedAt;
+
+  if (isSubmitted) {
+    return (
+      <div className="container mx-auto max-w-3xl py-10">
+        <Card className="shadow-xl text-center">
+          <CardHeader>
+            <CardTitle className="text-3xl font-bold">Thank You!</CardTitle>
+            <CardDescription>
+              Your application has been successfully submitted.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <p>
+              We appreciate your interest in a pilot position with FedEx. We will
+              review your application and be in touch soon regarding the next
+              steps.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <p className="text-sm text-muted-foreground w-full">
+              You may now close this window.
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   const hasStarted =
     !isSubmitted &&
     (applicantData.flightTime.total > 0 ||
       applicantData.typeRatings.length > 0 ||
-      Object.values(applicantData.safetyQuestions).some((q) => q !== null));
+      Object.values(applicantData.safetyQuestions).some(
+        (q) => q.answer !== null
+      ));
 
   const applicationStatus = isSubmitted
     ? 'Submitted'

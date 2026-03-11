@@ -36,7 +36,7 @@ export async function submitApplication(userId: string, data: any) {
   const submissionData = {
     ...data,
     submittedAt: serverTimestamp(),
-    status: 'Submitted',
+    status: 'Completed',
   };
 
   setDoc(docRef, submissionData, { merge: true }).catch((serverError) => {
