@@ -10,10 +10,10 @@ export const Icons = {
     exColor?: string;
   }) => (
     <svg
-      viewBox="0 0 220 48"
+      viewBox="0 0 240 48"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="FedexFlow Logo"
+      aria-label="FedExFlow Logo"
       {...props}
     >
       <text
@@ -24,8 +24,8 @@ export const Icons = {
         fontWeight="bold"
         letterSpacing="-1"
       >
-        <tspan fill={fedColor}>Fedex</tspan>
-        <tspan fill={exColor}>Flow</tspan>
+        <tspan fill={fedColor}>Fed</tspan>
+        <tspan fill={exColor}>ExFlow</tspan>
       </text>
     </svg>
   ),

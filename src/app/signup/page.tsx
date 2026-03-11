@@ -13,7 +13,7 @@ import Link from 'next/link';
 
 export default function SignupPage() {
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-primary p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-lg transition-shadow duration-300 hover:shadow-xl">
           <CardHeader className="items-center text-center">
