@@ -42,7 +42,7 @@ export default function ApplicationViewPage() {
 
   if (error) {
     return (
-      <Card>
+      <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Error</CardTitle>
         </CardHeader>
@@ -55,7 +55,7 @@ export default function ApplicationViewPage() {
 
   if (!applicantData) {
     return (
-      <Card>
+      <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Not Found</CardTitle>
         </CardHeader>
@@ -67,7 +67,7 @@ export default function ApplicationViewPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between gap-4 print:hidden">
         <Button variant="outline" onClick={() => router.back()}>
           <ArrowLeft />
