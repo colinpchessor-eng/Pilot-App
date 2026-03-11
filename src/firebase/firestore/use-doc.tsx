@@ -21,9 +21,12 @@ export function useDoc<T extends DocumentData>(
 
   useEffect(() => {
     if (!ref) {
-      setLoading(false);
+      // If there's no ref, we are still waiting for it, so loading is not finished.
+      // We keep loading as true and wait for a valid ref.
       return;
     }
+
+    setLoading(true); // Ensure loading is true when we start fetching a new ref
 
     if (options.listen) {
       const unsubscribe = onSnapshot(
