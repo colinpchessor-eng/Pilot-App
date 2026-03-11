@@ -98,10 +98,6 @@ export function ApplicationForm({
   const [showSubmitDialog, setShowSubmitDialog] = React.useState(false);
   const { toast } = useToast();
 
-  const hasRatings =
-    applicantData.typeRatings && applicantData.typeRatings.length > 0;
-  const [ratingsConfirmed, setRatingsConfirmed] = React.useState(hasRatings);
-
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
     defaultValues: {
@@ -119,6 +115,13 @@ export function ApplicationForm({
     },
     mode: 'onChange',
   });
+
+  const typeRatings = form.watch('typeRatings');
+  const hasRatings = typeRatings && typeRatings.length > 0;
+
+  const [ratingsConfirmed, setRatingsConfirmed] = React.useState(
+    applicantData.typeRatings && applicantData.typeRatings.length > 0
+  );
 
   const {
     fields: typeRatingFields,
