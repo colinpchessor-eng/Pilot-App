@@ -72,3 +72,26 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .art-deco-bg {
+    background-color: hsl(var(--primary));
+    background-image: radial-gradient(
+        circle at 100% 50%,
+        transparent 20%,
+        hsl(var(--accent) / 0.1) 21%,
+        hsl(var(--accent) / 0.1) 34%,
+        transparent 35%,
+        transparent
+      ),
+      radial-gradient(
+        circle at 0% 50%,
+        transparent 20%,
+        hsl(var(--accent) / 0.1) 21%,
+        hsl(var(--accent) / 0.1) 34%,
+        transparent 35%,
+        transparent
+      );
+    background-size: 4rem 4rem;
+  }
+}

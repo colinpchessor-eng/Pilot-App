@@ -13,9 +13,9 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-primary p-4">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center art-deco-bg p-4">
       <div className="w-full max-w-md">
-        <Card className="shadow-lg transition-shadow duration-300 hover:shadow-xl">
+        <Card className="shadow-xl transition-shadow duration-300 hover:shadow-2xl">
           <CardHeader className="items-center text-center">
             <Icons.logo className="h-12 w-auto" />
             <CardTitle className="pt-4 text-2xl font-bold">
