@@ -153,7 +153,7 @@ export function ApplicationForm({
       firstClassMedicalDate: applicantData.firstClassMedicalDate
         ? applicantData.firstClassMedicalDate.toDate()
         : undefined,
-      atpNumber: applicantData.atpNumber ?? undefined,
+      atpNumber: applicantData.atpNumber ?? '',
       typeRatings: applicantData.typeRatings,
       employmentHistory: (applicantData.employmentHistory || []).map((eh) => ({
         ...eh,
@@ -162,10 +162,10 @@ export function ApplicationForm({
         isCurrent: !eh.endDate,
       })),
       safetyQuestions: applicantData.safetyQuestions,
-      safetyExplanation: applicantData.safetyExplanation ?? undefined,
+      safetyExplanation: applicantData.safetyExplanation ?? '',
       resumeFileName: applicantData.resumeFileName ?? undefined,
       isCertified: applicantData.isCertified ?? false,
-      printedName: applicantData.printedName ?? undefined,
+      printedName: applicantData.printedName ?? '',
     },
     mode: 'onChange',
   });
