@@ -96,8 +96,11 @@ export function ApplicationForm({
   const [isUploading, setIsUploading] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = React.useState(false);
-  const [ratingsEditable, setRatingsEditable] = React.useState(false);
   const { toast } = useToast();
+
+  const hasRatings =
+    applicantData.typeRatings && applicantData.typeRatings.length > 0;
+  const [ratingsConfirmed, setRatingsConfirmed] = React.useState(hasRatings);
 
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
@@ -142,8 +145,13 @@ export function ApplicationForm({
     if (isNext) {
       const fieldsToValidate = TABS[currentTabIndex]
         .value as keyof ApplicationFormValues;
-      const isValid = await form.trigger(fieldsToValidate as any);
-      if (!isValid) return;
+      // If ratings are confirmed, we don't need to validate them for navigation
+      if (fieldsToValidate === 'type-ratings' && ratingsConfirmed) {
+        // skip validation
+      } else {
+        const isValid = await form.trigger(fieldsToValidate as any);
+        if (!isValid) return;
+      }
     }
 
     const nextTabIndex = isNext ? currentTabIndex + 1 : currentTabIndex - 1;
@@ -340,8 +348,31 @@ export function ApplicationForm({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {ratingsEditable ? (
-                    <>
+                  <div className="flex items-start space-x-3 rounded-md border p-4">
+                    <Checkbox
+                      id="ratings-confirmed"
+                      checked={ratingsConfirmed}
+                      onCheckedChange={(checked) =>
+                        setRatingsConfirmed(Boolean(checked))
+                      }
+                      disabled={!hasRatings}
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <label
+                        htmlFor="ratings-confirmed"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        My ratings and certificates are up-to-date.
+                      </label>
+                      <p className="text-sm text-muted-foreground">
+                        Uncheck this box to add or edit your ratings and
+                        certificates.
+                      </p>
+                    </div>
+                  </div>
+
+                  {!ratingsConfirmed && (
+                    <div className="space-y-4 pt-4">
                       {typeRatingFields.map((field, index) => (
                         <FormField
                           key={field.id}
@@ -383,18 +414,6 @@ export function ApplicationForm({
                           {form.formState.errors.typeRatings.message}
                         </p>
                       )}
-                    </>
-                  ) : (
-                    <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed p-8 text-center">
-                      <Button
-                        type="button"
-                        className="h-auto whitespace-normal py-4 px-8 text-lg"
-                        variant="outline"
-                        onClick={() => setRatingsEditable(true)}
-                      >
-                        My ratings and certificates haven't changed in the
-                        last three years.
-                      </Button>
                     </div>
                   )}
                 </CardContent>
