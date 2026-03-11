@@ -106,9 +106,10 @@ export default function DashboardPage() {
     !isSubmitted &&
     (applicantData.flightTime.total > 0 ||
       applicantData.typeRatings.length > 0 ||
-      Object.values(applicantData.safetyQuestions).some(
-        (q) => q.answer !== null
-      ));
+      (applicantData.safetyQuestions &&
+        Object.values(applicantData.safetyQuestions).some(
+          (q) => q && q.answer !== null
+        )));
 
   const applicationStatus = isSubmitted
     ? 'Submitted'
