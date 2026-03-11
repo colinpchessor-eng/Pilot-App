@@ -76,6 +76,10 @@ export const applicationFormSchema = z
       sic: z.coerce.number().min(0, 'Cannot be negative.'),
       other: z.coerce.number().min(0, 'Cannot be negative.'),
     }),
+    firstClassMedicalDate: z.date({
+      required_error: 'First class medical date is required.',
+    }),
+    atpNumber: z.string().min(1, 'ATP Number is required.'),
     typeRatings: z
       .array(
         z.object({ value: z.string().min(1, 'Type rating cannot be empty.') })

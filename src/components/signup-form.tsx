@@ -60,6 +60,8 @@ export function SignupForm() {
         firstName: values.firstName,
         lastName: values.lastName,
         createdAt: serverTimestamp(),
+        firstClassMedicalDate: null,
+        atpNumber: null,
         flightTime: {
           total: 0,
           turbinePic: 0,

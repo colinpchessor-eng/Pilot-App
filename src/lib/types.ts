@@ -16,6 +16,8 @@ export type ApplicantData = {
   firstName: string | null;
   lastName: string | null;
   createdAt: Timestamp;
+  firstClassMedicalDate: Timestamp | null;
+  atpNumber: string | null;
   flightTime: {
     total: number;
     turbinePic: number;

@@ -32,6 +32,20 @@
           "type": "object",
           "description": "The timestamp when the profile was created."
         },
+        "firstClassMedicalDate": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Date of the user's first class medical certificate."
+        },
+        "atpNumber": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The user's ATP certificate number."
+        },
         "flightTime": {
           "type": "object",
           "properties": {

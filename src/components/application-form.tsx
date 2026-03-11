@@ -78,7 +78,7 @@ import {
 
 const TABS = [
   { value: 'flight-time', label: 'Flight Time' },
-  { value: 'type-ratings', label: 'Ratings & Certs' },
+  { value: 'type-ratings', label: 'Aeronautical Ratings and Certificates' },
   { value: 'employment-history', label: 'Employment' },
   { value: 'resume', label: 'Resume' },
   { value: 'acknowledgment', label: 'Applicant Acknowledgment' },
@@ -150,6 +150,10 @@ export function ApplicationForm({
     resolver: zodResolver(applicationFormSchema),
     defaultValues: {
       flightTime: applicantData.flightTime,
+      firstClassMedicalDate: applicantData.firstClassMedicalDate
+        ? applicantData.firstClassMedicalDate.toDate()
+        : undefined,
+      atpNumber: applicantData.atpNumber ?? undefined,
       typeRatings: applicantData.typeRatings,
       employmentHistory: (applicantData.employmentHistory || []).map((eh) => ({
         ...eh,
@@ -165,13 +169,6 @@ export function ApplicationForm({
     },
     mode: 'onChange',
   });
-
-  const typeRatings = form.watch('typeRatings');
-  const hasRatings = typeRatings && typeRatings.length > 0;
-
-  const [ratingsConfirmed, setRatingsConfirmed] = React.useState(
-    applicantData.typeRatings && applicantData.typeRatings.length > 0
-  );
 
   const employmentHistory = form.watch('employmentHistory');
   const hasEmploymentHistory =
@@ -212,8 +209,7 @@ export function ApplicationForm({
     if (isNext) {
       const fieldsToValidate = TABS[currentTabIndex]
         .value as keyof ApplicationFormValues;
-      if (fieldsToValidate === 'type-ratings' && ratingsConfirmed) {
-      } else if (
+      if (
         fieldsToValidate === 'employment-history' &&
         employmentConfirmed
       ) {
@@ -509,83 +505,122 @@ export function ApplicationForm({
                 <CardHeader>
                   <CardTitle>Aeronautical Ratings and Certificates</CardTitle>
                   <CardDescription>
-                    Confirm your ratings and certificates, or update them if
-                    they have changed.
+                    Provide your medical certificate date, ATP number, and all
+                    aircraft type ratings you hold.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-start space-x-3 rounded-md border p-4">
-                    <Checkbox
-                      id="ratings-confirmed"
-                      checked={ratingsConfirmed}
-                      onCheckedChange={(checked) =>
-                        setRatingsConfirmed(Boolean(checked))
-                      }
-                      disabled={!hasRatings}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <label
-                        htmlFor="ratings-confirmed"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        My ratings and certificates are up-to-date.
-                      </label>
-                      <p className="text-sm text-muted-foreground">
-                        Uncheck this box to add or edit your ratings and
-                        certificates.
-                      </p>
-                    </div>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="firstClassMedicalDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>
+                          Date of your first class medical certificate
+                        </FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={'outline'}
+                                className={cn(
+                                  'w-full pl-3 text-left font-normal',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, 'PPP')
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-auto p-0"
+                            align="start"
+                          >
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date > new Date() ||
+                                date < new Date('1950-01-01')
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="atpNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>What is your ATP number?</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. 1234567" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  {!ratingsConfirmed && (
-                    <div className="space-y-4 pt-4">
-                      {typeRatingFields.map((field, index) => (
-                        <FormField
-                          key={field.id}
-                          control={form.control}
-                          name={`typeRatings.${index}.value`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center gap-2">
-                                <FormControl>
-                                  <Input
-                                    placeholder="e.g. B-737 or Commercial Pilot License"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeTypeRating(index)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => appendTypeRating({ value: '' })}
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Rating / Certificate
-                      </Button>
-                      <FormDescription>
-                        At a minimum, please add your FAA ATP certificate to
-                        continue.
-                      </FormDescription>
-                      {form.formState.errors.typeRatings && (
-                        <p className="text-sm font-medium text-destructive">
-                          {form.formState.errors.typeRatings.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  <div className="space-y-4 pt-4">
+                    <FormLabel>
+                      Please indicate all aircraft type ratings you hold
+                    </FormLabel>
+                    {typeRatingFields.map((field, index) => (
+                      <FormField
+                        key={field.id}
+                        control={form.control}
+                        name={`typeRatings.${index}.value`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center gap-2">
+                              <FormControl>
+                                <Input
+                                  placeholder="e.g. B-737 or Commercial Pilot License"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeTypeRating(index)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => appendTypeRating({ value: '' })}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Rating / Certificate
+                    </Button>
+                    <FormDescription>
+                      At a minimum, please add your FAA ATP certificate to
+                      continue.
+                    </FormDescription>
+                    {form.formState.errors.typeRatings && (
+                      <p className="text-sm font-medium text-destructive">
+                        {form.formState.errors.typeRatings.message}
+                      </p>
+                    )}
+                  </div>
                 </CardContent>
               </TabsContent>
 
