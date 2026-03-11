@@ -412,6 +412,9 @@ export function ApplicationForm({
                         <Plus className="mr-2 h-4 w-4" />
                         Add Rating / Certificate
                       </Button>
+                      <FormDescription>
+                        At a minimum, please add your FAA ATP certificate to continue.
+                      </FormDescription>
                       {form.formState.errors.typeRatings && (
                         <p className="text-sm font-medium text-destructive">
                           {form.formState.errors.typeRatings.message}
