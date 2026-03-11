@@ -9,7 +9,6 @@ import { AdminHeader } from '@/components/admin/admin-header';
 import {
   Sidebar,
   SidebarProvider,
-  SidebarInset,
   SidebarContent,
   SidebarMenu,
   SidebarMenuItem,
@@ -33,7 +32,7 @@ export default function AdminLayout({
   const { data: applicantData, loading: appDataLoading } =
     useDoc<ApplicantData>(userDocRef);
 
-  const loading = userLoading || appDataLoading;
+  const loading = userLoading || (user && appDataLoading);
 
   useEffect(() => {
     if (!loading) {
