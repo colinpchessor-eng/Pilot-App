@@ -61,10 +61,8 @@ export const employmentHistorySchema = z
 
 const safetyQuestionItemSchema = z
   .object({
-    answer: z.enum(['yes', 'no'], {
-      required_error: 'You must select an answer.',
-    }),
-    explanation: z.string().optional(),
+    answer: z.enum(['yes', 'no']).nullable(),
+    explanation: z.string().nullable().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.answer === 'yes' && (!data.explanation || data.explanation.trim() === '')) {
@@ -79,15 +77,15 @@ const safetyQuestionItemSchema = z
 export const applicationFormSchema = z
   .object({
     flightTime: z.object({
-      total: z.coerce.number().min(0, 'Cannot be negative.'),
-      turbinePic: z.coerce.number().min(0, 'Cannot be negative.'),
-      military: z.coerce.number().min(0, 'Cannot be negative.'),
-      civilian: z.coerce.number().min(0, 'Cannot be negative.'),
-      multiEngine: z.coerce.number().min(0, 'Cannot be negative.'),
-      instructor: z.coerce.number().min(0, 'Cannot be negative.'),
-      evaluator: z.coerce.number().min(0, 'Cannot be negative.'),
-      sic: z.coerce.number().min(0, 'Cannot be negative.'),
-      other: z.coerce.number().min(0, 'Cannot be negative.'),
+      total: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      turbinePic: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      military: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      civilian: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      multiEngine: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      instructor: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      evaluator: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      sic: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      other: z.coerce.number().min(0, 'Cannot be negative.').optional(),
     }),
     firstClassMedicalDate: z
       .date({
@@ -129,6 +127,18 @@ export const applicationFormSchema = z
         path: ['firstClassMedicalDate'],
       });
     }
+
+    Object.keys(data.safetyQuestions).forEach((keyStr) => {
+      const key = keyStr as keyof typeof data.safetyQuestions;
+      const question = data.safetyQuestions[key];
+      if (question.answer === null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'You must select an answer.',
+          path: [`safetyQuestions.${key}.answer`],
+        });
+      }
+    });
   });
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
