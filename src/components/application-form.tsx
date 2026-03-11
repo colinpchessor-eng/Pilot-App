@@ -105,7 +105,7 @@ const ACKNOWLEDGMENT_QUESTIONS = [
   {
     name: 'failedCheckRide',
     label:
-      'Have you ever failed a flight check ride, proficiency check, flight eval, or upgrade attempt aircraft or while compensated as a professional pilot?',
+      'Have you ever failed a flight check ride, proficiency check, flight eval, or upgrade attempt aircraft or while compensated as a professional pilot (in the last three years)?',
   },
   {
     name: 'formalDiscipline',
@@ -146,27 +146,71 @@ export function ApplicationForm({
   const [showSubmitDialog, setShowSubmitDialog] = React.useState(false);
   const { toast } = useToast();
 
-  const form = useForm<ApplicationFormValues>({
-    resolver: zodResolver(applicationFormSchema),
-    defaultValues: {
-      flightTime: applicantData.flightTime,
-      firstClassMedicalDate: applicantData.firstClassMedicalDate
-        ? applicantData.firstClassMedicalDate.toDate()
+  // Helper to safely transform applicantData (which might be in an old format)
+  // to the format expected by the form.
+  const getDefaultValues = (
+    data: ApplicantData
+  ): ApplicationFormValues => {
+    const safetyQuestionsDefault: ApplicationFormValues['safetyQuestions'] = {
+      terminations: { answer: null, explanation: '' },
+      askedToResign: { answer: null, explanation: '' },
+      accidents: { answer: null, explanation: '' },
+      incidents: { answer: null, explanation: '' },
+      flightViolations: { answer: null, explanation: '' },
+      certificateAction: { answer: null, explanation: '' },
+      pendingFaaAction: { answer: null, explanation: '' },
+      failedCheckRide: { answer: null, explanation: '' },
+      formalDiscipline: { answer: null, explanation: '' },
+      investigationBoard: { answer: null, explanation: '' },
+      previousInterview: { answer: null, explanation: '' },
+      trainingCommitmentConflict: { answer: null, explanation: '' },
+      otherInfo: { answer: null, explanation: '' },
+    };
+
+    if (data.safetyQuestions) {
+      for (const key of Object.keys(safetyQuestionsDefault)) {
+        const questionKey = key as keyof typeof data.safetyQuestions;
+        const value = data.safetyQuestions[questionKey];
+
+        // Check if value is in the new format ({ answer, explanation }) or old (string/null)
+        if (value && typeof value === 'object' && 'answer' in value) {
+          safetyQuestionsDefault[questionKey] = {
+            answer: value.answer ?? null,
+            explanation: value.explanation ?? '',
+          };
+        } else if (value) {
+          // It's the old format, just a string ('yes'/'no')
+          safetyQuestionsDefault[questionKey] = {
+            answer: value as 'yes' | 'no',
+            explanation: '', // Old format didn't have per-question explanations
+          };
+        }
+      }
+    }
+    
+    return {
+      flightTime: data.flightTime,
+      firstClassMedicalDate: data.firstClassMedicalDate
+        ? data.firstClassMedicalDate.toDate()
         : null,
-      atpNumber: applicantData.atpNumber ?? '',
-      typeRatings: applicantData.typeRatings ?? '',
-      employmentHistory: (applicantData.employmentHistory || []).map((eh) => ({
+      atpNumber: data.atpNumber ?? '',
+      typeRatings: data.typeRatings ?? '',
+      employmentHistory: (data.employmentHistory || []).map((eh) => ({
         ...eh,
         startDate: eh.startDate.toDate(),
         endDate: eh.endDate ? eh.endDate.toDate() : null,
         isCurrent: !eh.endDate,
       })),
-      safetyQuestions: applicantData.safetyQuestions,
-      safetyExplanation: applicantData.safetyExplanation ?? '',
-      resumeFileName: applicantData.resumeFileName ?? undefined,
-      isCertified: applicantData.isCertified ?? false,
-      printedName: applicantData.printedName ?? '',
-    },
+      safetyQuestions: safetyQuestionsDefault,
+      resumeFileName: data.resumeFileName ?? undefined,
+      isCertified: data.isCertified ?? false,
+      printedName: data.printedName ?? '',
+    };
+  };
+
+  const form = useForm<ApplicationFormValues>({
+    resolver: zodResolver(applicationFormSchema),
+    defaultValues: getDefaultValues(applicantData),
     mode: 'onChange',
   });
 
@@ -187,11 +231,6 @@ export function ApplicationForm({
     control: form.control,
     name: 'employmentHistory',
   });
-
-  const safetyAnswers = form.watch('safetyQuestions');
-  const showExplanation = Object.values(safetyAnswers || {}).some(
-    (answer) => answer === 'yes'
-  );
 
   const handleTabChange = async (direction: 'next' | 'prev') => {
     const currentTabIndex = TABS.findIndex((tab) => tab.value === activeTab);
@@ -1007,63 +1046,73 @@ export function ApplicationForm({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                  {ACKNOWLEDGMENT_QUESTIONS.map((q) => (
-                    <FormField
-                      key={q.name}
-                      control={form.control}
-                      name={`safetyQuestions.${q.name as keyof ApplicationFormValues['safetyQuestions']}`}
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>{q.label}</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex items-center gap-4"
-                            >
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="yes" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Yes
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="no" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  No
-                                </FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
+                  {ACKNOWLEDGMENT_QUESTIONS.map((q) => {
+                    const questionName =
+                      q.name as keyof ApplicationFormValues['safetyQuestions'];
+                    const answer = form.watch(
+                      `safetyQuestions.${questionName}.answer`
+                    );
 
-                  {showExplanation && (
-                    <FormField
-                      control={form.control}
-                      name="safetyExplanation"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Explanation</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Please explain all 'Yes' answers here."
-                              rows={5}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                    return (
+                      <div key={q.name} className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name={`safetyQuestions.${questionName}.answer`}
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormLabel>{q.label}</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  value={field.value ?? ''}
+                                  className="flex items-center gap-4"
+                                >
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="yes" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      Yes
+                                    </FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="no" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      No
+                                    </FormLabel>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {answer === 'yes' && (
+                          <FormField
+                            control={form.control}
+                            name={`safetyQuestions.${questionName}.explanation`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="sr-only">
+                                  Explanation for {q.label}
+                                </FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Please explain your 'Yes' answer here."
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
 
                   <div className="space-y-6 pt-6 border-t">
                     <FormField

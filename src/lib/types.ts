@@ -10,6 +10,11 @@ export type EmploymentHistory = {
   duties: string;
 };
 
+export type SafetyQuestion = {
+  answer: 'yes' | 'no' | null;
+  explanation: string | null;
+};
+
 export type ApplicantData = {
   uid: string;
   email: string | null;
@@ -32,21 +37,20 @@ export type ApplicantData = {
   typeRatings: string;
   employmentHistory: EmploymentHistory[];
   safetyQuestions: {
-    terminations: 'yes' | 'no' | null;
-    askedToResign: 'yes' | 'no' | null;
-    accidents: 'yes' | 'no' | null;
-    incidents: 'yes' | 'no' | null;
-    flightViolations: 'yes' | 'no' | null;
-    certificateAction: 'yes' | 'no' | null;
-    pendingFaaAction: 'yes' | 'no' | null;
-    failedCheckRide: 'yes' | 'no' | null;
-    formalDiscipline: 'yes' | 'no' | null;
-    investigationBoard: 'yes' | 'no' | null;
-    previousInterview: 'yes' | 'no' | null;
-    trainingCommitmentConflict: 'yes' | 'no' | null;
-    otherInfo: 'yes' | 'no' | null;
+    terminations: SafetyQuestion;
+    askedToResign: SafetyQuestion;
+    accidents: SafetyQuestion;
+    incidents: SafetyQuestion;
+    flightViolations: SafetyQuestion;
+    certificateAction: SafetyQuestion;
+    pendingFaaAction: SafetyQuestion;
+    failedCheckRide: SafetyQuestion;
+    formalDiscipline: SafetyQuestion;
+    investigationBoard: SafetyQuestion;
+    previousInterview: SafetyQuestion;
+    trainingCommitmentConflict: SafetyQuestion;
+    otherInfo: SafetyQuestion;
   };
-  safetyExplanation: string | null;
   resumeFileName: string | null;
   submittedAt: Timestamp | null;
   isCertified: boolean;

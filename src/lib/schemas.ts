@@ -59,9 +59,22 @@ export const employmentHistorySchema = z
     }
   });
 
-const requiredEnum = z.enum(['yes', 'no'], {
-  required_error: 'You must select an answer.',
-});
+const safetyQuestionItemSchema = z
+  .object({
+    answer: z.enum(['yes', 'no'], {
+      required_error: 'You must select an answer.',
+    }),
+    explanation: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.answer === 'yes' && (!data.explanation || data.explanation.trim() === '')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Explanation is required for a "Yes" answer.',
+        path: ['explanation'],
+      });
+    }
+  });
 
 export const applicationFormSchema = z
   .object({
@@ -87,21 +100,20 @@ export const applicationFormSchema = z
       .min(1, 'At least one rating or certificate is required.'),
     employmentHistory: z.array(employmentHistorySchema).optional(),
     safetyQuestions: z.object({
-      terminations: requiredEnum,
-      askedToResign: requiredEnum,
-      accidents: requiredEnum,
-      incidents: requiredEnum,
-      flightViolations: requiredEnum,
-      certificateAction: requiredEnum,
-      pendingFaaAction: requiredEnum,
-      failedCheckRide: requiredEnum,
-      formalDiscipline: requiredEnum,
-      investigationBoard: requiredEnum,
-      previousInterview: requiredEnum,
-      trainingCommitmentConflict: requiredEnum,
-      otherInfo: requiredEnum,
+      terminations: safetyQuestionItemSchema,
+      askedToResign: safetyQuestionItemSchema,
+      accidents: safetyQuestionItemSchema,
+      incidents: safetyQuestionItemSchema,
+      flightViolations: safetyQuestionItemSchema,
+      certificateAction: safetyQuestionItemSchema,
+      pendingFaaAction: safetyQuestionItemSchema,
+      failedCheckRide: safetyQuestionItemSchema,
+      formalDiscipline: safetyQuestionItemSchema,
+      investigationBoard: safetyQuestionItemSchema,
+      previousInterview: safetyQuestionItemSchema,
+      trainingCommitmentConflict: safetyQuestionItemSchema,
+      otherInfo: safetyQuestionItemSchema,
     }),
-    safetyExplanation: z.string().optional(),
     resumeFileName: z
       .string({ required_error: 'Resume is required for submission.' })
       .min(1, 'Resume is required for submission.'),
@@ -118,16 +130,6 @@ export const applicationFormSchema = z
         code: z.ZodIssueCode.custom,
         message: 'First class medical date is required.',
         path: ['firstClassMedicalDate'],
-      });
-    }
-    const hasYesAnswer = Object.values(data.safetyQuestions).some(
-      (answer) => answer === 'yes'
-    );
-    if (hasYesAnswer && !data.safetyExplanation) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Please explain all "Yes" answers.',
-        path: ['safetyExplanation'],
       });
     }
   });

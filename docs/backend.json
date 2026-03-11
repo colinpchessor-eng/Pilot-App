@@ -91,144 +91,20 @@
         "safetyQuestions": {
           "type": "object",
           "properties": {
-            "terminations": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "askedToResign": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "accidents": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "incidents": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "flightViolations": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "certificateAction": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "pendingFaaAction": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "failedCheckRide": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "formalDiscipline": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "investigationBoard": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "previousInterview": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "trainingCommitmentConflict": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            },
-            "otherInfo": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "enum": [
-                "yes",
-                "no"
-              ]
-            }
+            "terminations": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "askedToResign": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "accidents": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "incidents": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "flightViolations": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "certificateAction": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "pendingFaaAction": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "failedCheckRide": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "formalDiscipline": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "investigationBoard": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "previousInterview": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "trainingCommitmentConflict": { "$ref": "#/backend/entities/SafetyQuestion" },
+            "otherInfo": { "$ref": "#/backend/entities/SafetyQuestion" }
           }
-        },
-        "safetyExplanation": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Explanation for any 'yes' answers in the safety questionnaire."
         },
         "resumeFileName": {
           "type": [
@@ -299,6 +175,29 @@
         "totalHours",
         "duties"
       ]
+    },
+    "SafetyQuestion": {
+      "title": "Safety Question",
+      "description": "Represents a single safety question with an answer and an optional explanation.",
+      "type": "object",
+      "properties": {
+        "answer": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "yes",
+            "no"
+          ]
+        },
+        "explanation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   },
   "auth": {

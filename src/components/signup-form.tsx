@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import { triggerWelcomeEmail } from '@/app/actions';
+import type { ApplicantData } from '@/lib/types';
 
 export function SignupForm() {
   const router = useRouter();
@@ -54,12 +55,12 @@ export function SignupForm() {
       );
       const user = userCredential.user;
 
-      const userProfile = {
+      const userProfile: ApplicantData = {
         uid: user.uid,
         email: user.email,
         firstName: values.firstName,
         lastName: values.lastName,
-        createdAt: serverTimestamp(),
+        createdAt: serverTimestamp() as any,
         firstClassMedicalDate: null,
         atpNumber: null,
         flightTime: {
@@ -76,21 +77,20 @@ export function SignupForm() {
         typeRatings: '',
         employmentHistory: [],
         safetyQuestions: {
-          terminations: null,
-          askedToResign: null,
-          accidents: null,
-          incidents: null,
-          flightViolations: null,
-          certificateAction: null,
-          pendingFaaAction: null,
-          failedCheckRide: null,
-          formalDiscipline: null,
-          investigationBoard: null,
-          previousInterview: null,
-          trainingCommitmentConflict: null,
-          otherInfo: null,
+          terminations: { answer: null, explanation: null },
+          askedToResign: { answer: null, explanation: null },
+          accidents: { answer: null, explanation: null },
+          incidents: { answer: null, explanation: null },
+          flightViolations: { answer: null, explanation: null },
+          certificateAction: { answer: null, explanation: null },
+          pendingFaaAction: { answer: null, explanation: null },
+          failedCheckRide: { answer: null, explanation: null },
+          formalDiscipline: { answer: null, explanation: null },
+          investigationBoard: { answer: null, explanation: null },
+          previousInterview: { answer: null, explanation: null },
+          trainingCommitmentConflict: { answer: null, explanation: null },
+          otherInfo: { answer: null, explanation: null },
         },
-        safetyExplanation: null,
         resumeFileName: null,
         submittedAt: null,
         isCertified: false,
