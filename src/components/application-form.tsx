@@ -185,7 +185,17 @@ export function ApplicationForm({
     }
     
     return {
-      flightTime: data.flightTime,
+      flightTime: {
+        total: data.flightTime?.total ?? 0,
+        turbinePic: data.flightTime?.turbinePic ?? 0,
+        military: data.flightTime?.military ?? 0,
+        civilian: data.flightTime?.civilian ?? 0,
+        multiEngine: data.flightTime?.multiEngine ?? 0,
+        instructor: data.flightTime?.instructor ?? 0,
+        evaluator: data.flightTime?.evaluator ?? 0,
+        sic: data.flightTime?.sic ?? 0,
+        other: data.flightTime?.other ?? 0,
+      },
       firstClassMedicalDate: data.firstClassMedicalDate
         ? data.firstClassMedicalDate.toDate()
         : null,
