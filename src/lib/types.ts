@@ -30,11 +30,23 @@ export type ApplicantData = {
   typeRatings: { value: string }[];
   employmentHistory: EmploymentHistory[];
   safetyQuestions: {
-    incidents: 'yes' | 'no' | null;
+    terminations: 'yes' | 'no' | null;
+    askedToResign: 'yes' | 'no' | null;
     accidents: 'yes' | 'no' | null;
-    faaAction: 'yes' | 'no' | null;
+    incidents: 'yes' | 'no' | null;
+    flightViolations: 'yes' | 'no' | null;
+    certificateAction: 'yes' | 'no' | null;
+    pendingFaaAction: 'yes' | 'no' | null;
+    failedCheckRide: 'yes' | 'no' | null;
+    formalDiscipline: 'yes' | 'no' | null;
+    investigationBoard: 'yes' | 'no' | null;
+    previousInterview: 'yes' | 'no' | null;
+    trainingCommitmentConflict: 'yes' | 'no' | null;
+    otherInfo: 'yes' | 'no' | null;
   };
+  safetyExplanation: string | null;
   resumeFileName: string | null;
   submittedAt: Timestamp | null;
-  trainingCommitment: boolean;
+  isCertified: boolean;
+  printedName: string | null;
 };

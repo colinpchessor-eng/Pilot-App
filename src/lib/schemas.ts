@@ -59,44 +59,66 @@ export const employmentHistorySchema = z
     }
   });
 
-export const applicationFormSchema = z.object({
-  flightTime: z.object({
-    total: z.coerce.number().min(1, 'Total flight hours are required.'),
-    turbinePic: z.coerce.number().min(0, 'Cannot be negative.'),
-    military: z.coerce.number().min(0, 'Cannot be negative.'),
-    civilian: z.coerce.number().min(0, 'Cannot be negative.'),
-    multiEngine: z.coerce.number().min(0, 'Cannot be negative.'),
-    instructor: z.coerce.number().min(0, 'Cannot be negative.'),
-    evaluator: z.coerce.number().min(0, 'Cannot be negative.'),
-    sic: z.coerce.number().min(0, 'Cannot be negative.'),
-    other: z.coerce.number().min(0, 'Cannot be negative.'),
-  }),
-  typeRatings: z
-    .array(
-      z.object({ value: z.string().min(1, 'Type rating cannot be empty.') })
-    )
-    .min(1, 'At least one type rating is required.'),
-  employmentHistory: z
-    .array(employmentHistorySchema),
-  safetyQuestions: z.object({
-    incidents: z.enum(['yes', 'no'], {
-      required_error: 'You must select an answer.',
-    }),
-    accidents: z.enum(['yes', 'no'], {
-      required_error: 'You must select an answer.',
-    }),
-    faaAction: z.enum(['yes', 'no'], {
-      required_error: 'You must select an answer.',
-    }),
-  }),
-  resumeFileName: z
-    .string({ required_error: 'Resume is required for submission.' })
-    .min(1, 'Resume is required for submission.'),
-  trainingCommitment: z.literal(true, {
-    errorMap: () => ({
-      message: 'You must agree to the training commitment to submit.',
-    }),
-  }),
+const requiredEnum = z.enum(['yes', 'no'], {
+  required_error: 'You must select an answer.',
 });
+
+export const applicationFormSchema = z
+  .object({
+    flightTime: z.object({
+      total: z.coerce.number().min(1, 'Total flight hours are required.'),
+      turbinePic: z.coerce.number().min(0, 'Cannot be negative.'),
+      military: z.coerce.number().min(0, 'Cannot be negative.'),
+      civilian: z.coerce.number().min(0, 'Cannot be negative.'),
+      multiEngine: z.coerce.number().min(0, 'Cannot be negative.'),
+      instructor: z.coerce.number().min(0, 'Cannot be negative.'),
+      evaluator: z.coerce.number().min(0, 'Cannot be negative.'),
+      sic: z.coerce.number().min(0, 'Cannot be negative.'),
+      other: z.coerce.number().min(0, 'Cannot be negative.'),
+    }),
+    typeRatings: z
+      .array(
+        z.object({ value: z.string().min(1, 'Type rating cannot be empty.') })
+      )
+      .min(1, 'At least one type rating is required.'),
+    employmentHistory: z.array(employmentHistorySchema).optional(),
+    safetyQuestions: z.object({
+      terminations: requiredEnum,
+      askedToResign: requiredEnum,
+      accidents: requiredEnum,
+      incidents: requiredEnum,
+      flightViolations: requiredEnum,
+      certificateAction: requiredEnum,
+      pendingFaaAction: requiredEnum,
+      failedCheckRide: requiredEnum,
+      formalDiscipline: requiredEnum,
+      investigationBoard: requiredEnum,
+      previousInterview: requiredEnum,
+      trainingCommitmentConflict: requiredEnum,
+      otherInfo: requiredEnum,
+    }),
+    safetyExplanation: z.string().optional(),
+    resumeFileName: z
+      .string({ required_error: 'Resume is required for submission.' })
+      .min(1, 'Resume is required for submission.'),
+    isCertified: z.literal(true, {
+      errorMap: () => ({
+        message: 'You must certify your application to submit.',
+      }),
+    }),
+    printedName: z.string().min(1, 'You must enter your name to certify.'),
+  })
+  .superRefine((data, ctx) => {
+    const hasYesAnswer = Object.values(data.safetyQuestions).some(
+      (answer) => answer === 'yes'
+    );
+    if (hasYesAnswer && !data.safetyExplanation) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Please explain all "Yes" answers.',
+        path: ['safetyExplanation'],
+      });
+    }
+  });
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;

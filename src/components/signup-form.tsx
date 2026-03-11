@@ -74,13 +74,25 @@ export function SignupForm() {
         typeRatings: [],
         employmentHistory: [],
         safetyQuestions: {
-          incidents: null,
+          terminations: null,
+          askedToResign: null,
           accidents: null,
-          faaAction: null,
+          incidents: null,
+          flightViolations: null,
+          certificateAction: null,
+          pendingFaaAction: null,
+          failedCheckRide: null,
+          formalDiscipline: null,
+          investigationBoard: null,
+          previousInterview: null,
+          trainingCommitmentConflict: null,
+          otherInfo: null,
         },
+        safetyExplanation: null,
         resumeFileName: null,
         submittedAt: null,
-        trainingCommitment: false,
+        isCertified: false,
+        printedName: null,
       };
 
       const userDocRef = doc(firestore, 'users', user.uid);

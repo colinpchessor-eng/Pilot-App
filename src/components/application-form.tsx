@@ -80,9 +80,57 @@ const TABS = [
   { value: 'flight-time', label: 'Flight Time' },
   { value: 'type-ratings', label: 'Ratings & Certs' },
   { value: 'employment-history', label: 'Employment' },
-  { value: 'safety', label: 'Safety Questionnaire' },
   { value: 'resume', label: 'Resume' },
-  { value: 'submit', label: 'Review & Submit' },
+  { value: 'acknowledgment', label: 'Applicant Acknowledgment' },
+];
+
+const ACKNOWLEDGMENT_QUESTIONS = [
+  {
+    name: 'terminations',
+    label:
+      'Terminations or resignations in lieu of from any FAA covered positions?',
+  },
+  {
+    name: 'askedToResign',
+    label: 'Asked to resign from any FAA covered position?',
+  },
+  { name: 'accidents', label: 'Aircraft accidents?' },
+  { name: 'incidents', label: 'Aircraft Incidents?' },
+  { name: 'flightViolations', label: 'Flight violations?' },
+  { name: 'certificateAction', label: 'Certificate suspension/revocation?' },
+  {
+    name: 'pendingFaaAction',
+    label: 'Pending FAA Action/Letters of investigation?',
+  },
+  {
+    name: 'failedCheckRide',
+    label:
+      'Have you ever failed a flight check ride, proficiency check, flight eval, or upgrade attempt aircraft or while compensated as a professional pilot?',
+  },
+  {
+    name: 'formalDiscipline',
+    label: 'Have you ever received formal discipline from your?',
+  },
+  {
+    name: 'investigationBoard',
+    label:
+      'Have you ever been called before a field board of investigation for any reason?',
+  },
+  {
+    name: 'previousInterview',
+    label:
+      'Have you previously interviewed for the following positions at Fedex (not counting the one that you were hired under)?',
+  },
+  {
+    name: 'trainingCommitmentConflict',
+    label:
+      'Do you have any commitment that will not allow you to enter and complete uninterrupted a training syllabus of approximately 10 weeks once commenced?',
+  },
+  {
+    name: 'otherInfo',
+    label:
+      'Is there anything else you feel warrants and that you would like to bring up at this time?',
+  },
 ];
 
 export function ApplicationForm({
@@ -110,8 +158,10 @@ export function ApplicationForm({
         isCurrent: !eh.endDate,
       })),
       safetyQuestions: applicantData.safetyQuestions,
+      safetyExplanation: applicantData.safetyExplanation ?? undefined,
       resumeFileName: applicantData.resumeFileName ?? undefined,
-      trainingCommitment: applicantData.trainingCommitment ?? false,
+      isCertified: applicantData.isCertified ?? false,
+      printedName: applicantData.printedName ?? undefined,
     },
     mode: 'onChange',
   });
@@ -124,10 +174,12 @@ export function ApplicationForm({
   );
 
   const employmentHistory = form.watch('employmentHistory');
-  const hasEmploymentHistory = employmentHistory && employmentHistory.length > 0;
+  const hasEmploymentHistory =
+    employmentHistory && employmentHistory.length > 0;
 
   const [employmentConfirmed, setEmploymentConfirmed] = React.useState(
-    applicantData.employmentHistory && applicantData.employmentHistory.length > 0
+    !applicantData.employmentHistory ||
+      applicantData.employmentHistory.length === 0
   );
 
   const {
@@ -148,6 +200,11 @@ export function ApplicationForm({
     name: 'employmentHistory',
   });
 
+  const safetyAnswers = form.watch('safetyQuestions');
+  const showExplanation = Object.values(safetyAnswers || {}).some(
+    (answer) => answer === 'yes'
+  );
+
   const handleTabChange = async (direction: 'next' | 'prev') => {
     const currentTabIndex = TABS.findIndex((tab) => tab.value === activeTab);
     const isNext = direction === 'next';
@@ -155,14 +212,11 @@ export function ApplicationForm({
     if (isNext) {
       const fieldsToValidate = TABS[currentTabIndex]
         .value as keyof ApplicationFormValues;
-      // If sections are confirmed, we don't need to validate them for navigation
       if (fieldsToValidate === 'type-ratings' && ratingsConfirmed) {
-        // skip validation
       } else if (
         fieldsToValidate === 'employment-history' &&
         employmentConfirmed
       ) {
-        // skip validation
       } else {
         const isValid = await form.trigger(fieldsToValidate as any);
         if (!isValid) return;
@@ -214,8 +268,6 @@ export function ApplicationForm({
         variant: 'default',
         duration: 5000,
       });
-      // The form is not reset to allow viewing submitted data.
-      // A submitted status should lock the form.
     } else {
       toast({
         variant: 'destructive',
@@ -228,7 +280,7 @@ export function ApplicationForm({
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (!user) return;
-      if (name !== 'trainingCommitment') {
+      if (name !== 'isCertified' && name !== 'printedName') {
         setIsSaving(true);
         const timer = setTimeout(async () => {
           await saveApplication(user.uid, value);
@@ -280,7 +332,7 @@ export function ApplicationForm({
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-5">
               {TABS.map((tab) => (
                 <TabsTrigger key={tab.value} value={tab.value}>
                   {tab.label}
@@ -524,7 +576,8 @@ export function ApplicationForm({
                         Add Rating / Certificate
                       </Button>
                       <FormDescription>
-                        At a minimum, please add your FAA ATP certificate to continue.
+                        At a minimum, please add your FAA ATP certificate to
+                        continue.
                       </FormDescription>
                       {form.formState.errors.typeRatings && (
                         <p className="text-sm font-medium text-destructive">
@@ -874,113 +927,6 @@ export function ApplicationForm({
                 </CardContent>
               </TabsContent>
 
-              <TabsContent value="safety">
-                <CardHeader>
-                  <CardTitle>Safety Questionnaire</CardTitle>
-                  <CardDescription>
-                    Please answer the following questions honestly.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="safetyQuestions.incidents"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>
-                          Have you ever had any aircraft incidents?
-                        </FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex items-center gap-4"
-                          >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="yes" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Yes</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="no" />
-                              </FormControl>
-                              <FormLabel className="font-normal">No</FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="safetyQuestions.accidents"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>
-                          Have you ever had any aircraft accidents?
-                        </FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex items-center gap-4"
-                          >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="yes" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Yes</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="no" />
-                              </FormControl>
-                              <FormLabel className="font-normal">No</FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="safetyQuestions.faaAction"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>
-                          Have you ever been subject to FAA enforcement action?
-                        </FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex items-center gap-4"
-                          >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="yes" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Yes</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="no" />
-                              </FormControl>
-                              <FormLabel className="font-normal">No</FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </TabsContent>
-
               <TabsContent value="resume">
                 <CardHeader>
                   <CardTitle>Upload Resume</CardTitle>
@@ -1047,44 +993,132 @@ export function ApplicationForm({
                 </CardContent>
               </TabsContent>
 
-              <TabsContent value="submit">
+              <TabsContent value="acknowledgment">
                 <CardHeader>
-                  <CardTitle>Review & Submit</CardTitle>
+                  <CardTitle>Applicant Acknowledgment</CardTitle>
                   <CardDescription>
-                    {isSubmitted
-                      ? 'Your application has been submitted.'
-                      : 'Please review your application and confirm your commitment.'}
+                    Please update the information you provided on your
+                    application for employment. Indicate whether there have been
+                    any changes or updates to your responses to the following
+                    questions. Also indicate whether there have been any changes
+                    in your employment status, specifically if there was a
+                    resignation in lieu of termination or a termination of your
+                    employment. Please respond "yes" or "no" to each question
+                    and explain each "yes" response below.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="trainingCommitment"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Training Commitment</FormLabel>
-                          <FormDescription>
-                            I confirm I can commit to the 10-week training
-                            syllabus if my application is successful.
-                          </FormDescription>
+                <CardContent className="space-y-8">
+                  {ACKNOWLEDGMENT_QUESTIONS.map((q) => (
+                    <FormField
+                      key={q.name}
+                      control={form.control}
+                      name={`safetyQuestions.${q.name as keyof ApplicationFormValues['safetyQuestions']}`}
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>{q.label}</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex items-center gap-4"
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="yes" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Yes
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="no" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  No
+                                </FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
                           <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
 
-                  <p className="text-sm text-muted-foreground">
-                    By clicking "Submit Application", you certify that all
-                    information provided is true and complete to the best of
-                    your knowledge.
-                  </p>
+                  {showExplanation && (
+                    <FormField
+                      control={form.control}
+                      name="safetyExplanation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Explanation</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Please explain all 'Yes' answers here."
+                              rows={5}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <div className="space-y-6 pt-6 border-t">
+                    <FormField
+                      control={form.control}
+                      name="isCertified"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>
+                              I certify the above information is complete and
+                              accurate.
+                            </FormLabel>
+                            <FormDescription>
+                              I acknowledge and agree that if the company learns
+                              the information is inaccurate or incomplete,
+                              regardless of when, it is a sufficient basis to
+                              either immediately rescind a conditional job offer
+                              or terminate my employment.
+                            </FormDescription>
+                            <FormMessage />
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="printedName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Printed Name (as digital signature)
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your full name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      By clicking "Submit Application", you certify that all
+                      information provided is true and complete to the best of
+                      your knowledge.
+                    </p>
+                  </div>
                 </CardContent>
               </TabsContent>
             </Card>

@@ -76,7 +76,17 @@
         "safetyQuestions": {
           "type": "object",
           "properties": {
-            "incidents": {
+            "terminations": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "askedToResign": {
               "type": [
                 "string",
                 "null"
@@ -96,7 +106,97 @@
                 "no"
               ]
             },
-            "faaAction": {
+            "incidents": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "flightViolations": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "certificateAction": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "pendingFaaAction": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "failedCheckRide": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "formalDiscipline": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "investigationBoard": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "previousInterview": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "trainingCommitmentConflict": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "yes",
+                "no"
+              ]
+            },
+            "otherInfo": {
               "type": [
                 "string",
                 "null"
@@ -107,6 +207,13 @@
               ]
             }
           }
+        },
+        "safetyExplanation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Explanation for any 'yes' answers in the safety questionnaire."
         },
         "resumeFileName": {
           "type": [
@@ -121,8 +228,16 @@
           ],
           "format": "date-time"
         },
-        "trainingCommitment": {
-          "type": "boolean"
+        "isCertified": {
+          "type": "boolean",
+          "description": "Whether the user has certified their application."
+        },
+        "printedName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The user's printed name for certification."
         }
       },
       "required": [
