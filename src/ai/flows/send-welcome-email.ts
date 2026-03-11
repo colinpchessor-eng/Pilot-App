@@ -36,11 +36,11 @@ const sendWelcomeEmailFlow = ai.defineFlow(
       console.log(`
       --- SKIPPED Welcome Email ---
       To: ${input.email}
-      Subject: Welcome to the FedEx Pilot Application Portal!
+      Subject: Welcome to FedexFlow!
       
       Hi ${input.name || 'there'},
 
-      Thank you for creating an account. We're excited to have you on board.
+      Thank you for creating an account on FedexFlow. We're excited to have you on board.
       You can now log in and start your application.
 
       Best,
@@ -55,8 +55,8 @@ const sendWelcomeEmailFlow = ai.defineFlow(
       await resend.emails.send({
         from: fromAddress,
         to: input.email,
-        subject: 'Welcome to the FedEx Pilot Application Portal!',
-        text: `Hi ${input.name || 'there'},\n\nThank you for creating an account. We're excited to have you on board.\nYou can now log in and start your application.\n\nBest,\nThe FedEx Pilot Recruitment Team`,
+        subject: 'Welcome to FedexFlow!',
+        text: `Hi ${input.name || 'there'},\n\nThank you for creating an account on FedexFlow. We're excited to have you on board.\nYou can now log in and start your application.\n\nBest,\nThe FedEx Pilot Recruitment Team`,
       });
       console.log(`Welcome email sent to ${input.email} via Resend.`);
     } catch (error) {

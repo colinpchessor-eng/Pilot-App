@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'FedEx Pilot Application Portal',
-  description: 'Apply to become a pilot for FedEx.',
+  title: 'FedexFlow',
+  description: 'Pilot application portal for FedEx.',
 };
 
 export default function RootLayout({

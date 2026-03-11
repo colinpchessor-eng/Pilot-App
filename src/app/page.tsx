@@ -15,11 +15,11 @@ export default function Home() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-md">
-        <Card className="shadow-lg">
+        <Card className="shadow-lg transition-shadow duration-300 hover:shadow-xl">
           <CardHeader className="items-center text-center">
             <Icons.logo className="h-12 w-auto" />
             <CardTitle className="pt-4 text-2xl font-bold">
-              Pilot Application Portal
+              FedexFlow
             </CardTitle>
             <CardDescription className="pt-2">
               Please sign in to access your application.

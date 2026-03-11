@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto max-w-3xl py-10">
-      <Card className="shadow-lg">
+      <Card className="shadow-lg transition-shadow duration-300 hover:shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">
             Welcome, {fullName || user?.email}!
