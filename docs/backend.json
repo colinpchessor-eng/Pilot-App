@@ -123,6 +123,10 @@
             "null"
           ],
           "description": "The user's printed name for certification."
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Whether the user has administrator privileges."
         }
       },
       "required": [

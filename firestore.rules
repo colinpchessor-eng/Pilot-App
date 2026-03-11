@@ -2,18 +2,33 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      // Check the admin flag on the user's document that is making the request.
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
     match /users/{userId} {
-      // A user can read their own profile.
-      allow read: if request.auth.uid == userId;
+      // CREATE: A user can create their own profile.
+      allow create: if isOwner(userId);
 
-      // A user can create their own profile.
-      allow create: if request.auth.uid == userId;
+      // READ: A user can read their own profile. An admin can read any profile.
+      allow get: if isOwner(userId) || isAdmin();
+      
+      // LIST: An admin can list all user profiles.
+      allow list: if isAdmin();
 
-      // A user can update their profile only if it has not been submitted yet.
-      // `resource.data` refers to the document's state *before* the update.
-      allow update: if request.auth.uid == userId && resource.data.submittedAt == null;
+      // UPDATE:
+      // 1. A user can update their own profile if it hasn't been submitted.
+      // 2. An admin can update any user's profile.
+      allow update: if (isOwner(userId) && resource.data.submittedAt == null) || isAdmin();
 
-      // Users cannot delete their own profile.
+      // DELETE: Nobody can delete profiles.
       allow delete: if false;
     }
   }

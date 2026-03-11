@@ -1,3 +1,4 @@
+
 import { Timestamp } from 'firebase/firestore';
 
 export type EmploymentHistory = {
@@ -21,6 +22,7 @@ export type ApplicantData = {
   firstName: string | null;
   lastName: string | null;
   createdAt: Timestamp;
+  isAdmin?: boolean;
   firstClassMedicalDate: Timestamp | null;
   atpNumber: string | null;
   flightTime: {

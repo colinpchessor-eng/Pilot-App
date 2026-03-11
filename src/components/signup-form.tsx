@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -61,6 +62,7 @@ export function SignupForm() {
         firstName: values.firstName,
         lastName: values.lastName,
         createdAt: serverTimestamp() as any,
+        isAdmin: values.email.toLowerCase() === 'fedexadmin@fedex.com',
         firstClassMedicalDate: null,
         atpNumber: null,
         flightTime: {
@@ -106,7 +108,12 @@ export function SignupForm() {
         title: 'Account Created!',
         description: "You've been successfully signed up.",
       });
-      router.push('/dashboard');
+
+      if (userProfile.isAdmin) {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error) {
       let description = 'An unexpected error occurred. Please try again.';
 
