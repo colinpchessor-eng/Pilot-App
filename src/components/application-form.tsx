@@ -240,20 +240,41 @@ export function ApplicationForm({
   const handleTabChange = async (direction: 'next' | 'prev') => {
     const currentTabIndex = TABS.findIndex((tab) => tab.value === activeTab);
     const isNext = direction === 'next';
-
+  
     if (isNext) {
-      const fieldsToValidate = TABS[currentTabIndex]
-        .value as keyof ApplicationFormValues;
-      if (
-        fieldsToValidate === 'employment-history' &&
-        employmentConfirmed
-      ) {
-      } else {
-        const isValid = await form.trigger(fieldsToValidate as any);
-        if (!isValid) return;
+      const currentTabValue = TABS[currentTabIndex].value;
+      let fieldsToValidate: (keyof ApplicationFormValues)[] | keyof ApplicationFormValues | undefined;
+  
+      switch (currentTabValue) {
+        case 'flight-time':
+          fieldsToValidate = 'flightTime';
+          break;
+        case 'type-ratings':
+          fieldsToValidate = ['firstClassMedicalDate', 'atpNumber', 'typeRatings'];
+          break;
+        case 'employment-history':
+          if (!employmentConfirmed) {
+            fieldsToValidate = 'employmentHistory';
+          }
+          break;
+        case 'acknowledgment':
+          // No validation needed when clicking "Next" as it's the last tab
+          break;
+      }
+  
+      if (fieldsToValidate) {
+        const isValid = await form.trigger(fieldsToValidate);
+        if (!isValid) {
+          toast({
+            variant: 'destructive',
+            title: 'Incomplete Information',
+            description: 'Please review the current section for errors before continuing.',
+          });
+          return;
+        }
       }
     }
-
+  
     const nextTabIndex = isNext ? currentTabIndex + 1 : currentTabIndex - 1;
     if (nextTabIndex >= 0 && nextTabIndex < TABS.length) {
       setActiveTab(TABS[nextTabIndex].value);
