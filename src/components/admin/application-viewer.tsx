@@ -9,6 +9,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { Badge } from '../ui/badge';
+import { Icons } from '../icons';
+import { cn } from '@/lib/utils';
 
 const ACKNOWLEDGMENT_QUESTIONS_MAP: Record<string, string> = {
     terminations: 'Terminations or resignations in lieu of from any FAA covered positions?',
@@ -26,12 +28,26 @@ const ACKNOWLEDGMENT_QUESTIONS_MAP: Record<string, string> = {
     otherInfo: 'Is there anything else you feel warrants and that you would like to bring up at this time?',
 };
 
+const SAFETY_INCIDENTS_QUESTIONS = [
+    'terminations', 'askedToResign', 'accidents', 'incidents',
+    'flightViolations', 'certificateAction', 'pendingFaaAction',
+    'investigationBoard', 'formalDiscipline'
+];
+
+const TRAINING_QUESTIONS = [
+    'failedCheckRide', 'trainingCommitmentConflict',
+];
+
+const OTHER_QUESTIONS = [
+    'previousInterview', 'otherInfo'
+];
+
 
 function DetailItem({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-3 gap-4">
-      <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-      <dd className="col-span-2 text-sm">{value || 'N/A'}</dd>
+    <div className="grid grid-cols-3 gap-4 py-2">
+      <dt className="text-sm font-medium text-muted-foreground print-sans">{label}</dt>
+      <dd className="col-span-2 text-sm print-mono">{value || 'N/A'}</dd>
     </div>
   );
 }
@@ -41,21 +57,37 @@ function SafetyQuestionItem({ questionKey, questionData }: { questionKey: string
     if (!questionLabel) return null;
 
     return (
-        <div className="space-y-2 rounded-md border p-4">
-            <p className="font-medium">{questionLabel}</p>
+        <div className={cn(
+            'space-y-2 rounded-md border p-4',
+             questionData.answer === 'yes' && 'print-highlight-yes'
+        )}>
+            <p className="font-medium print-sans">{questionLabel}</p>
             <div className='flex items-center gap-2'>
-                <p className="text-muted-foreground">Answer:</p>
+                <p className="text-muted-foreground print-sans">Answer:</p>
                 <Badge variant={questionData.answer === 'yes' ? 'destructive' : 'secondary'}>
                     {questionData.answer?.toUpperCase() ?? 'Not Answered'}
                 </Badge>
             </div>
             {questionData.answer === 'yes' && (
                 <div className='space-y-1'>
-                    <p className="text-muted-foreground">Explanation:</p>
-                    <p className="text-sm pl-4 border-l-2 ml-2">{questionData.explanation || 'No explanation provided.'}</p>
+                    <p className="text-muted-foreground print-sans">Explanation:</p>
+                    <p className="text-sm pl-4 border-l-2 ml-2 print-mono">{questionData.explanation || 'No explanation provided.'}</p>
                 </div>
             )}
         </div>
+    );
+}
+
+function SectionWrapper({ title, children, className }: { title: string, children: React.ReactNode, className?: string }) {
+    return (
+        <Card className={cn("print:shadow-none print:border-none print:p-0", className)}>
+            <CardHeader>
+                <CardTitle>{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {children}
+            </CardContent>
+        </Card>
     );
 }
 
@@ -63,14 +95,21 @@ export function ApplicationViewer({ applicantData }: { applicantData: ApplicantD
   const fullName = [applicantData.firstName, applicantData.lastName].filter(Boolean).join(' ');
 
   return (
-    <div className="space-y-6 print:space-y-4">
+    <div className="space-y-6 print:space-y-4 print-sans">
+      <div className="hidden print:block text-center mb-8">
+          <Icons.logo className="h-12 w-auto mx-auto" />
+          <h1 className="text-xl font-bold mt-4 uppercase">
+              PILOT APPLICATION SUMMARY - CANDIDATE ID: <span className="print-mono">{applicantData.uid}</span>
+          </h1>
+      </div>
+
       <Card className="print:shadow-none print:border-none print:p-0">
         <CardHeader>
           <CardTitle className="text-2xl">{fullName}</CardTitle>
           <CardDescription>{applicantData.email}</CardDescription>
         </CardHeader>
         <CardContent>
-          <dl className="space-y-4">
+          <dl className="space-y-2">
             <DetailItem label="Submitted On" value={applicantData.submittedAt ? format(applicantData.submittedAt.toDate(), 'PPP p') : 'N/A'} />
             <DetailItem label="ATP Number" value={applicantData.atpNumber} />
             <DetailItem label="First Class Medical Date" value={applicantData.firstClassMedicalDate ? format(applicantData.firstClassMedicalDate.toDate(), 'PPP') : 'N/A'} />
@@ -78,39 +117,33 @@ export function ApplicationViewer({ applicantData }: { applicantData: ApplicantD
         </CardContent>
       </Card>
 
-      <Card className="print:shadow-none print:border-none print:p-0">
-        <CardHeader>
-          <CardTitle>Flight Time</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
-            <DetailItem label="Total Hours" value={applicantData.flightTime.total} />
-            <DetailItem label="Turbine PIC" value={applicantData.flightTime.turbinePic} />
-            <DetailItem label="Multi-Engine" value={applicantData.flightTime.multiEngine} />
-            <DetailItem label="Military" value={applicantData.flightTime.military} />
-            <DetailItem label="Civilian" value={applicantData.flightTime.civilian} />
-            <DetailItem label="Instructor" value={applicantData.flightTime.instructor} />
-            <DetailItem label="Evaluator" value={applicantData.flightTime.evaluator} />
-            <DetailItem label="SIC" value={applicantData.flightTime.sic} />
-            <DetailItem label="Other" value={applicantData.flightTime.other} />
-          </dl>
-        </CardContent>
-      </Card>
+      <SectionWrapper title="Flight Time" className="print-page-break">
+        <table className="w-full text-sm">
+            <thead>
+                <tr className="border-b">
+                    <th className="text-left py-2 px-2 print-sans">Category</th>
+                    <th className="text-right py-2 px-2 print-sans">Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                {Object.entries(applicantData.flightTime).map(([key, value], index) => (
+                    <tr key={key} className={cn("border-b", index % 2 === 0 ? "bg-muted/50" : "")}>
+                        <td className="py-2 px-2 capitalize print-sans">
+                            {key.replace(/([A-Z])/g, ' $1').replace('Pic', 'PIC')}
+                        </td>
+                        <td className="py-2 px-2 text-right print-mono">{value}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+      </SectionWrapper>
 
-      <Card className="print:shadow-none print:border-none print:p-0">
-        <CardHeader>
-            <CardTitle>Aeronautical Ratings and Certificates</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <p className="whitespace-pre-wrap">{applicantData.typeRatings || 'N/A'}</p>
-        </CardContent>
-      </Card>
+      <SectionWrapper title="Aeronautical Ratings and Certificates" className="print-page-break">
+        <p className="whitespace-pre-wrap print-mono">{applicantData.typeRatings || 'N/A'}</p>
+      </SectionWrapper>
 
-      <Card className="print:shadow-none print:border-none print:p-0">
-        <CardHeader>
-          <CardTitle>Employment History</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <SectionWrapper title="Employment History" className="print-page-break">
+         <div className="space-y-6">
           {applicantData.employmentHistory && applicantData.employmentHistory.length > 0 ? (
             applicantData.employmentHistory.map((job, index) => (
               <div key={index} className="space-y-4">
@@ -124,7 +157,7 @@ export function ApplicationViewer({ applicantData }: { applicantData: ApplicantD
                 <dl className="space-y-2">
                     <DetailItem label="Aircraft Flown" value={job.aircraftTypes} />
                     <DetailItem label="Total Hours" value={job.totalHours} />
-                    <DetailItem label="Duties" value={<p className="whitespace-pre-wrap">{job.duties}</p>} />
+                    <DetailItem label="Duties" value={<p className="whitespace-pre-wrap print-mono">{job.duties}</p>} />
                 </dl>
                 {index < applicantData.employmentHistory.length - 1 && <Separator />}
               </div>
@@ -132,17 +165,41 @@ export function ApplicationViewer({ applicantData }: { applicantData: ApplicantD
           ) : (
             <p>No employment history provided.</p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </SectionWrapper>
 
-      <Card className="print:shadow-none print:border-none print:p-0">
+      <Card className="print:shadow-none print:border-none print:p-0 print-page-break">
         <CardHeader>
             <CardTitle>Applicant Acknowledgment</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-            {Object.entries(applicantData.safetyQuestions).map(([key, value]) => (
-                <SafetyQuestionItem key={key} questionKey={key} questionData={value} />
-            ))}
+        <CardContent className="space-y-8">
+            <div>
+                <h3 className="text-lg font-semibold mb-4 border-b pb-2">Safety & Incidents</h3>
+                <div className="space-y-4">
+                    {SAFETY_INCIDENTS_QUESTIONS.map(key => (
+                         <SafetyQuestionItem key={key} questionKey={key} questionData={applicantData.safetyQuestions[key as keyof typeof applicantData.safetyQuestions]} />
+                    ))}
+                </div>
+            </div>
+
+             <div>
+                <h3 className="text-lg font-semibold mb-4 border-b pb-2">Training & Commitment</h3>
+                <div className="space-y-4">
+                     {TRAINING_QUESTIONS.map(key => (
+                         <SafetyQuestionItem key={key} questionKey={key} questionData={applicantData.safetyQuestions[key as keyof typeof applicantData.safetyQuestions]} />
+                    ))}
+                </div>
+            </div>
+
+            <div>
+                <h3 className="text-lg font-semibold mb-4 border-b pb-2">Additional Information</h3>
+                <div className="space-y-4">
+                     {OTHER_QUESTIONS.map(key => (
+                         <SafetyQuestionItem key={key} questionKey={key} questionData={applicantData.safetyQuestions[key as keyof typeof applicantData.safetyQuestions]} />
+                    ))}
+                </div>
+            </div>
+            
              <Separator className="my-6" />
              <div className='space-y-4'>
                 <h3 className='font-semibold'>Certification</h3>
@@ -151,7 +208,6 @@ export function ApplicationViewer({ applicantData }: { applicantData: ApplicantD
              </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }
