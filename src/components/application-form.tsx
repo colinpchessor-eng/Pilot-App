@@ -395,6 +395,19 @@ export function ApplicationForm({
     }
   };
 
+  const handleFinalSubmitClick = async () => {
+    // Manually trigger validation on all form fields.
+    const isValid = await form.trigger();
+    if (isValid) {
+      // If the form is valid, show the confirmation dialog.
+      setShowSubmitDialog(true);
+    } else {
+      // If the form is invalid, use the existing onInvalid logic to find the
+      // first error and alert the user.
+      onInvalid(form.formState.errors);
+    }
+  };
+
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (!user || !firestore) return;
@@ -429,12 +442,7 @@ export function ApplicationForm({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(
-          () => setShowSubmitDialog(true),
-          onInvalid
-        )}
-      >
+      <form onSubmit={(e) => e.preventDefault()}>
         <fieldset disabled={isSubmitted}>
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -1239,10 +1247,11 @@ export function ApplicationForm({
               </Button>
             ) : (
               <Button
-                type="submit"
+                type="button"
                 variant="accent"
                 className="bg-accent hover:bg-accent/90"
                 disabled={isSubmitting || isSubmitted}
+                onClick={handleFinalSubmitClick}
               >
                 {isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
