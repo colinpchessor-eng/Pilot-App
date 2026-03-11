@@ -79,7 +79,7 @@ const safetyQuestionItemSchema = z
 export const applicationFormSchema = z
   .object({
     flightTime: z.object({
-      total: z.coerce.number().min(1, 'Total flight hours are required.'),
+      total: z.coerce.number().min(0, 'Cannot be negative.'),
       turbinePic: z.coerce.number().min(0, 'Cannot be negative.'),
       military: z.coerce.number().min(0, 'Cannot be negative.'),
       civilian: z.coerce.number().min(0, 'Cannot be negative.'),
