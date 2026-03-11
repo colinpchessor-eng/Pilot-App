@@ -12,7 +12,10 @@ export async function saveApplication(userId: string, data: any) {
 
   const docRef = doc(firestore, 'users', userId);
 
-  setDoc(docRef, data, { merge: true }).catch((serverError) => {
+  try {
+    await setDoc(docRef, data, { merge: true });
+    return { success: true, message: 'Progress saved successfully.' };
+  } catch (serverError) {
     const permissionError = new FirestorePermissionError({
       path: docRef.path,
       operation: 'update',
@@ -23,9 +26,7 @@ export async function saveApplication(userId: string, data: any) {
       success: false,
       message: 'Failed to save progress due to permissions.',
     };
-  });
-
-  return { success: true, message: 'Progress saved successfully.' };
+  }
 }
 
 export async function submitApplication(userId: string, data: any) {
@@ -39,7 +40,10 @@ export async function submitApplication(userId: string, data: any) {
     status: 'Completed',
   };
 
-  setDoc(docRef, submissionData, { merge: true }).catch((serverError) => {
+  try {
+    await setDoc(docRef, submissionData, { merge: true });
+    return { success: true, message: 'Application submitted successfully!' };
+  } catch (serverError) {
     const permissionError = new FirestorePermissionError({
       path: docRef.path,
       operation: 'update',
@@ -50,9 +54,7 @@ export async function submitApplication(userId: string, data: any) {
       success: false,
       message: 'Failed to submit application due to permissions.',
     };
-  });
-
-  return { success: true, message: 'Application submitted successfully!' };
+  }
 }
 
 export async function triggerWelcomeEmail(email: string, name: string | null) {
