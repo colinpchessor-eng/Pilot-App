@@ -43,10 +43,6 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import {
-  saveApplication,
-  submitApplication,
-} from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from './ui/checkbox';
 import { cn } from '@/lib/utils';
@@ -60,7 +56,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format } from 'date-fns';
 import { Calendar } from './ui/calendar';
@@ -136,6 +135,7 @@ export function ApplicationForm({
 }) {
   const router = useRouter();
   const { user } = useUser();
+  const firestore = useFirestore();
   const [activeTab, setActiveTab] = React.useState(TABS[0].value);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -260,28 +260,39 @@ export function ApplicationForm({
     }
   };
 
-  const onSubmit = async (values: ApplicationFormValues) => {
-    if (!user) return;
+  const onSubmit = (values: ApplicationFormValues) => {
+    if (!user || !firestore) return;
     setIsSubmitting(true);
-    const result = await submitApplication(user.uid, values);
-    setIsSubmitting(false);
-    setShowSubmitDialog(false);
 
-    if (result.success) {
-      toast({
-        title: 'Application Submitted!',
-        description: 'Thank you for your interest in FedEx.',
-        variant: 'default',
-        duration: 5000,
+    const docRef = doc(firestore, 'users', user.uid);
+    const submissionData = {
+      ...values,
+      submittedAt: serverTimestamp(),
+    };
+
+    setDoc(docRef, submissionData, { merge: true })
+      .then(() => {
+        toast({
+          title: 'Application Submitted!',
+          description: 'Thank you for your interest in FedEx.',
+          variant: 'default',
+          duration: 5000,
+        });
+        router.push('/dashboard');
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: submissionData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        // The listener will show a toast.
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+        setShowSubmitDialog(false);
       });
-      router.push('/dashboard');
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Submission Failed',
-        description: result.message,
-      });
-    }
   };
 
   const onInvalid = (errors: any) => {
@@ -365,18 +376,33 @@ export function ApplicationForm({
 
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
-      if (!user) return;
+      if (!user || !firestore) return;
       if (name !== 'isCertified' && name !== 'printedName') {
         setIsSaving(true);
-        const timer = setTimeout(async () => {
-          await saveApplication(user.uid, value);
-          setIsSaving(false);
+        const timer = setTimeout(() => {
+          const docRef = doc(firestore, 'users', user.uid);
+          setDoc(docRef, value, { merge: true })
+            .catch((serverError) => {
+              const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'update',
+                requestResourceData: value,
+              });
+              errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+              setIsSaving(false);
+            });
         }, 1000);
         return () => clearTimeout(timer);
       }
     });
     return () => subscription.unsubscribe();
-  }, [form, user]);
+  }, [form, user, firestore]);
+
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
 
   const isSubmitted = !!applicantData.submittedAt;
 

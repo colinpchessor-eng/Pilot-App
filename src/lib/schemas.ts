@@ -65,6 +65,13 @@ const safetyQuestionItemSchema = z
     explanation: z.string().nullable().optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.answer === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'You must select an answer.',
+        path: ['answer'],
+      });
+    }
     if (data.answer === 'yes' && (!data.explanation || data.explanation.trim() === '')) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -98,19 +105,19 @@ export const applicationFormSchema = z
       .min(1, 'At least one rating or certificate is required.'),
     employmentHistory: z.array(employmentHistorySchema).optional(),
     safetyQuestions: z.object({
-      terminations: safetyQuestionItemSchema,
-      askedToResign: safetyQuestionItemSchema,
-      accidents: safetyQuestionItemSchema,
-      incidents: safetyQuestionItemSchema,
-      flightViolations: safetyQuestionItemSchema,
-      certificateAction: safetyQuestionItemSchema,
-      pendingFaaAction: safetyQuestionItemSchema,
-      failedCheckRide: safetyQuestionItemSchema,
-      formalDiscipline: safetyQuestionItemSchema,
-      investigationBoard: safetyQuestionItemSchema,
-      previousInterview: safetyQuestionItemSchema,
-      trainingCommitmentConflict: safetyQuestionItemSchema,
-      otherInfo: safetyQuestionItemSchema,
+      terminations: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      askedToResign: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      accidents: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      incidents: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      flightViolations: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      certificateAction: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      pendingFaaAction: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      failedCheckRide: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      formalDiscipline: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      investigationBoard: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      previousInterview: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      trainingCommitmentConflict: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
+      otherInfo: safetyQuestionItemSchema.superRefine((data, ctx) => { if (data.answer === null) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'You must select an answer.', path: ['answer'], }); } }),
     }),
     isCertified: z.literal(true, {
       errorMap: () => ({
@@ -127,18 +134,6 @@ export const applicationFormSchema = z
         path: ['firstClassMedicalDate'],
       });
     }
-
-    Object.keys(data.safetyQuestions).forEach((keyStr) => {
-      const key = keyStr as keyof typeof data.safetyQuestions;
-      const question = data.safetyQuestions[key];
-      if (question.answer === null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'You must select an answer.',
-          path: [`safetyQuestions.${key}.answer`],
-        });
-      }
-    });
   });
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
