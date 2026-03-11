@@ -59,18 +59,21 @@ export default function AdminLayout({
     );
   }
 
+  const isDashboardActive = pathname === '/admin' || pathname.startsWith('/admin/applications');
+
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
-        <AdminHeader />
+        <AdminHeader className="print:hidden"/>
         <div className="flex flex-1">
-          <Sidebar collapsible="icon" className="hidden lg:flex">
+          <Sidebar collapsible="icon" className="hidden lg:flex print:hidden">
             <SidebarContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === '/admin'}
+                    isActive={isDashboardActive}
                     tooltip="Dashboard"
                   >
                     <Link href="/admin">
@@ -95,7 +98,7 @@ export default function AdminLayout({
             </SidebarContent>
           </Sidebar>
           <div className="flex flex-1 flex-col">
-            <main className="flex-1 p-4 sm:p-6">{children}</main>
+            <main className="flex-1 p-4 sm:p-6 print:p-0">{children}</main>
           </div>
         </div>
       </div>

@@ -94,4 +94,25 @@
       );
     background-size: 4rem 4rem;
   }
+
+  @media print {
+    .print\:hidden {
+      display: none;
+    }
+    body {
+      background: white;
+    }
+    main {
+      padding: 0;
+    }
+    .print\:shadow-none {
+      box-shadow: none;
+    }
+    .print\:border-none {
+      border: none;
+    }
+    .print\:p-0 {
+        padding: 0;
+    }
+  }
 }

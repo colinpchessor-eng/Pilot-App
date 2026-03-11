@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
-export function AdminHeader() {
+export function AdminHeader({ className }: { className?: string }) {
   const { user } = useUser();
   const router = useRouter();
 
@@ -28,7 +29,7 @@ export function AdminHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
+    <header className={cn("sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6", className)}>
       <Link
         href="/admin"
         className="flex items-center gap-2"

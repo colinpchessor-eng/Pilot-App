@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import type { ApplicantData } from '@/lib/types';
 import { format } from 'date-fns';
 import { unparse } from 'papaparse';
-import { Download } from 'lucide-react';
+import { Download, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 
 export function ApplicationsTable({
   applications,
@@ -67,6 +68,7 @@ export function ApplicationsTable({
                 Submitted On
               </TableHead>
               <TableHead className="text-right">Total Hours</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -87,11 +89,19 @@ export function ApplicationsTable({
                   <TableCell className="text-right">
                     {app.flightTime?.total ?? 0}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/admin/applications/${app.uid}`}>
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Open
+                      </Link>
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No submitted applications found.
                 </TableCell>
               </TableRow>
