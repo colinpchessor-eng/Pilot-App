@@ -303,6 +303,63 @@ export function ApplicationForm({
     }
   };
 
+  const onInvalid = (errors: any) => {
+    const errorFields = Object.keys(errors);
+    if (errorFields.length === 0) return;
+
+    const firstErrorField = errorFields[0];
+
+    const fieldToTabMap: Record<string, { tab: string; label: string }> = {
+      flightTime: { tab: 'flight-time', label: 'Flight Time' },
+      firstClassMedicalDate: {
+        tab: 'type-ratings',
+        label: 'Aeronautical Ratings and Certificates',
+      },
+      atpNumber: {
+        tab: 'type-ratings',
+        label: 'Aeronautical Ratings and Certificates',
+      },
+      typeRatings: {
+        tab: 'type-ratings',
+        label: 'Aeronautical Ratings and Certificates',
+      },
+      employmentHistory: { tab: 'employment-history', label: 'Employment' },
+      resumeFileName: { tab: 'resume', label: 'Resume' },
+      safetyQuestions: {
+        tab: 'acknowledgment',
+        label: 'Applicant Acknowledgment',
+      },
+      isCertified: {
+        tab: 'acknowledgment',
+        label: 'Applicant Acknowledgment',
+      },
+      printedName: {
+        tab: 'acknowledgment',
+        label: 'Applicant Acknowledgment',
+      },
+    };
+
+    const errorLocation = fieldToTabMap[firstErrorField];
+
+    if (errorLocation) {
+      setActiveTab(errorLocation.tab);
+      toast({
+        variant: 'destructive',
+        title: 'Incomplete Application',
+        description: `Please review the "${errorLocation.label}" section for missing information.`,
+        duration: 5000,
+      });
+    } else {
+      // Fallback for any error not mapped
+      toast({
+        variant: 'destructive',
+        title: 'Incomplete Application',
+        description: 'Please review all sections for missing information.',
+        duration: 5000,
+      });
+    }
+  };
+
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (!user) return;
@@ -322,7 +379,12 @@ export function ApplicationForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(() => setShowSubmitDialog(true))}>
+      <form
+        onSubmit={form.handleSubmit(
+          () => setShowSubmitDialog(true),
+          onInvalid
+        )}
+      >
         <fieldset disabled={isSubmitted}>
           <div className="flex items-center justify-between mb-4">
             <div>
