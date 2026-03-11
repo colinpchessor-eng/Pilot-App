@@ -552,7 +552,6 @@ export function ApplicationForm({
                       onCheckedChange={(checked) =>
                         setEmploymentConfirmed(Boolean(checked))
                       }
-                      disabled={!hasEmploymentHistory}
                     />
                     <div className="grid gap-1.5 leading-none">
                       <label

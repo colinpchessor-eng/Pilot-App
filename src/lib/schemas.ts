@@ -77,8 +77,7 @@ export const applicationFormSchema = z.object({
     )
     .min(1, 'At least one type rating is required.'),
   employmentHistory: z
-    .array(employmentHistorySchema)
-    .min(1, 'At least one employment entry is required.'),
+    .array(employmentHistorySchema),
   safetyQuestions: z.object({
     incidents: z.enum(['yes', 'no'], {
       required_error: 'You must select an answer.',
