@@ -152,7 +152,7 @@ export function ApplicationForm({
       flightTime: applicantData.flightTime,
       firstClassMedicalDate: applicantData.firstClassMedicalDate
         ? applicantData.firstClassMedicalDate.toDate()
-        : undefined,
+        : null,
       atpNumber: applicantData.atpNumber ?? '',
       typeRatings: applicantData.typeRatings ?? '',
       employmentHistory: (applicantData.employmentHistory || []).map((eh) => ({
@@ -319,9 +319,9 @@ export function ApplicationForm({
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-5">
+            <TabsList className="grid w-full grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-5 h-auto">
               {TABS.map((tab) => (
-                <TabsTrigger key={tab.value} value={tab.value}>
+                <TabsTrigger key={tab.value} value={tab.value} className="text-wrap h-full">
                   {tab.label}
                 </TabsTrigger>
               ))}
@@ -534,7 +534,7 @@ export function ApplicationForm({
                           >
                             <Calendar
                               mode="single"
-                              selected={field.value}
+                              selected={field.value ? field.value : undefined}
                               onSelect={field.onChange}
                               disabled={(date) =>
                                 date > new Date() ||
@@ -801,7 +801,7 @@ export function ApplicationForm({
                                             >
                                               <Calendar
                                                 mode="single"
-                                                selected={field.value}
+                                                selected={field.value ? field.value : undefined}
                                                 onSelect={field.onChange}
                                                 disabled={(date) =>
                                                   date > new Date() ||

@@ -76,9 +76,11 @@ export const applicationFormSchema = z
       sic: z.coerce.number().min(0, 'Cannot be negative.'),
       other: z.coerce.number().min(0, 'Cannot be negative.'),
     }),
-    firstClassMedicalDate: z.date({
-      required_error: 'First class medical date is required.',
-    }),
+    firstClassMedicalDate: z
+      .date({
+        required_error: 'First class medical date is required.',
+      })
+      .nullable(),
     atpNumber: z.string().min(1, 'ATP Number is required.'),
     typeRatings: z
       .string()
@@ -111,6 +113,13 @@ export const applicationFormSchema = z
     printedName: z.string().min(1, 'You must enter your name to certify.'),
   })
   .superRefine((data, ctx) => {
+    if (!data.firstClassMedicalDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'First class medical date is required.',
+        path: ['firstClassMedicalDate'],
+      });
+    }
     const hasYesAnswer = Object.values(data.safetyQuestions).some(
       (answer) => answer === 'yes'
     );
