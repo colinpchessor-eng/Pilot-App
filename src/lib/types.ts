@@ -29,7 +29,7 @@ export type ApplicantData = {
     sic: number;
     other: number;
   };
-  typeRatings: { value: string }[];
+  typeRatings: string;
   employmentHistory: EmploymentHistory[];
   safetyQuestions: {
     terminations: 'yes' | 'no' | null;

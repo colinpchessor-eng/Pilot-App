@@ -73,7 +73,7 @@ export function SignupForm() {
           sic: 0,
           other: 0,
         },
-        typeRatings: [],
+        typeRatings: '',
         employmentHistory: [],
         safetyQuestions: {
           terminations: null,

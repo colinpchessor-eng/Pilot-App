@@ -154,7 +154,7 @@ export function ApplicationForm({
         ? applicantData.firstClassMedicalDate.toDate()
         : undefined,
       atpNumber: applicantData.atpNumber ?? '',
-      typeRatings: applicantData.typeRatings,
+      typeRatings: applicantData.typeRatings ?? '',
       employmentHistory: (applicantData.employmentHistory || []).map((eh) => ({
         ...eh,
         startDate: eh.startDate.toDate(),
@@ -178,15 +178,6 @@ export function ApplicationForm({
     !applicantData.employmentHistory ||
       applicantData.employmentHistory.length === 0
   );
-
-  const {
-    fields: typeRatingFields,
-    append: appendTypeRating,
-    remove: removeTypeRating,
-  } = useFieldArray({
-    control: form.control,
-    name: 'typeRatings',
-  });
 
   const {
     fields: employmentFields,
@@ -328,7 +319,7 @@ export function ApplicationForm({
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-5">
               {TABS.map((tab) => (
                 <TabsTrigger key={tab.value} value={tab.value}>
                   {tab.label}
@@ -524,7 +515,7 @@ export function ApplicationForm({
                               <Button
                                 variant={'outline'}
                                 className={cn(
-                                  'w-full pl-3 text-left font-normal',
+                                  'w-[280px] pl-3 text-left font-normal',
                                   !field.value && 'text-muted-foreground'
                                 )}
                               >
@@ -570,57 +561,30 @@ export function ApplicationForm({
                       </FormItem>
                     )}
                   />
-
-                  <div className="space-y-4 pt-4">
-                    <FormLabel>
-                      Please indicate all aircraft type ratings you hold
-                    </FormLabel>
-                    {typeRatingFields.map((field, index) => (
-                      <FormField
-                        key={field.id}
-                        control={form.control}
-                        name={`typeRatings.${index}.value`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="flex items-center gap-2">
-                              <FormControl>
-                                <Input
-                                  placeholder="e.g. B-737 or Commercial Pilot License"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeTypeRating(index)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => appendTypeRating({ value: '' })}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Rating / Certificate
-                    </Button>
-                    <FormDescription>
-                      At a minimum, please add your FAA ATP certificate to
-                      continue.
-                    </FormDescription>
-                    {form.formState.errors.typeRatings && (
-                      <p className="text-sm font-medium text-destructive">
-                        {form.formState.errors.typeRatings.message}
-                      </p>
+                  <FormField
+                    control={form.control}
+                    name="typeRatings"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Please indicate all aircraft type ratings you hold
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="e.g. B-737, Commercial Pilot License"
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Enter each rating or certificate on a new line or
+                          separated by commas. At a minimum, please add your FAA
+                          ATP certificate to continue.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
                 </CardContent>
               </TabsContent>
 

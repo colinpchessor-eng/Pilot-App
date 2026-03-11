@@ -79,7 +79,8 @@
           }
         },
         "typeRatings": {
-          "type": "array"
+          "type": "string",
+          "description": "A list of the user's aircraft type ratings and certificates, separated by newlines or commas."
         },
         "employmentHistory": {
           "type": "array",
