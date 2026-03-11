@@ -106,12 +106,6 @@
             "otherInfo": { "$ref": "#/backend/entities/SafetyQuestion" }
           }
         },
-        "resumeFileName": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "submittedAt": {
           "type": [
             "string",

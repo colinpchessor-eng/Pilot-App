@@ -91,7 +91,6 @@ export function SignupForm() {
           trainingCommitmentConflict: { answer: null, explanation: null },
           otherInfo: { answer: null, explanation: null },
         },
-        resumeFileName: null,
         submittedAt: null,
         isCertified: false,
         printedName: null,

@@ -36,20 +36,16 @@ import {
   ArrowRight,
   Calendar as CalendarIcon,
   Check,
-  FileUp,
   Loader2,
-  Paperclip,
   Plus,
   Send,
   Trash2,
-  X,
 } from 'lucide-react';
 import React from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import {
   saveApplication,
   submitApplication,
-  uploadResume,
 } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from './ui/checkbox';
@@ -80,7 +76,6 @@ const TABS = [
   { value: 'flight-time', label: 'Flight Time' },
   { value: 'type-ratings', label: 'Aeronautical Ratings and Certificates' },
   { value: 'employment-history', label: 'Employment' },
-  { value: 'resume', label: 'Resume' },
   { value: 'acknowledgment', label: 'Applicant Acknowledgment' },
 ];
 
@@ -141,7 +136,6 @@ export function ApplicationForm({
   const { user } = useUser();
   const [activeTab, setActiveTab] = React.useState(TABS[0].value);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [isUploading, setIsUploading] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = React.useState(false);
   const { toast } = useToast();
@@ -202,7 +196,6 @@ export function ApplicationForm({
         isCurrent: !eh.endDate,
       })),
       safetyQuestions: safetyQuestionsDefault,
-      resumeFileName: data.resumeFileName ?? undefined,
       isCertified: data.isCertified ?? false,
       printedName: data.printedName ?? '',
     };
@@ -255,31 +248,6 @@ export function ApplicationForm({
     }
   };
 
-  const onFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user) return;
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append('resume', file);
-    const result = await uploadResume(user.uid, formData);
-    setIsUploading(false);
-
-    if (result.success && result.fileName) {
-      form.setValue('resumeFileName', result.fileName, {
-        shouldValidate: true,
-      });
-      toast({ title: 'Success', description: result.message });
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: result.message,
-      });
-    }
-  };
-
   const onSubmit = async (values: ApplicationFormValues) => {
     if (!user) return;
     setIsSubmitting(true);
@@ -324,7 +292,6 @@ export function ApplicationForm({
         label: 'Aeronautical Ratings and Certificates',
       },
       employmentHistory: { tab: 'employment-history', label: 'Employment' },
-      resumeFileName: { tab: 'resume', label: 'Resume' },
       safetyQuestions: {
         tab: 'acknowledgment',
         label: 'Applicant Acknowledgment',
@@ -420,7 +387,7 @@ export function ApplicationForm({
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-5 h-auto">
+            <TabsList className="grid w-full grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-4 h-auto">
               {TABS.map((tab) => (
                 <TabsTrigger key={tab.value} value={tab.value} className="text-wrap h-full">
                   {tab.label}
@@ -1024,72 +991,6 @@ export function ApplicationForm({
                       )}
                     </div>
                   )}
-                </CardContent>
-              </TabsContent>
-
-              <TabsContent value="resume">
-                <CardHeader>
-                  <CardTitle>Upload Resume</CardTitle>
-                  <CardDescription>
-                    Please upload your resume in PDF format (max 5MB).
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="resumeFileName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div className="relative flex h-32 w-full items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20">
-                            <div className="text-center">
-                              <FileUp className="mx-auto h-10 w-10 text-muted-foreground" />
-                              <p className="mt-2 text-sm text-muted-foreground">
-                                Drag & drop or click to upload PDF
-                              </p>
-                            </div>
-                            <Input
-                              type="file"
-                              accept="application/pdf"
-                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                              onChange={onFileChange}
-                              disabled={isUploading}
-                            />
-                          </div>
-                        </FormControl>
-
-                        {isUploading ? (
-                          <div className="flex items-center gap-2 rounded-md border p-3">
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            <span className="text-sm">Uploading...</span>
-                          </div>
-                        ) : (
-                          field.value && (
-                            <div className="flex items-center justify-between gap-2 rounded-md border p-3">
-                              <div className="flex items-center gap-2">
-                                <Paperclip className="h-5 w-5" />
-                                <span className="text-sm font-medium">
-                                  {field.value}
-                                </span>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() =>
-                                  form.setValue('resumeFileName', undefined)
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </CardContent>
               </TabsContent>
 

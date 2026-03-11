@@ -114,9 +114,6 @@ export const applicationFormSchema = z
       trainingCommitmentConflict: safetyQuestionItemSchema,
       otherInfo: safetyQuestionItemSchema,
     }),
-    resumeFileName: z
-      .string({ required_error: 'Resume is required for submission.' })
-      .min(1, 'Resume is required for submission.'),
     isCertified: z.literal(true, {
       errorMap: () => ({
         message: 'You must certify your application to submit.',

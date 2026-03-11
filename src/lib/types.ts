@@ -51,7 +51,6 @@ export type ApplicantData = {
     trainingCommitmentConflict: SafetyQuestion;
     otherInfo: SafetyQuestion;
   };
-  resumeFileName: string | null;
   submittedAt: Timestamp | null;
   isCertified: boolean;
   printedName: string | null;
