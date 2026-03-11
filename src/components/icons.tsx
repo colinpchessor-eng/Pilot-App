@@ -17,8 +17,9 @@ export const Icons = {
       {...props}
     >
       <text
-        x="0"
+        x="120"
         y="36"
+        textAnchor="middle"
         fontFamily="Inter, sans-serif"
         fontSize="36"
         fontWeight="bold"
