@@ -60,7 +60,17 @@ export function SignupForm() {
         firstName: values.firstName,
         lastName: values.lastName,
         createdAt: serverTimestamp(),
-        flightTime: { total: 0, multiCrew: 0, pic: 0 },
+        flightTime: {
+          total: 0,
+          turbinePic: 0,
+          military: 0,
+          civilian: 0,
+          multiEngine: 0,
+          instructor: 0,
+          evaluator: 0,
+          sic: 0,
+          other: 0,
+        },
         typeRatings: [],
         employmentHistory: [],
         safetyQuestions: {

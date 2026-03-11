@@ -61,18 +61,15 @@ export const employmentHistorySchema = z
 
 export const applicationFormSchema = z.object({
   flightTime: z.object({
-    total: z.coerce
-      .number({ invalid_type_error: 'Must be a number.' })
-      .min(1, 'Total flight hours are required.'),
-    multiCrew: z.coerce
-      .number({ invalid_type_error: 'Must be a number.' })
-      .min(
-        500,
-        'A minimum of 500 hours of Civilian Multi-Crew flight time is required.'
-      ),
-    pic: z.coerce
-      .number({ invalid_type_error: 'Must be a number.' })
-      .min(1, 'PIC hours are required.'),
+    total: z.coerce.number().min(1, 'Total flight hours are required.'),
+    turbinePic: z.coerce.number().min(0, 'Cannot be negative.'),
+    military: z.coerce.number().min(0, 'Cannot be negative.'),
+    civilian: z.coerce.number().min(0, 'Cannot be negative.'),
+    multiEngine: z.coerce.number().min(0, 'Cannot be negative.'),
+    instructor: z.coerce.number().min(0, 'Cannot be negative.'),
+    evaluator: z.coerce.number().min(0, 'Cannot be negative.'),
+    sic: z.coerce.number().min(0, 'Cannot be negative.'),
+    other: z.coerce.number().min(0, 'Cannot be negative.'),
   }),
   typeRatings: z
     .array(

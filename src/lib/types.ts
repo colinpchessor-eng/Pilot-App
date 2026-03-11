@@ -18,8 +18,14 @@ export type ApplicantData = {
   createdAt: Timestamp;
   flightTime: {
     total: number;
-    multiCrew: number;
-    pic: number;
+    turbinePic: number;
+    military: number;
+    civilian: number;
+    multiEngine: number;
+    instructor: number;
+    evaluator: number;
+    sic: number;
+    other: number;
   };
   typeRatings: { value: string }[];
   employmentHistory: EmploymentHistory[];

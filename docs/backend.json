@@ -33,7 +33,36 @@
           "description": "The timestamp when the profile was created."
         },
         "flightTime": {
-          "type": "object"
+          "type": "object",
+          "properties": {
+            "total": {
+              "type": "number"
+            },
+            "turbinePic": {
+              "type": "number"
+            },
+            "military": {
+              "type": "number"
+            },
+            "civilian": {
+              "type": "number"
+            },
+            "multiEngine": {
+              "type": "number"
+            },
+            "instructor": {
+              "type": "number"
+            },
+            "evaluator": {
+              "type": "number"
+            },
+            "sic": {
+              "type": "number"
+            },
+            "other": {
+              "type": "number"
+            }
+          }
         },
         "typeRatings": {
           "type": "array"

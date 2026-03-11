@@ -284,7 +284,7 @@ export function ApplicationForm({
                     Enter your flight hours in the fields below.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="flightTime.total"
@@ -304,10 +304,61 @@ export function ApplicationForm({
                   />
                   <FormField
                     control={form.control}
-                    name="flightTime.multiCrew"
+                    name="flightTime.turbinePic"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Civilian Multi-Crew Hours</FormLabel>
+                        <FormLabel>Turbine PIC Hours</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 1000"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="flightTime.military"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Military Hours</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 500"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="flightTime.civilian"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Civilian Hours</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 2500"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="flightTime.multiEngine"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Multi-engine Hours</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -315,23 +366,71 @@ export function ApplicationForm({
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Minimum 500 hours required.
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
-                    name="flightTime.pic"
+                    name="flightTime.instructor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Pilot in Command (PIC) Hours</FormLabel>
+                        <FormLabel>Instructor Hours</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 200"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="flightTime.evaluator"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Evaluator Hours</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 100"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="flightTime.sic"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>SIC Hours</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="e.g. 1000"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="flightTime.other"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Other Hours</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 50"
                             {...field}
                           />
                         </FormControl>
