@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -24,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogIn } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
 import { triggerWelcomeEmail } from '@/app/actions';
 import type { ApplicantData } from '@/lib/types';
 
@@ -48,6 +47,16 @@ export function SignupForm() {
 
   async function onSubmit(values: SignupSchema) {
     setLoading(true);
+    if (!auth || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Signup Failed',
+        description: 'Firebase not initialized.',
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -119,15 +128,19 @@ export function SignupForm() {
 
       if (error instanceof Error) {
         // Check if it's a Firebase Auth error
-        if ('code' in error && typeof error.code === 'string' && error.code.startsWith('auth/')) {
-            const authError = error as AuthError;
-            if (authError.code === 'auth/email-already-in-use') {
-                description = 'This email is already registered.';
-            } else {
-                description = authError.message; 
-            }
+        if (
+          'code' in error &&
+          typeof error.code === 'string' &&
+          error.code.startsWith('auth/')
+        ) {
+          const authError = error as AuthError;
+          if (authError.code === 'auth/email-already-in-use') {
+            description = 'This email is already registered.';
+          } else {
+            description = authError.message;
+          }
         } else {
-            description = error.message;
+          description = error.message;
         }
       }
 
@@ -143,7 +156,7 @@ export function SignupForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -215,13 +228,17 @@ export function SignupForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button
+          type="submit"
+          className="!mt-6 w-full bg-accent text-accent-foreground shimmer-btn hover:bg-accent/90"
+          disabled={loading}
+        >
           {loading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <LogIn className="mr-2 h-4 w-4" />
+            <UserPlus className="mr-2 h-4 w-4" />
           )}
-          Sign Up
+          Create Account
         </Button>
       </form>
     </Form>

@@ -4,19 +4,19 @@ import Link from 'next/link';
 
 export default function SignupPage() {
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bento-grid-bg p-4 md:p-8">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        <div className="bg-card border border-border rounded-lg shadow-2xl p-6 md:p-8">
-          <div className="text-center">
-            <Icons.logo className="h-12 w-auto mx-auto" />
-            <h1 className="pt-4 text-3xl font-bold">Create an Account</h1>
+        <div className="frosted-glass rounded-xl p-8 shadow-2xl">
+          <div className="mb-8 text-center">
+            <Icons.logo className="mx-auto h-12 w-auto" />
+            <h1 className="pt-4 text-3xl font-bold uppercase tracking-wider">
+              Create an Account
+            </h1>
             <p className="pt-2 text-muted-foreground">
               Enter your details below to get started.
             </p>
           </div>
-          <div className="mt-8">
-            <SignupForm />
-          </div>
+          <SignupForm />
           <p className="mt-8 w-full text-center text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link
@@ -28,6 +28,9 @@ export default function SignupPage() {
           </p>
         </div>
       </div>
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-black/30 p-2 text-center text-xs text-muted-foreground">
+        System Status: <span className="text-green-400">Online</span>
+      </footer>
     </main>
   );
 }

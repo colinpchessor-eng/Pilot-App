@@ -41,15 +41,15 @@ export default function DashboardLayout({
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-screen items-center justify-center">
         <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background bento-grid-bg">
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-sm">
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/50 backdrop-blur-sm">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" aria-label="Back to home">
             <Icons.logo className="h-10 w-auto" />
@@ -95,7 +95,7 @@ export default function DashboardLayout({
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="bg-card border-t border-border">
+      <footer className="border-t border-white/10 bg-transparent">
         <div className="container py-4 text-center text-sm text-muted-foreground md:text-left">
           &copy; {new Date().getFullYear()} FedEx. All rights reserved.
         </div>

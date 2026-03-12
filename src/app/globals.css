@@ -4,64 +4,59 @@
 
 @layer base {
   :root {
-    --background: 0 0% 5%; /* #0D0D0D */
+    /* FedEx Dark Theme */
+    --background: 275 71% 7%; /* Dark Purple */
     --foreground: 0 0% 98%;
-    --card: 0 0% 8%;
+
+    --card: 275 20% 15%; /* Semi-transparent purple for frosted glass */
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 5%;
+
+    --popover: 275 71% 7%;
     --popover-foreground: 0 0% 98%;
+
     --primary: 275 71% 31%; /* FedEx Purple */
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 15%;
+
+    --secondary: 24 100% 50%; /* FedEx Orange - used sparingly */
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 15%;
+
+    --muted: 275 20% 20%;
     --muted-foreground: 0 0% 60%;
+
     --accent: 24 100% 50%; /* FedEx Orange */
     --accent-foreground: 0 0% 98%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 24 100% 50%;
+
+    --border: 275 71% 25%;
+    --input: 275 40% 20%;
+    --ring: 24 100% 50%; /* FedEx Orange */
+
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 275 71% 31%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 24 100% 50%;
   }
 
   .dark {
-    --background: 0 0% 5%;
+    /* Same as root for a forced dark theme */
+    --background: 275 71% 7%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 8%;
+    --card: 275 20% 15%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 5%;
+    --popover: 275 71% 7%;
     --popover-foreground: 0 0% 98%;
     --primary: 275 71% 31%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 15%;
+    --secondary: 24 100% 50%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 15%;
+    --muted: 275 20% 20%;
     --muted-foreground: 0 0% 60%;
     --accent: 24 100% 50%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
+    --border: 275 71% 25%;
+    --input: 275 40% 20%;
     --ring: 24 100% 50%;
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 275 71% 31%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 24 100% 50%;
   }
 }
 
@@ -71,17 +66,66 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Deep dark purple night sky gradient */
+    background-color: #0d0514; /* Fallback */
+    background-image: radial-gradient(
+      ellipse at bottom,
+      #4d148c 0%,
+      #0d0514 60%,
+      #040106 100%
+    );
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-headline;
+  }
+}
+
+@layer components {
+  /* Frosted glass effect */
+  .frosted-glass {
+    background-color: hsla(var(--primary), 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsla(var(--primary), 0.2);
+  }
+
+  /* Button shimmer effect */
+  .shimmer-btn {
+    position: relative;
+    overflow: hidden;
+    transition: color 0.3s ease-in-out;
+  }
+  .shimmer-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      hsla(var(--accent), 0.4),
+      transparent
+    );
+    transition: left 0.6s ease-in-out;
+  }
+  .shimmer-btn:hover::before {
+    left: 100%;
+  }
+  .shimmer-btn:hover {
+    box-shadow: 0 0 20px hsla(var(--accent), 0.5);
   }
 }
 
 @layer utilities {
-  .bento-grid-bg {
-    background-color: hsl(var(--background));
-    background-image: linear-gradient(hsl(var(--border)) 1px, transparent 1px),
-      linear-gradient(to right, hsl(var(--border)) 1px, hsl(var(--background)) 1px);
-    background-size: 2rem 2rem;
-  }
-
   @media print {
     body {
       background: white;
@@ -106,17 +150,19 @@
       break-before: page;
     }
     .print-sans {
-       font-family: 'Helvetica', 'Arial', sans-serif;
+      font-family: 'Helvetica', 'Arial', sans-serif;
     }
     .print-mono {
       font-family: 'Courier New', monospace;
     }
     .print-highlight-yes {
-      background-color: #FFFBEB !important; /* Tailwind color: amber-50 */
-      border-color: #FEF3C7 !important; /* Tailwind color: amber-100 */
+      background-color: #fffbeb !important; /* Tailwind color: amber-50 */
+      border-color: #fef3c7 !important; /* Tailwind color: amber-100 */
     }
-     .print-highlight-yes p, .print-highlight-yes span, .print-highlight-yes div {
-        color: #92400E !important; /* amber-900 */
+    .print-highlight-yes p,
+    .print-highlight-yes span,
+    .print-highlight-yes div {
+      color: #92400e !important; /* amber-900 */
     }
   }
 }
