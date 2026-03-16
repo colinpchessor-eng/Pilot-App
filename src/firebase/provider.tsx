@@ -2,12 +2,11 @@
 import {
   createContext,
   useContext,
-  useState,
-  useEffect,
   type ReactNode,
 } from 'react';
-import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { type Auth } from 'firebase/auth';
+import { type Firestore } from 'firebase/firestore';
+import { type Storage } from 'firebase/storage';
 import { type FirebaseApp } from 'firebase/app';
 import { FirebaseErrorListener } from '@/components/firebase-error-listener';
 
@@ -15,6 +14,7 @@ export type FirebaseContextValue = {
   app: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
+  storage: Storage;
 };
 
 const FirebaseContext = createContext<FirebaseContextValue | null>(null);
@@ -52,4 +52,8 @@ export function useFirestore() {
 
 export function useAuth() {
   return useFirebase().auth;
+}
+
+export function useStorage() {
+  return useFirebase().storage;
 }

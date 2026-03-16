@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// See https://firebase.google.com/docs/storage/security
+service firebase.storage {
+  match /b/{bucket}/o {
+    // By default, all access is denied. You must create specific rules
+    // below to grant access to paths in your bucket.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // Example: Allow users to read and write their own files.
+    // match /users/{userId}/{allPaths=**} {
+    //   allow read, write: if request.auth.uid == userId;
+    // }
+
+    // Example: Allow anyone to read files from a "public" folder.
+    // match /public/{allPaths=**} {
+    //   allow read;
+    // }
+  }
+}
