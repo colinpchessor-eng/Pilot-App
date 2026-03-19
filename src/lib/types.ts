@@ -1,6 +1,9 @@
 
 import { Timestamp } from 'firebase/firestore';
 
+export type VerificationStatus = 'pending' | 'token_sent' | 'verified';
+export type UserRole = 'admin';
+
 export type EmploymentHistory = {
   employerName: string;
   jobTitle: string;
@@ -19,10 +22,15 @@ export type SafetyQuestion = {
 export type ApplicantData = {
   uid: string;
   email: string | null;
+  displayName?: string | null;
   firstName: string | null;
   lastName: string | null;
   createdAt: Timestamp;
   isAdmin?: boolean;
+  role?: UserRole;
+  status?: VerificationStatus;
+  requestedAt?: Timestamp | null;
+  verifiedAt?: Timestamp | null;
   firstClassMedicalDate: Timestamp | null;
   atpNumber: string | null;
   flightTime: {
