@@ -1157,6 +1157,8 @@ export function ApplicationForm({
                                   <Textarea
                                     placeholder="Please explain your 'Yes' answer here."
                                     {...field}
+                                    value={field.value ?? ''}
+                                    onChange={(e) => field.onChange(e.target.value)}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -1248,7 +1250,7 @@ export function ApplicationForm({
             ) : (
               <Button
                 type="button"
-                variant="accent"
+                variant="default"
                 className="bg-accent hover:bg-accent/90"
                 disabled={isSubmitting || isSubmitted}
                 onClick={handleFinalSubmitClick}

@@ -12,11 +12,11 @@
         updateDoc,
         doc,
       } from 'firebase/firestore';
-      import type { BridgeRequest } from '@/lib/types';
       import { Button } from './ui/button';
       import { Input } from './ui/input';
+      import { Label } from './ui/label';
       import { useToast } from '@/hooks/use-toast';
-      import { Loader2, ArrowRight, KeyRound, FileClock } from 'lucide-react';
+      import { Loader2, KeyRound } from 'lucide-react';
       import { useRouter } from 'next/navigation';
       import { errorEmitter } from '@/firebase/error-emitter';
       import { FirestorePermissionError } from '@/firebase/errors';
@@ -36,16 +36,21 @@
         AlertDialogFooter,
         AlertDialogHeader,
         AlertDialogTitle,
-        AlertDialogTrigger,
       } from '@/components/ui/alert-dialog';
+
+      type BridgeRequest = {
+        uid: string;
+        email: string;
+        fullName: string;
+        status: 'pending' | 'approved' | 'rejected';
+        requestedAt: any;
+      };
       
       export function BridgeApplication({ applicantId }: { applicantId: string }) {
         const { user, loading: userLoading } = useUser();
-        const firestoreContext = useFirestore();
-        const firestore = firestoreContext?.firestore;
-        const addBridgeRequest = firestoreContext?.addBridgeRequest;
+        const firestore = useFirestore();
         
-        const { addToast } = useToast();
+        const { toast } = useToast();
         const router = useRouter();
       
         const [isRequesting, setIsRequesting] = useState(false);
@@ -67,7 +72,7 @@
         }, [user, firestore]);
       
         const { data: bridgeRequests, loading: bridgeRequestsLoading } =
-          useCollection(applicantQuery);
+          useCollection<BridgeRequest>(applicantQuery);
           
         const latestRequest = useMemo(() => {
             if (!bridgeRequests || bridgeRequests.length === 0) return null;
@@ -110,11 +115,7 @@
                 requestedAt: serverTimestamp(),
               };
               
-              if (addBridgeRequest) {
-                  await addBridgeRequest(requestData);
-              } else {
-                 await addDoc(collection(firestore, 'bridge_requests'), requestData);
-              }
+              await addDoc(collection(firestore, 'bridge_requests'), requestData);
               
               setHasRequestedLocal(true);
               setShowWelcomeModal(false); // Close modal on submission
@@ -122,11 +123,9 @@
           } catch (error: any) {
             console.error('Error submitting bridge request:', error);
             if (error instanceof FirestorePermissionError) {
-              errorEmitter.emit('firestore_permission_denied', error.message);
-            } else {
-              errorEmitter.emit('error', error.message);
+              errorEmitter.emit('permission-error', error);
             }
-            addToast({
+            toast({
               title: 'Error',
               description: 'Something went wrong. Please try again.',
               variant: 'destructive',
@@ -151,10 +150,9 @@
       
               await updateDoc(docRef, claimData);
               
-              addToast({
+              toast({
                   title: 'Success!',
                   description: 'Application data bridged successfully. Redirecting...',
-                  variant: 'success',
               });
               
               setTimeout(() => {
@@ -170,7 +168,7 @@
               });
               errorEmitter.emit('permission-error', permissionError);
               
-              addToast({
+              toast({
                   variant: 'destructive',
                   title: 'Verification Failed',
                   description: 'The token is invalid or has expired.',

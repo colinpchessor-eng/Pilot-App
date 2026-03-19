@@ -6,7 +6,7 @@ import {
 } from 'react';
 import { type Auth } from 'firebase/auth';
 import { type Firestore } from 'firebase/firestore';
-import { type Storage } from 'firebase/storage';
+import { type FirebaseStorage } from 'firebase/storage';
 import { type FirebaseApp } from 'firebase/app';
 import { FirebaseErrorListener } from '@/components/firebase-error-listener';
 
@@ -14,7 +14,7 @@ export type FirebaseContextValue = {
   app: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
-  storage: Storage;
+  storage: FirebaseStorage;
 };
 
 const FirebaseContext = createContext<FirebaseContextValue | null>(null);

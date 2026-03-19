@@ -2,14 +2,13 @@
 import { useState, useEffect } from 'react';
 import {
   onSnapshot,
-  query,
   getDocs,
   type Query,
   type DocumentData,
 } from 'firebase/firestore';
 
 export function useCollection<T extends DocumentData>(
-  q: Query<T> | undefined | null,
+  q: Query<DocumentData> | undefined | null,
   options: { listen: boolean } = { listen: true }
 ) {
   const [data, setData] = useState<T[] | null>(null);
@@ -26,7 +25,7 @@ export function useCollection<T extends DocumentData>(
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
-          const docs = snapshot.docs.map((doc) => doc.data());
+          const docs = snapshot.docs.map((doc) => doc.data() as T);
           setData(docs);
           setLoading(false);
         },
@@ -39,7 +38,7 @@ export function useCollection<T extends DocumentData>(
     } else {
       getDocs(q)
         .then((snapshot) => {
-          const docs = snapshot.docs.map((doc) => doc.data());
+          const docs = snapshot.docs.map((doc) => doc.data() as T);
           setData(docs);
           setLoading(false);
         })

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import {
   onSnapshot,
-  doc,
   getDoc,
   type DocumentReference,
   type DocumentData,
@@ -11,7 +10,7 @@ import {
 import { useFirestore } from '@/firebase/provider';
 
 export function useDoc<T extends DocumentData>(
-  ref: DocumentReference<T> | undefined | null,
+  ref: DocumentReference<DocumentData> | undefined | null,
   options: { listen: boolean } = { listen: true }
 ) {
   const [data, setData] = useState<T | null>(null);
@@ -32,7 +31,7 @@ export function useDoc<T extends DocumentData>(
       const unsubscribe = onSnapshot(
         ref,
         (doc) => {
-          setData(doc.exists() ? doc.data() : null);
+          setData((doc.exists() ? (doc.data() as T) : null) as T | null);
           setLoading(false);
         },
         (err) => {
@@ -44,7 +43,7 @@ export function useDoc<T extends DocumentData>(
     } else {
       getDoc(ref)
         .then((doc) => {
-          setData(doc.exists() ? doc.data() : null);
+          setData((doc.exists() ? (doc.data() as T) : null) as T | null);
           setLoading(false);
         })
         .catch((err) => {

@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users } from 'lucide-react';
+import { LayoutDashboard, Users, BadgeCheck } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -36,8 +36,9 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (!loading) {
-      if (!user || !applicantData?.isAdmin) {
-        router.push('/'); // Redirect non-admins to home page
+      const isAdmin = !!applicantData?.isAdmin || applicantData?.role === 'admin';
+      if (!user || !isAdmin) {
+        router.push('/login'); // Redirect non-admins to login
       }
     }
   }, [user, applicantData, loading, router]);
@@ -50,7 +51,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!applicantData?.isAdmin) {
+  if (!applicantData?.isAdmin && applicantData?.role !== 'admin') {
     // This will show briefly before redirect effect runs
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -91,6 +92,18 @@ export default function AdminLayout({
                     <Link href="/admin/users">
                       <Users />
                       <span>Manage Users</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/admin/verifications'}
+                    tooltip="Verifications"
+                  >
+                    <Link href="/admin/verifications">
+                      <BadgeCheck />
+                      <span>Verifications</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
