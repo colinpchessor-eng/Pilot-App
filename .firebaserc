@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "studio-3449665797-2559e"
-  }
+    "default": "studio-3449665797-2559e",
+    "home-computer-pilotapp": "studio-3449665797-2559e"
+  },
+  "targets": {},
+  "etags": {}
 }

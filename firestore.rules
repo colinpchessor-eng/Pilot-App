@@ -31,5 +31,43 @@ service cloud.firestore {
       // DELETE: Nobody can delete profiles.
       allow delete: if false;
     }
+
+    // Rules for the application bridging feature
+    match /bridge_requests/{requestId} {
+      // CREATE: Any authenticated user can create a request for themselves.
+      allow create: if request.auth != null 
+                    && request.resource.data.uid == request.auth.uid;
+
+      // READ: The user who created the request or an admin can read it.
+      allow get: if isOwner(resource.data.uid) || isAdmin();
+      
+      // LIST: Only admins can list all bridge requests.
+      allow list: if isAdmin();
+
+      // UPDATE: Only admins can update the status of a request.
+      allow update: if isAdmin();
+      
+      // DELETE: No one can delete requests to maintain a record.
+      allow delete: if false;
+    }
+
+    match /bridge_codes/{codeId} {
+      // CREATE: Only admins can create new bridge codes.
+      allow create: if isAdmin();
+      
+      // READ: Only admins can read codes to prevent discovery.
+      allow get, list: if isAdmin();
+
+      // UPDATE: An authenticated user can "claim" a code if it's unclaimed and assigned to their email.
+      // This is the core logic for the bridge action.
+      allow update: if request.auth != null
+                    && resource.data.isClaimed == false
+                    && request.resource.data.isClaimed == true
+                    && request.resource.data.claimedByUid == request.auth.uid
+                    && resource.data.assignedEmail == request.auth.token.email;
+
+      // DELETE: Admins can delete codes if necessary.
+      allow delete: if isAdmin();
+    }
   }
 }
