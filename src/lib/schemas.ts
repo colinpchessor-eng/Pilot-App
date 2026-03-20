@@ -91,10 +91,8 @@ export const applicationFormSchema = z
     firstClassMedicalDate: z
       .date()
       .nullable(),
-    atpNumber: z.string().min(1, 'ATP Number is required.'),
-    typeRatings: z
-      .string()
-      .min(1, 'At least one rating or certificate is required.'),
+    atpNumber: z.coerce.number({ invalid_type_error: 'ATP Number must be a number' }),
+    typeRatings: z.string().optional().default(''),
     employmentHistory: z.array(employmentHistorySchema).optional(),
     safetyQuestions: z.object({
       terminations: safetyQuestionItemSchema,

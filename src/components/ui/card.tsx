@@ -9,25 +9,6 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn("glass-card text-card-foreground shadow-sm", className)}
-    onMouseMove={(e) => {
-      props.onMouseMove?.(e)
-      const el = e.currentTarget
-      const rect = el.getBoundingClientRect()
-      const cx = rect.left + rect.width / 2
-      const cy = rect.top + rect.height / 2
-      const dx = (e.clientX - cx) / (rect.width / 2)
-      const dy = (e.clientY - cy) / (rect.height / 2)
-      const rx = Math.max(-1, Math.min(1, -dy)) * 8
-      const ry = Math.max(-1, Math.min(1, dx)) * 8
-      el.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg)`
-      el.style.transition = "transform 0ms"
-    }}
-    onMouseLeave={(e) => {
-      props.onMouseLeave?.(e)
-      const el = e.currentTarget
-      el.style.transition = "transform 500ms ease"
-      el.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg)"
-    }}
     {...props}
   />
 ))

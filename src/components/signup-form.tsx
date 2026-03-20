@@ -23,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { triggerWelcomeEmail } from '@/app/actions';
 import type { ApplicantData } from '@/lib/types';
 
@@ -154,6 +154,9 @@ export function SignupForm() {
     }
   }
 
+  const labelStyle = "text-[13px] font-semibold text-[#565656] mb-1.5 block";
+  const inputStyle = "h-12 border-[1.5px] border-[#E3E3E3] rounded-lg px-4 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus-visible:ring-[#4D148C] focus-visible:ring-offset-0 focus-visible:border-[#4D148C]";
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -163,9 +166,9 @@ export function SignupForm() {
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel className={labelStyle}>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John" {...field} />
+                  <Input placeholder="John" className={inputStyle} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -176,9 +179,9 @@ export function SignupForm() {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel className={labelStyle}>Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Doe" {...field} />
+                  <Input placeholder="Doe" className={inputStyle} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -190,11 +193,12 @@ export function SignupForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className={labelStyle}>Email Address</FormLabel>
               <FormControl>
                 <Input
                   type="email"
                   placeholder="name@example.com"
+                  className={inputStyle}
                   {...field}
                 />
               </FormControl>
@@ -207,9 +211,9 @@ export function SignupForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className={labelStyle}>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <Input type="password" placeholder="••••••••" className={inputStyle} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -220,9 +224,9 @@ export function SignupForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel className={labelStyle}>Confirm Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <Input type="password" placeholder="••••••••" className={inputStyle} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -230,14 +234,12 @@ export function SignupForm() {
         />
         <Button
           type="submit"
-          className="!mt-6 w-full bg-accent text-accent-foreground shimmer-btn hover:bg-accent/90"
+          className="!mt-6 w-full h-12 fedex-gradient text-white font-bold rounded-lg shadow-[0_4px_15px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 active:translate-y-0.5"
           disabled={loading}
         >
           {loading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <UserPlus className="mr-2 h-4 w-4" />
-          )}
+          ) : null}
           Create Account
         </Button>
       </form>

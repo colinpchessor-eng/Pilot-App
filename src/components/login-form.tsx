@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogIn } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Checkbox } from './ui/checkbox';
 
 export function LoginForm() {
@@ -92,7 +92,7 @@ export function LoginForm() {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: 'Invalid Employee ID or password. Please try again.',
+        description: 'Invalid Email or password. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -101,60 +101,82 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Employee ID</FormLabel>
+              <FormLabel className="text-[13px] font-semibold text-[#565656] mb-1.5 block">
+                Email Address
+              </FormLabel>
               <FormControl>
-                <Input type="email" placeholder="name@fedex.com" {...field} />
+                <Input 
+                  type="email" 
+                  placeholder="name@fedex.com" 
+                  className="h-12 border-[1.5px] border-[#E3E3E3] rounded-lg px-4 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus-visible:ring-[#4D148C] focus-visible:ring-offset-0 focus-visible:border-[#4D148C]"
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-1">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[13px] font-semibold text-[#565656] mb-1.5 block">
+                  Password
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className="h-12 border-[1.5px] border-[#E3E3E3] rounded-lg px-4 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus-visible:ring-[#4D148C] focus-visible:ring-offset-0 focus-visible:border-[#4D148C]"
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex justify-end">
+            <button type="button" className="text-[13px] text-[#4D148C] font-medium hover:underline cursor-pointer">
+              Forgot password?
+            </button>
+          </div>
+        </div>
+
         <FormField
           control={form.control}
           name="keepSignedIn"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex flex-row items-center space-x-2 space-y-0 py-2">
               <FormControl>
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
+                  className="border-[#E3E3E3] data-[state=checked]:bg-[#4D148C] data-[state=checked]:border-[#4D148C]"
                 />
               </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Keep me signed in</FormLabel>
-              </div>
+              <FormLabel className="text-[13px] font-medium text-[#565656] cursor-pointer">
+                Remember me
+              </FormLabel>
             </FormItem>
           )}
         />
+
         <Button
           type="submit"
-          className="w-full bg-accent text-accent-foreground shimmer-btn hover:bg-accent/90"
+          className="w-full h-12 fedex-gradient text-white font-bold rounded-lg shadow-[0_4px_15px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 active:translate-y-0.5"
           disabled={loading}
         >
           {loading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <LogIn className="mr-2 h-4 w-4" />
-          )}
+          ) : null}
           Sign In
         </Button>
       </form>

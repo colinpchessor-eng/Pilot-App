@@ -41,29 +41,30 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Status-based verification gating
-  if (status === 'pending') {
-    if (!pathname.startsWith('/verify/request')) {
+  /* 
+  // Verification bypass for demo: 
+  // Previously, we redirected to /verify pages if not verified.
+  // We're disabling this logic to allow immediate access to the application.
+  
+  if (pathname.startsWith('/dashboard/application') && status !== 'verified') {
+    if (status === 'pending') {
       const url = req.nextUrl.clone();
       url.pathname = '/verify/request';
       return NextResponse.redirect(url);
     }
-  }
-
-  if (status === 'token_sent') {
-    if (!pathname.startsWith('/verify/token')) {
+    if (status === 'token_sent') {
       const url = req.nextUrl.clone();
       url.pathname = '/verify/token';
       return NextResponse.redirect(url);
     }
   }
+  */
 
-  if (status === 'verified') {
-    if (pathname.startsWith('/verify')) {
-      const url = req.nextUrl.clone();
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
-    }
+  // If they land on verify pages but are already verified, bounce them out to dashboard.
+  if (status === 'verified' && pathname.startsWith('/verify')) {
+    const url = req.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
@@ -72,4 +73,3 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
-

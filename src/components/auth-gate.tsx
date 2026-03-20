@@ -22,10 +22,16 @@ function getRedirectForStatus(pathname: string, status: VerificationStatus) {
   if (pathname.startsWith('/admin')) return null;
   if (pathname.startsWith('/verify/request')) return null;
   if (pathname.startsWith('/verify/token')) return null;
-  if (pathname === '/login' || pathname === '/signup' || pathname === '/') return null;
+  if (pathname === '/login' || pathname === '/signup' || pathname === '/' || pathname === '/dashboard') return null;
 
-  if (status === 'pending') return '/verify/request';
-  if (status === 'token_sent') return '/verify/token';
+  /* 
+  // REMOVED: Verification redirect logic
+  if (pathname.startsWith('/dashboard/application') && status !== 'verified') {
+    if (status === 'pending') return '/verify/request';
+    if (status === 'token_sent') return '/verify/token';
+  }
+  */
+
   return null;
 }
 
@@ -108,4 +114,3 @@ export function AuthGate() {
 
   return null;
 }
-
