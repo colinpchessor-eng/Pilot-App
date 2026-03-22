@@ -334,7 +334,9 @@ export function LandingPage() {
             ))}
           </div>
           <div className="border-t border-white/10 py-4 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} FedExFlow. All rights reserved.
+            © {new Date().getFullYear()} FedEx. All rights reserved.{' '}
+            <span className="text-muted-foreground">|</span>{' '}
+            <Link href="/privacy" className="text-[#4D148C] text-[13px] hover:underline">Privacy Policy</Link>
           </div>
         </footer>
       </div>

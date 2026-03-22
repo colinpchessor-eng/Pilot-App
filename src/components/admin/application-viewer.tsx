@@ -1,4 +1,5 @@
 import type { ApplicantData, SafetyQuestion } from '@/lib/types';
+import { decryptField, isEncrypted } from '@/lib/encryption';
 import {
   Card,
   CardContent,
@@ -111,8 +112,17 @@ export function ApplicationViewer({ applicantData }: { applicantData: ApplicantD
         <CardContent>
           <dl className="space-y-2">
             <DetailItem label="Submitted On" value={applicantData.submittedAt ? format(applicantData.submittedAt.toDate(), 'PPP p') : 'N/A'} />
-            <DetailItem label="ATP Number" value={applicantData.atpNumber} />
-            <DetailItem label="First Class Medical Date" value={applicantData.firstClassMedicalDate ? format(applicantData.firstClassMedicalDate.toDate(), 'PPP') : 'N/A'} />
+            <DetailItem label="ATP Number" value={isEncrypted(String(applicantData.atpNumber || '')) ? decryptField(String(applicantData.atpNumber)) : applicantData.atpNumber} />
+            <DetailItem label="First Class Medical Date" value={(() => {
+              const raw = applicantData.firstClassMedicalDate;
+              if (!raw) return 'N/A';
+              if (typeof raw === 'string' && isEncrypted(raw)) {
+                const d = decryptField(raw);
+                try { return format(new Date(d), 'PPP'); } catch { return d; }
+              }
+              if (typeof raw === 'object' && 'toDate' in raw) return format((raw as any).toDate(), 'PPP');
+              return 'N/A';
+            })()} />
           </dl>
         </CardContent>
       </Card>

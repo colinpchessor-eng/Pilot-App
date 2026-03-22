@@ -1,73 +1,59 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
     function isAdmin() {
-      // Check the admin flag on the user's document that is making the request.
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
-              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
 
     match /users/{userId} {
-      // CREATE: A user can create their own profile.
-      allow create: if isOwner(userId);
-
-      // READ: A user can read their own profile. An admin can read any profile.
-      allow get: if isOwner(userId) || isAdmin();
-      
-      // LIST: An admin can list all user profiles.
-      allow list: if isAdmin();
-
-      // UPDATE:
-      // 1. A user can update their own profile if it hasn't been submitted.
-      // 2. An admin can update any user's profile.
-      allow update: if (isOwner(userId) && resource.data.submittedAt == null) || isAdmin();
-
-      // DELETE: Nobody can delete profiles.
-      allow delete: if false;
-    }
-
-    // Rules for the application bridging feature
-    match /bridge_requests/{requestId} {
-      // CREATE: Any authenticated user can create a request for themselves.
+      allow read: if request.auth != null 
+        && request.auth.uid == userId;
       allow create: if request.auth != null 
-                    && request.resource.data.uid == request.auth.uid;
+        && request.auth.uid == userId;
+      allow update: if request.auth != null 
+        && request.auth.uid == userId;
+      allow read, write: if isAdmin();
+    }
 
-      // READ: The user who created the request or an admin can read it.
-      allow get: if isOwner(resource.data.uid) || isAdmin();
-      
-      // LIST: Only admins can list all bridge requests.
+    match /candidateIds/{candidateId} {
+      allow get: if request.auth != null;
       allow list: if isAdmin();
-
-      // UPDATE: Only admins can update the status of a request.
-      allow update: if isAdmin();
-      
-      // DELETE: No one can delete requests to maintain a record.
-      allow delete: if false;
-    }
-
-    match /bridge_codes/{codeId} {
-      // CREATE: Only admins can create new bridge codes.
       allow create: if isAdmin();
-      
-      // READ: Only admins can read codes to prevent discovery.
-      allow get, list: if isAdmin();
-
-      // UPDATE: An authenticated user can "claim" a code if it's unclaimed and assigned to their email.
-      // This is the core logic for the bridge action.
-      allow update: if request.auth != null
-                    && resource.data.isClaimed == false
-                    && request.resource.data.isClaimed == true
-                    && request.resource.data.claimedByUid == request.auth.uid
-                    && resource.data.assignedEmail == request.auth.token.email;
-
-      // DELETE: Admins can delete codes if necessary.
       allow delete: if isAdmin();
+      allow update: if request.auth != null
+        && request.resource.data.status == 'claimed'
+        && request.resource.data.assignedUid 
+           == request.auth.uid
+        && resource.data.status != 'claimed';
     }
+
+    match /legacyData/{candidateId} {
+      allow get: if request.auth != null;
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /pendingVerifications/{userId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId;
+      allow read, write: if isAdmin();
+    }
+
+    match /auditLog/{logId} {
+      allow read: if isAdmin();
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    match /deletionRequests/{requestId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid 
+           == request.auth.uid;
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
   }
 }

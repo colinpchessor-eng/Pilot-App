@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { ApplicantData } from '@/lib/types';
 import { format } from 'date-fns';
+import { decryptField, isEncrypted } from '@/lib/encryption';
 import { unparse } from 'papaparse';
 import { Download, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -30,7 +31,7 @@ export function ApplicationsTable({
       'First Name': app.firstName || '',
       'Last Name': app.lastName || '',
       Email: app.email || '',
-      'ATP Number': app.atpNumber || '',
+      'ATP Number': isEncrypted(String(app.atpNumber || '')) ? decryptField(String(app.atpNumber)) : (app.atpNumber || ''),
       'Total Flight Hours': app.flightTime?.total ?? 0,
       'Turbine PIC Hours': app.flightTime?.turbinePic ?? 0,
       'Multi-Engine Hours': app.flightTime?.multiEngine ?? 0,
@@ -53,10 +54,13 @@ export function ApplicationsTable({
   return (
     <div>
       <div className="mb-4 flex justify-end">
-        <Button onClick={handleExport} disabled={applications.length === 0}>
-          <Download className="mr-2 h-4 w-4" />
-          Export to CSV
-        </Button>
+        <span className="admin-tooltip">
+          <span className="admin-tooltip-text">Download all submitted applications as a spreadsheet</span>
+          <Button onClick={handleExport} disabled={applications.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Export to CSV
+          </Button>
+        </span>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -90,12 +94,15 @@ export function ApplicationsTable({
                     {app.flightTime?.total ?? 0}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/admin/applications/${app.uid}`}>
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        Open
-                      </Link>
-                    </Button>
+                    <span className="admin-tooltip">
+                      <span className="admin-tooltip-text">View and print full application details</span>
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/admin/applications/${app.uid}`}>
+                          <ExternalLink className="mr-2 h-4 w-4" />
+                          Open
+                        </Link>
+                      </Button>
+                    </span>
                   </TableCell>
                 </TableRow>
               ))

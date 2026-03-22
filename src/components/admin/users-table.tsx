@@ -81,13 +81,16 @@ export function UsersTable({ users }: { users: ApplicantData[] }) {
                   {user.email?.toLowerCase() === 'fedexadmin@fedex.com' ? (
                     <Badge>Super Admin</Badge>
                   ) : (
-                    <Switch
-                      checked={!!user.isAdmin}
-                      onCheckedChange={(checked) =>
-                        handleAdminChange(user, checked)
-                      }
-                      aria-label="Admin status"
-                    />
+                    <span className="admin-tooltip inline-block">
+                      <span className="admin-tooltip-text">Grant or remove admin access for this user</span>
+                      <Switch
+                        checked={!!user.isAdmin}
+                        onCheckedChange={(checked) =>
+                          handleAdminChange(user, checked)
+                        }
+                        aria-label="Admin status"
+                      />
+                    </span>
                   )}
                 </TableCell>
               </TableRow>

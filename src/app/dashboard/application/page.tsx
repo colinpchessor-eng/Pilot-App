@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import type { ApplicantData } from '@/lib/types';
-import { doc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useEffect } from 'react';
 import { InteriorNavbar } from '@/components/layout/InteriorNavbar';
 
@@ -22,6 +22,28 @@ export default function ApplicationPage() {
     loading,
     error,
   } = useDoc<ApplicantData>(userDocRef);
+
+  // Fetch and save legacy data when user is verified but legacyData is missing
+  useEffect(() => {
+    if (!user || !firestore || !applicantData) return;
+    const status = applicantData.status || 'pending';
+    const candidateId = applicantData.candidateId;
+    const hasLegacy = applicantData.legacyData != null;
+    if (status !== 'verified' || !candidateId || hasLegacy) return;
+
+    (async () => {
+      try {
+        const legacyRef = doc(firestore, 'legacyData', candidateId);
+        const legacySnap = await getDoc(legacyRef);
+        if (legacySnap.exists()) {
+          const userRef = doc(firestore, 'users', user.uid);
+          await updateDoc(userRef, { legacyData: legacySnap.data() });
+        }
+      } catch (e) {
+        console.error('Failed to fetch legacy data:', e);
+      }
+    })();
+  }, [user, firestore, applicantData]);
 
   if (loading) {
     return (

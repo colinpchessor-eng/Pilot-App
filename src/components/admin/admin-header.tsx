@@ -33,14 +33,14 @@ export function AdminHeader({ className }: { className?: string }) {
   };
 
   return (
-    <header className={cn("sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6", className)}>
+    <header className={cn("sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#3d3850] px-4 sm:px-6", className)} style={{ background: '#1E1A2B', color: '#ffffff' }}>
       <Link
         href="/admin"
         className="flex items-center gap-2"
         aria-label="Back to admin home"
       >
         <Icons.logo className="h-8 w-auto" />
-        <span className="hidden font-semibold sm:inline-block">
+        <span className="hidden font-semibold sm:inline-block text-white">
           Admin Portal
         </span>
       </Link>

@@ -2,7 +2,13 @@
 
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import type { ApplicantData } from '@/lib/types';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  writeBatch,
+  serverTimestamp,
+  updateDoc,
+} from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -28,15 +34,16 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { InteriorNavbar } from '@/components/layout/InteriorNavbar';
 import { useRouter } from 'next/navigation';
+import { Printer } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-  const [appIdInput, setAppIdInput] = useState('');
+  const [candidateIdInput, setCandidateIdInput] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verifyError, setVerifyError] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
 
   const userDocRef = user ? doc(firestore, 'users', user.uid) : undefined;
   const {
@@ -53,29 +60,155 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const handleVerifyId = async () => {
-    if (!user || !userDocRef) return;
-    
-    setIsVerifying(true);
-    setVerifyError(false);
+  // Fetch and save legacy data when user is verified but legacyData is missing
+  useEffect(() => {
+    if (!user || !firestore || !applicantData) return;
+    const status = applicantData.status || 'pending';
+    const candidateId = applicantData.candidateId;
+    const hasLegacy = applicantData.legacyData != null;
+    if (status !== 'verified' || !candidateId || hasLegacy) return;
 
-    // Simulate verification delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    if (appIdInput.toUpperCase() === 'ABC123') {
+    (async () => {
       try {
-        await updateDoc(userDocRef, {
-          status: 'verified',
-          verifiedAt: serverTimestamp()
-        } as any);
-        // sessionStorage flag for UI immediate response if needed
-        sessionStorage.setItem('isBridged', 'true');
+        const legacyRef = doc(firestore, 'legacyData', candidateId);
+        const legacySnap = await getDoc(legacyRef);
+        if (legacySnap.exists()) {
+          const userRef = doc(firestore, 'users', user.uid);
+          await updateDoc(userRef, { legacyData: legacySnap.data() });
+        }
       } catch (e) {
-        console.error("Failed to update status", e);
+        console.error('Failed to fetch legacy data:', e);
       }
-    } else {
-      setVerifyError(true);
+    })();
+  }, [user, firestore, applicantData]);
+
+  const handleVerifyCandidateId = async () => {
+    if (!user || !candidateIdInput.trim()) return;
+
+    setIsVerifying(true);
+    setVerifyError('');
+
+    try {
+      const inputId = candidateIdInput.trim().toUpperCase();
+
+      // Look up the candidate ID in Firestore
+      const candidateRef = doc(
+        firestore,
+        'candidateIds',
+        inputId
+      );
+      const candidateSnap = await getDoc(candidateRef);
+
+      // Check 1: Does document exist?
+      if (!candidateSnap.exists()) {
+        setVerifyError(
+          'Invalid Candidate ID. Please check ' +
+          'your email and try again.'
+        );
+        setIsVerifying(false);
+        return;
+      }
+
+      const candidateData = candidateSnap.data();
+
+      // Check 2: Already claimed by someone else?
+      if (
+        candidateData.status === 'claimed' &&
+        candidateData.assignedUid !== user.uid
+      ) {
+        setVerifyError(
+          'This Candidate ID has already been used.'
+        );
+        setIsVerifying(false);
+        return;
+      }
+
+      // Check 3: Email match unless masterKey
+      const isMasterKey = candidateData.masterKey === true;
+
+      if (isMasterKey) {
+        const expiry = candidateData.masterKeyExpiry;
+        if (expiry && expiry.toDate() < new Date()) {
+          setVerifyError(
+            'This Candidate ID has expired. ' +
+            'Please contact HR for assistance.'
+          );
+          setIsVerifying(false);
+          return;
+        }
+
+        const authorizedEmails =
+          candidateData.masterKeyEmails || [];
+
+        if (
+          authorizedEmails.length > 0 &&
+          !authorizedEmails
+            .map((e: string) => e.toLowerCase())
+            .includes(user.email?.toLowerCase() || '')
+        ) {
+          setVerifyError(
+            'This Candidate ID is not authorized ' +
+            'for your account.'
+          );
+          setIsVerifying(false);
+          return;
+        }
+      }
+
+      if (!isMasterKey && candidateData.email) {
+        if (
+          candidateData.email.toLowerCase() !==
+          user.email?.toLowerCase()
+        ) {
+          setVerifyError(
+            'This Candidate ID is not associated ' +
+            'with your account. Please use the ' +
+            'email address your Candidate ID ' +
+            'was sent to.'
+          );
+          setIsVerifying(false);
+          return;
+        }
+      }
+
+      // All checks passed — write updates atomically
+      const batch = writeBatch(firestore);
+
+      // Mark candidate ID as claimed
+      batch.update(candidateRef, {
+        status: 'claimed',
+        assignedUid: user.uid,
+        claimedAt: serverTimestamp(),
+      });
+
+      // Update user document to verified
+      const userRef = doc(firestore, 'users', user.uid);
+      batch.update(userRef, {
+        status: 'verified',
+        verifiedAt: serverTimestamp(),
+        legacyApplicationId:
+          candidateData.legacyApplicationId || '',
+        candidateId: inputId,
+      });
+
+      await batch.commit();
+
+      // Fetch legacy data and copy into user document
+      const legacyRef = doc(firestore, 'legacyData', inputId);
+      const legacySnap = await getDoc(legacyRef);
+      if (legacySnap.exists()) {
+        const userRef = doc(firestore, 'users', user.uid);
+        await updateDoc(userRef, {
+          legacyData: legacySnap.data(),
+        });
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      setVerifyError(
+        'Something went wrong. Please try again.'
+      );
     }
+
     setIsVerifying(false);
   };
 
@@ -118,6 +251,11 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const legacyData = applicantData?.legacyData || null;
+  const flightTime = legacyData?.flightTime || null;
+  const lastEmployer = legacyData?.lastEmployer || null;
+  const lastResidence = legacyData?.lastResidence || null;
 
   const isSubmitted = !!applicantData.submittedAt;
   const status = applicantData.status || 'pending';
@@ -237,25 +375,37 @@ export default function DashboardPage() {
                 <div className="mt-6 p-4 rounded-lg bg-[#FAFAFA] border border-[#E3E3E3] space-y-3">
                   <label className="text-xs font-bold text-[#565656] uppercase tracking-wider flex items-center gap-2">
                     <ShieldCheck className="h-3.5 w-3.5 text-[#4D148C]" />
-                    Application ID Verification
+                    Candidate ID Verification
                   </label>
                   <div className="flex gap-2">
                     <Input 
-                      placeholder="Enter ID (e.g. ABC123)" 
+                      placeholder="Enter Candidate ID (e.g. 12345678)" 
                       className="bg-white border-[#E3E3E3] h-10"
-                      value={appIdInput}
-                      onChange={(e) => setAppIdInput(e.target.value)}
+                      value={candidateIdInput}
+                      onChange={(e) => setCandidateIdInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleVerifyCandidateId()
+                      }}
                     />
                     <Button 
-                      onClick={handleVerifyId} 
-                      disabled={isVerifying || !appIdInput}
+                      onClick={handleVerifyCandidateId} 
+                      disabled={isVerifying || !candidateIdInput.trim()}
                       className="bg-[#4D148C] hover:bg-[#7D22C3] text-white font-bold h-10 px-6 shrink-0"
                     >
-                      {isVerifying ? "..." : "Verify"}
+                      {isVerifying ? 'Verifying...' : 'Verify'}
                     </Button>
                   </div>
-                  {verifyError && <p className="text-xs text-[#DE002E] font-bold">Invalid Application ID. Please try again.</p>}
-                  <p className="text-[11px] text-[#8E8E8E]">New pilots must verify their Application ID to continue.</p>
+                  {verifyError && (
+                    <p
+                      className="text-xs font-bold mt-2"
+                      style={{ color: '#DE002E' }}
+                    >
+                      {verifyError}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-[#8E8E8E]">
+                    New pilots must verify their Application ID to continue.
+                  </p>
                 </div>
               )}
             </div>
@@ -285,33 +435,69 @@ export default function DashboardPage() {
 
           {/* Legacy Records Card - ONLY SHOWS FOR VERIFIED USERS */}
           {isVerified && (
-            <div className="p-6 rounded-xl border border-[#E3E3E3] border-top-3 border-t-[#007AB7] bg-white shadow-[0_4px_20px_rgba(0,122,183,0.15)] animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="border-t-[3px] border-t-[#007AB7] pt-4 -mt-6 rounded-t-xl">
+            <div className="legacy-print-area p-6 rounded-xl border border-[#E3E3E3] bg-white shadow-[0_4px_20px_rgba(0,122,183,0.15)] animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ borderTop: '3px solid #007AB7' }}>
+              <div className="hidden print:block mb-6">
+                <h1 className="text-xl font-bold text-[#333333] mb-2">FedEx Pilot Application — Legacy Records</h1>
+                {applicantData.candidateId && <p className="text-sm text-[#565656]">Candidate ID: {applicantData.candidateId}</p>}
+                <p className="text-sm text-[#565656]">Name: {[applicantData.firstName, applicantData.lastName].filter(Boolean).join(' ')}</p>
+                <p className="text-sm text-[#565656]">Printed: {new Date().toLocaleDateString()}</p>
+              </div>
+              <div className="pt-4 -mt-6 rounded-t-xl">
                 <div className="flex justify-between items-start mt-2">
-                  <h3 className="text-xl font-bold text-[#333333]">Legacy Records</h3>
-                  <Database className="h-6 w-6 text-[#007AB7]" />
+                  <h3 className="text-xl font-bold text-[#333333]">Your Legacy Records</h3>
+                  <Database className="h-6 w-6 shrink-0" style={{ color: '#007AB7' }} />
                 </div>
-                <div className="mt-6 p-4 rounded-lg bg-[#F2F2F2] border border-[#E3E3E3] flex flex-col items-center text-center space-y-3">
-                  <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <FileDown className="h-6 w-6 text-[#007AB7]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-[#333333]">application_archive_2023.pdf</p>
-                    <p className="text-xs text-[#8E8E8E]">Last synced: {format(new Date(), 'MMM d, yyyy')}</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="w-full border-[#007AB7] text-[#007AB7] font-bold hover:bg-[#007AB7] hover:text-white transition-all">
-                    View Stored Data
-                  </Button>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-[#8E8E8E]">Stored Flight Time:</span>
-                    <span className="font-bold text-[#333333]">2,450 hrs</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-[#8E8E8E]">Type Ratings:</span>
-                    <span className="font-bold text-[#333333]">B737, MD11</span>
-                  </div>
+                <p className="text-xs text-[#8E8E8E] mt-1">
+                  Data imported from your previous application on file
+                </p>
+                <div className="mt-4">
+                  {!legacyData ? (
+                    <p className="text-[13px]" style={{ color: '#8E8E8E' }}>No legacy records found.</p>
+                  ) : (
+                    <>
+                      <div className="mb-5">
+                        <h4 className="text-xs font-bold text-[#8E8E8E] uppercase tracking-wider mb-3">FLIGHT TIME SUMMARY</h4>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                          <div className="flex justify-between"><span className="text-[#565656]">Total Hours:</span><span className="font-semibold text-[#333333]">{flightTime?.total ?? '—'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#565656]">Turbine PIC:</span><span className="font-semibold text-[#333333]">{flightTime?.turbinePIC ?? '—'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#565656]">Military:</span><span className="font-semibold text-[#333333]">{flightTime?.military ?? '—'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#565656]">Multi-Engine:</span><span className="font-semibold text-[#333333]">{flightTime?.multiEngine ?? '—'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#565656]">Instructor:</span><span className="font-semibold text-[#333333]">{flightTime?.instructor ?? '—'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#565656]">SIC Hours:</span><span className="font-semibold text-[#333333]">{flightTime?.sic ?? '—'}</span></div>
+                        </div>
+                      </div>
+                      <div className="mb-5 p-3 rounded" style={{ background: 'rgba(0,122,183,0.06)', borderLeft: '3px solid #007AB7' }}>
+                        <div className="text-xs font-bold text-[#8E8E8E] uppercase tracking-wider mb-1">Date Last Flown</div>
+                        <div className="text-[#333333] font-semibold">{flightTime?.dateLastFlown ?? '—'}</div>
+                        {(flightTime?.lastAircraftFlown) && <div className="text-xs text-[#8E8E8E] mt-1">{flightTime.lastAircraftFlown}</div>}
+                      </div>
+                      <div className="mb-5">
+                        <h4 className="text-xs font-bold text-[#8E8E8E] uppercase tracking-wider mb-2">LAST EMPLOYER ON FILE</h4>
+                        <div className="space-y-1">
+                          <div className="font-bold text-[#333333]" style={{ fontSize: 15 }}>{lastEmployer?.company ?? '—'}</div>
+                          <div className="text-[#565656]" style={{ fontSize: 13 }}>{lastEmployer?.title ?? '—'}</div>
+                          <div className="text-[#8E8E8E]" style={{ fontSize: 12 }}>{[lastEmployer?.city, lastEmployer?.state].filter(Boolean).join(', ') || '—'}</div>
+                          <div className="text-[#8E8E8E]" style={{ fontSize: 12 }}>{(lastEmployer?.from ?? '—')} → {(lastEmployer?.to ?? '—')}</div>
+                        </div>
+                      </div>
+                      <div className="mb-5">
+                        <h4 className="text-xs font-bold text-[#8E8E8E] uppercase tracking-wider mb-2">LAST RESIDENCE ON FILE</h4>
+                        <div className="space-y-1">
+                          <div className="font-bold text-[#333333]">{lastResidence?.street ?? '—'}</div>
+                          <div className="text-[#565656]">{[lastResidence?.city, lastResidence?.state, lastResidence?.zip].filter(Boolean).join(' ') || '—'}</div>
+                          <div className="text-[#8E8E8E]" style={{ fontSize: 12 }}>{(lastResidence?.from ?? '—')} → {(lastResidence?.to ?? '—')}</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => window.print()}
+                        className="print-hide w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold transition-colors hover:!bg-[#007AB7] hover:!text-white"
+                        style={{ background: 'white', border: '1.5px solid #007AB7', color: '#007AB7' }}
+                      >
+                        <Printer className="h-4 w-4" /> Print Legacy Records
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -363,7 +549,9 @@ export default function DashboardPage() {
       </div>
       
       <footer className="mt-auto py-8 text-center text-[#8E8E8E] text-sm interior-bg">
-        © {new Date().getFullYear()} FedEx. All rights reserved.
+        © {new Date().getFullYear()} FedEx. All rights reserved.{' '}
+        <span className="text-[#8E8E8E]">|</span>{' '}
+        <Link href="/privacy" className="text-[#4D148C] text-[13px] hover:underline">Privacy Policy</Link>
       </footer>
     </div>
   );

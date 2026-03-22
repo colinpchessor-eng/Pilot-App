@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   createUserWithEmailAndPassword,
   type AuthError,
@@ -33,6 +34,11 @@ export function SignupForm() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [dataConsent, setDataConsent] = useState(false);
+  const [consentError, setConsentError] = useState(false);
+
+  const bothConsented = privacyConsent && dataConsent;
 
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),
@@ -105,6 +111,10 @@ export function SignupForm() {
         submittedAt: null,
         isCertified: false,
         printedName: null,
+        consentGiven: true,
+        consentTimestamp: serverTimestamp() as any,
+        consentVersion: '1.0',
+        privacyPolicyVersion: 'March 2026',
       };
 
       const userDocRef = doc(firestore, 'users', user.uid);
@@ -232,9 +242,59 @@ export function SignupForm() {
             </FormItem>
           )}
         />
+        {/* Consent Checkboxes */}
+        <div
+          className="!mt-5 flex flex-col gap-3 rounded-lg p-4"
+          style={{
+            background: 'rgba(77,20,140,0.04)',
+            border: '1px solid rgba(77,20,140,0.15)',
+          }}
+        >
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={privacyConsent}
+              onChange={(e) => { setPrivacyConsent(e.target.checked); setConsentError(false); }}
+              className="mt-0.5 shrink-0"
+              style={{ width: 18, height: 18, minWidth: 18, borderRadius: 4, accentColor: '#4D148C' }}
+            />
+            <span className="text-[13px] text-[#565656] leading-[1.5]">
+              I have read and agree to the{' '}
+              <Link href="/privacy" target="_blank" className="text-[#4D148C] font-semibold underline">
+                Privacy Policy
+              </Link>{' '}
+              regarding how my application data will be collected and used.
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={dataConsent}
+              onChange={(e) => { setDataConsent(e.target.checked); setConsentError(false); }}
+              className="mt-0.5 shrink-0"
+              style={{ width: 18, height: 18, minWidth: 18, borderRadius: 4, accentColor: '#4D148C' }}
+            />
+            <span className="text-[13px] text-[#565656] leading-[1.5]">
+              I consent to FedEx Express collecting and processing my pilot application data for employment evaluation purposes.
+            </span>
+          </label>
+
+          {consentError && (
+            <p className="text-[12px]" style={{ color: '#DE002E' }}>
+              Please agree to both items above to create your account.
+            </p>
+          )}
+        </div>
+
         <Button
-          type="submit"
-          className="!mt-6 w-full h-12 fedex-gradient text-white font-bold rounded-lg shadow-[0_4px_15px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 active:translate-y-0.5"
+          type={bothConsented ? 'submit' : 'button'}
+          onClick={bothConsented ? undefined : () => setConsentError(true)}
+          className={
+            bothConsented
+              ? '!mt-6 w-full h-12 fedex-gradient text-white font-bold rounded-lg shadow-[0_4px_15px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 active:translate-y-0.5'
+              : '!mt-6 w-full h-12 font-bold rounded-lg transition-all !bg-[#E3E3E3] !text-[#8E8E8E] cursor-not-allowed !shadow-none'
+          }
           disabled={loading}
         >
           {loading ? (

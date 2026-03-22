@@ -1,5 +1,40 @@
-
 import { Timestamp } from 'firebase/firestore';
+
+/** Legacy data imported from previous application (Paradox) */
+export type LegacyData = {
+  candidateId?: string;
+  legacyApplicationId?: string;
+  flightTime?: {
+    total?: number;
+    turbinePIC?: number;
+    military?: number;
+    civilian?: number;
+    multiEngine?: number;
+    instructor?: number;
+    evaluator?: number;
+    sic?: number;
+    other?: number;
+    dateLastFlown?: string;
+    lastAircraftFlown?: string;
+  };
+  lastEmployer?: {
+    from?: string;
+    to?: string;
+    company?: string;
+    title?: string;
+    city?: string;
+    state?: string;
+  };
+  lastResidence?: {
+    from?: string;
+    to?: string;
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
+};
 
 export type VerificationStatus = 'pending' | 'token_sent' | 'verified';
 export type UserRole = 'admin';
@@ -64,4 +99,6 @@ export type ApplicantData = {
   submittedAt: Timestamp | null;
   isCertified: boolean;
   printedName: string | null;
+  candidateId?: string | null;
+  legacyData?: LegacyData | null;
 };

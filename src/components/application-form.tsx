@@ -72,7 +72,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from './ui/accordion';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from './ui/sheet';
+import { LegacyRecordsContent } from './legacy-records-content';
+import { Database, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { encryptField, decryptField, isEncrypted } from '@/lib/encryption';
 
 const TABS = [
   { value: 'flight-time', label: 'Flight Time' },
@@ -117,6 +127,8 @@ export function ApplicationForm({
   const [showSubmitDialog, setShowSubmitDialog] = React.useState(false);
   const [isStuck, setIsStuck] = useState(false);
   const [incompleteItems, setIncompleteItems] = useState<IncompleteItem[]>([]);
+  const [legacyPanelOpen, setLegacyPanelOpen] = useState(false);
+  const [legacySheetOpen, setLegacySheetOpen] = useState(false);
   const { toast } = useToast();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const activeTabRef = useRef<HTMLButtonElement>(null);
@@ -189,8 +201,28 @@ export function ApplicationForm({
         sic: data.flightTime?.sic ?? 0,
         other: data.flightTime?.other ?? 0,
       },
-      firstClassMedicalDate: data.firstClassMedicalDate ? data.firstClassMedicalDate.toDate() : null,
-      atpNumber: Number(data.atpNumber) || 0,
+      firstClassMedicalDate: (() => {
+        if (!data.firstClassMedicalDate) return null;
+        const raw = typeof data.firstClassMedicalDate === 'string' ? data.firstClassMedicalDate : null;
+        if (raw && isEncrypted(raw)) {
+          const decrypted = decryptField(raw);
+          return decrypted ? new Date(decrypted) : null;
+        }
+        if (data.firstClassMedicalDate && typeof data.firstClassMedicalDate === 'object' && 'toDate' in data.firstClassMedicalDate) {
+          return (data.firstClassMedicalDate as any).toDate();
+        }
+        return raw ? new Date(raw) : null;
+      })(),
+      atpNumber: (() => {
+        const raw = data.atpNumber;
+        if (!raw) return 0;
+        const str = String(raw);
+        if (isEncrypted(str)) {
+          const decrypted = decryptField(str);
+          return Number(decrypted) || 0;
+        }
+        return Number(raw) || 0;
+      })(),
       typeRatings: data.typeRatings ?? '',
       employmentHistory: (data.employmentHistory || []).map((eh) => ({
         ...eh,
@@ -224,8 +256,15 @@ export function ApplicationForm({
     setIsSaving(true);
     try {
       const values = form.getValues();
+      const encryptedValues = {
+        ...values,
+        atpNumber: encryptField(String(values.atpNumber || '')),
+        firstClassMedicalDate: values.firstClassMedicalDate
+          ? encryptField(values.firstClassMedicalDate instanceof Date ? values.firstClassMedicalDate.toISOString() : String(values.firstClassMedicalDate))
+          : null,
+      };
       const docRef = doc(firestore, 'users', user.uid);
-      await updateDoc(docRef, values as any);
+      await updateDoc(docRef, encryptedValues as any);
       return true;
     } catch (error) {
       console.error("Save failed:", error);
@@ -254,8 +293,15 @@ export function ApplicationForm({
   const onSubmit = (values: ApplicationFormValues) => {
     if (!user || !firestore) return;
     setIsSubmitting(true);
+    const encryptedValues = {
+      ...values,
+      atpNumber: encryptField(String(values.atpNumber || '')),
+      firstClassMedicalDate: values.firstClassMedicalDate
+        ? encryptField(values.firstClassMedicalDate instanceof Date ? values.firstClassMedicalDate.toISOString() : String(values.firstClassMedicalDate))
+        : null,
+    };
     const docRef = doc(firestore, 'users', user.uid);
-    setDoc(docRef, { ...values, submittedAt: serverTimestamp() }, { merge: true })
+    setDoc(docRef, { ...encryptedValues, submittedAt: serverTimestamp() }, { merge: true })
       .then(() => {
         toast({ title: 'Application Submitted!' });
         router.push('/dashboard');
@@ -344,10 +390,43 @@ export function ApplicationForm({
     ) : null;
   };
 
+  const legacyContent = (
+    <LegacyRecordsContent
+      legacyData={applicantData.legacyData}
+      candidateId={applicantData.candidateId}
+      firstName={applicantData.firstName}
+      lastName={applicantData.lastName}
+      showNoteBanner
+    />
+  );
+
   return (
     <Form {...form}>
       <form onSubmit={(e) => e.preventDefault()}>
         <fieldset disabled={isSubmitted}>
+          {/* Mobile: View Legacy Records button */}
+          <div className="md:hidden mb-4">
+            <Sheet open={legacySheetOpen} onOpenChange={setLegacySheetOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-[#007AB7] text-[#007AB7] font-semibold hover:bg-[#007AB7] hover:text-white"
+                >
+                  <Database className="h-4 w-4 mr-2" />
+                  View Legacy Records
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[85vh] overflow-y-auto bg-white border-t border-[#E3E3E3] rounded-t-2xl">
+                <SheetHeader>
+                  <SheetTitle className="text-[#333333] font-bold">Legacy Records</SheetTitle>
+                  <p className="text-xs text-[#8E8E8E] text-left">Your data on file — for reference only</p>
+                </SheetHeader>
+                <div className="mt-4">{legacyContent}</div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-[#333333]">Pilot Application</h1>
@@ -922,6 +1001,59 @@ export function ApplicationForm({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Desktop: Legacy Data side panel */}
+      <div className="hidden md:block">
+        {/* Collapsed tab */}
+        <button
+          type="button"
+          onClick={() => setLegacyPanelOpen(true)}
+          className="fixed z-30 right-0 top-1/2 -translate-y-1/2 w-8 h-[120px] rounded-l-lg flex items-center justify-center cursor-pointer transition-colors hover:opacity-90"
+          style={{
+            background: '#007AB7',
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed',
+            color: 'white',
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          Legacy Data
+        </button>
+        {/* Expanded panel */}
+        <div
+          className={cn(
+            'fixed z-30 right-0 top-0 h-full w-[320px] bg-white border-l overflow-y-auto transition-transform duration-300 ease-out',
+            legacyPanelOpen ? 'translate-x-0' : 'translate-x-full'
+          )}
+          style={{
+            borderLeftColor: '#E3E3E3',
+            boxShadow: legacyPanelOpen ? '-4px 0 20px rgba(0,0,0,0.1)' : 'none',
+          }}
+        >
+          <div className="p-6">
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="text-lg font-bold text-[#333333]">Legacy Records</h3>
+              <button
+                type="button"
+                onClick={() => setLegacyPanelOpen(false)}
+                className="text-[#8E8E8E] hover:text-[#333333] p-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-xs text-[#8E8E8E] mb-4">Your data on file — for reference only</p>
+            {legacyContent}
+          </div>
+        </div>
+        {legacyPanelOpen && (
+          <div
+            className="fixed inset-0 z-20 bg-black/20"
+            onClick={() => setLegacyPanelOpen(false)}
+            aria-hidden
+          />
+        )}
+      </div>
     </Form>
   );
 }

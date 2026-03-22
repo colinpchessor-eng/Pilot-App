@@ -329,3 +329,68 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* Admin tooltip */
+.admin-tooltip {
+  position: relative;
+  display: inline-block;
+}
+.admin-tooltip .admin-tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  background: #333333;
+  color: #FFFFFF;
+  font-size: 11px;
+  line-height: 1.4;
+  border-radius: 6px;
+  padding: 6px 10px;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  width: max-content;
+  max-width: 220px;
+  white-space: normal;
+  text-align: center;
+  transition: opacity 150ms ease;
+  z-index: 50;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  pointer-events: none;
+}
+.admin-tooltip .admin-tooltip-text::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 16px;
+  border: 4px solid transparent;
+  border-top-color: #333333;
+}
+.admin-tooltip:hover .admin-tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Print styles for Legacy Records */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .legacy-print-area,
+  .legacy-print-area * {
+    visibility: visible;
+  }
+
+  .legacy-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 40px;
+  }
+
+  nav,
+  .interior-navbar,
+  .print-hide {
+    display: none !important;
+  }
+}
