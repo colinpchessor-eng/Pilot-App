@@ -51,7 +51,7 @@ export function InteriorNavbar() {
 
   const navItems = [
     { label: 'Dashboard', href: '/dashboard' },
-    { label: 'My Application', href: '/dashboard/application' },
+    { label: 'My Application', href: '/dashboard/application', requiresVerified: true },
     { label: 'Purple Runway Program', href: '#' },
     { label: 'Fleet & Routes', href: '#' },
     { label: 'Help', href: '#' },
@@ -66,6 +66,7 @@ export function InteriorNavbar() {
     { label: 'Audit Log', href: '/admin/audit' },
   ];
 
+  const isVerified = userData?.status === 'verified';
   const isOnAdminPage = pathname.startsWith('/admin');
 
   const userInitials = user?.email?.[0].toUpperCase() || 'U';
@@ -144,6 +145,18 @@ export function InteriorNavbar() {
               ? pathname === '/admin' || (pathname.startsWith('/admin/applications') && item.href === '/admin')
               : pathname === item.href;
             const dot = (item as any).dot;
+            const locked = (item as any).requiresVerified && !isVerified;
+            if (locked) {
+              return (
+                <span
+                  key={item.label + item.href}
+                  title="Verify your Candidate ID to access your application"
+                  className="px-3 py-2 rounded-full text-[13px] font-medium text-[#8E8E8E] cursor-not-allowed whitespace-nowrap shrink-0 relative select-none opacity-50"
+                >
+                  {item.label}
+                </span>
+              );
+            }
             return (
               <Link
                 key={item.label + item.href}
@@ -163,11 +176,21 @@ export function InteriorNavbar() {
 
         {/* Right Side Action */}
         <div className="ml-auto flex items-center shrink-0">
-          <Link href="/dashboard/application">
-            <Button className="hidden sm:flex bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-full px-5 py-2 text-[13px] font-bold shadow-[0_2px_12px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 hover:-translate-y-0.5">
+          {isVerified ? (
+            <Link href="/dashboard/application">
+              <Button className="hidden sm:flex bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-full px-5 py-2 text-[13px] font-bold shadow-[0_2px_12px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 hover:-translate-y-0.5">
+                My Application
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              disabled
+              title="Verify your Candidate ID to access your application"
+              className="hidden sm:flex bg-[#E3E3E3] text-[#8E8E8E] rounded-full px-5 py-2 text-[13px] font-bold cursor-not-allowed shadow-none"
+            >
               My Application
             </Button>
-          </Link>
+          )}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -185,6 +208,17 @@ export function InteriorNavbar() {
               {allMobileItems.map((item) => {
                 const isActive = pathname === item.href;
                 const dot = (item as any).dot;
+                const mobileLocked = (item as any).requiresVerified && !isVerified;
+                if (mobileLocked) {
+                  return (
+                    <span
+                      key={item.label + item.href}
+                      className="px-4 py-3 rounded-xl text-sm font-medium text-[#8E8E8E] cursor-not-allowed opacity-50 select-none"
+                    >
+                      {item.label}
+                    </span>
+                  );
+                }
                 return (
                   <Link
                     key={item.label + item.href}
@@ -201,15 +235,24 @@ export function InteriorNavbar() {
                   </Link>
                 );
               })}
-              <Link
-                href="/dashboard/application"
-                className="mt-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Button className="w-full bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-xl py-6 text-sm font-bold">
+              {isVerified ? (
+                <Link
+                  href="/dashboard/application"
+                  className="mt-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Button className="w-full bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-xl py-6 text-sm font-bold">
+                    My Application
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  disabled
+                  className="mt-2 w-full bg-[#E3E3E3] text-[#8E8E8E] rounded-xl py-6 text-sm font-bold cursor-not-allowed shadow-none"
+                >
                   My Application
                 </Button>
-              </Link>
+              )}
             </div>
           </div>
         )}
