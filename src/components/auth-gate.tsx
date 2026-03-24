@@ -6,11 +6,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
 import type { ApplicantData, VerificationStatus } from '@/lib/types';
 import { buildDefaultApplicantData } from '@/lib/default-applicant';
-import { deleteClientCookie, setClientCookie } from '@/lib/cookies';
-
-const AUTH_COOKIE = 'ff_authed';
-const STATUS_COOKIE = 'ff_status';
-const ROLE_COOKIE = 'ff_role';
+import { createSessionCookie, clearSessionCookie } from '@/app/auth/actions';
 
 function normalizeStatus(value: unknown): VerificationStatus {
   if (value === 'token_sent' || value === 'verified') return value;
@@ -18,20 +14,10 @@ function normalizeStatus(value: unknown): VerificationStatus {
 }
 
 function getRedirectForStatus(pathname: string, status: VerificationStatus) {
-  // Allow these routes regardless of status:
   if (pathname.startsWith('/admin')) return null;
   if (pathname.startsWith('/verify/request')) return null;
   if (pathname.startsWith('/verify/token')) return null;
   if (pathname === '/login' || pathname === '/signup' || pathname === '/' || pathname === '/dashboard') return null;
-
-  /* 
-  // REMOVED: Verification redirect logic
-  if (pathname.startsWith('/dashboard/application') && status !== 'verified') {
-    if (status === 'pending') return '/verify/request';
-    if (status === 'token_sent') return '/verify/token';
-  }
-  */
-
   return null;
 }
 
@@ -51,16 +37,11 @@ export function AuthGate() {
     if (authLoading) return;
 
     if (!user) {
-      // clear cookies on sign out / unauth
-      deleteClientCookie(AUTH_COOKIE);
-      deleteClientCookie(STATUS_COOKIE);
-      deleteClientCookie(ROLE_COOKIE);
-
+      clearSessionCookie();
       if (shouldProtect) router.replace('/login');
       return;
     }
 
-    // Ensure this effect only triggers once per navigation burst.
     if (ranRef.current) return;
     ranRef.current = true;
 
@@ -81,33 +62,28 @@ export function AuthGate() {
       }
 
       const status = normalizeStatus((data as any).status);
-      const role = (data as any).role ?? ((data as any).isAdmin ? 'admin' : '');
+      const isAdmin = (data as any).isAdmin === true;
+      const role = (data as any).role ?? (isAdmin ? 'admin' : '');
 
-      setClientCookie(AUTH_COOKIE, '1');
-      setClientCookie(STATUS_COOKIE, status);
-      if (role) setClientCookie(ROLE_COOKIE, String(role));
-      else deleteClientCookie(ROLE_COOKIE);
+      const idToken = await user.getIdToken();
+      await createSessionCookie(idToken);
 
-      // Client-side guard: redirect based on status (non-admin routes)
       const redirect = getRedirectForStatus(pathname, status);
       if (redirect) {
         router.replace(redirect);
         return;
       }
 
-      // Admin guard: require admin role/isAdmin
       if (pathname.startsWith('/admin') && role !== 'admin') {
         router.replace('/dashboard');
         return;
       }
 
-      // If they're verified and they land on verify pages, bounce them out.
       if (status === 'verified' && pathname.startsWith('/verify')) {
         router.replace('/dashboard');
         return;
       }
     })().finally(() => {
-      // allow future navigations to run
       ranRef.current = false;
     });
   }, [authLoading, firestore, pathname, router, shouldProtect, user]);

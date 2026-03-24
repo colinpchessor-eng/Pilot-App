@@ -3,17 +3,15 @@
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
   query,
-  serverTimestamp,
-  updateDoc,
   where,
 } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useFirestore, useUser } from '@/firebase';
+import { useIdToken } from '@/firebase/auth/use-id-token';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,10 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  triggerApplicantRejectionEmail,
-  triggerApplicantTokenEmail,
-} from '@/app/actions';
+import { adminApproveVerification, adminRejectVerification } from '@/app/admin/actions';
 import { ShieldCheck } from 'lucide-react';
 
 type PendingVerification = {
@@ -47,6 +42,7 @@ type ApplicantRecord = {
 export default function AdminVerificationsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { getIdToken } = useIdToken();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<PendingVerification | null>(null);
   const [token, setToken] = useState('');
@@ -92,26 +88,19 @@ export default function AdminVerificationsPage() {
     setSaving(true);
     setError(null);
     try {
-      const applicantRef = doc(firestore, 'applicants', tokenId);
-      const applicantSnap = await getDoc(applicantRef);
-      if (!applicantSnap.exists()) { setError('Applicant token not found in /applicants.'); return; }
-      const applicant = applicantSnap.data() as ApplicantRecord;
-      if (applicant.email?.toLowerCase() !== selected.email.toLowerCase()) {
-        setError('Token email does not match the pending verification email.');
+      const idToken = await getIdToken();
+      const result = await adminApproveVerification({
+        idToken,
+        uid: selected.uid,
+        email: selected.email,
+        displayName: selected.displayName,
+        tokenId,
+      });
+
+      if (!result.success) {
+        setError(result.message);
         return;
       }
-
-      const pendingRef = doc(firestore, 'pendingVerifications', selected.uid);
-      await updateDoc(pendingRef, { status: 'approved', approvedAt: serverTimestamp() } as any);
-      await updateDoc(applicantRef, { status: 'token_sent', assignedUid: selected.uid } as any);
-      const userRef = doc(firestore, 'users', selected.uid);
-      await updateDoc(userRef, { status: 'token_sent' } as any);
-
-      await triggerApplicantTokenEmail({ email: selected.email, displayName: selected.displayName, token: tokenId });
-      await addDoc(collection(firestore, 'auditLog'), {
-        action: 'approved_verification', adminUid: user?.uid || '', adminEmail: user?.email || '',
-        candidateId: tokenId, candidateName: selected.displayName || selected.email, timestamp: serverTimestamp(),
-      });
 
       setOpen(false);
       setSelected(null);
@@ -126,16 +115,17 @@ export default function AdminVerificationsPage() {
     setSaving(true);
     setError(null);
     try {
-      const pendingRef = doc(firestore, 'pendingVerifications', row.uid);
-      await updateDoc(pendingRef, { status: 'rejected', rejectedAt: serverTimestamp() } as any);
-      const userRef = doc(firestore, 'users', row.uid);
-      await updateDoc(userRef, { status: 'pending' } as any);
-
-      await triggerApplicantRejectionEmail({ email: row.email, displayName: row.displayName });
-      await addDoc(collection(firestore, 'auditLog'), {
-        action: 'rejected_verification', adminUid: user?.uid || '', adminEmail: user?.email || '',
-        candidateId: '', candidateName: row.displayName || row.email, timestamp: serverTimestamp(),
+      const idToken = await getIdToken();
+      const result = await adminRejectVerification({
+        idToken,
+        uid: row.uid,
+        email: row.email,
+        displayName: row.displayName,
       });
+
+      if (!result.success) {
+        setError(result.message);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to reject.');
     } finally {

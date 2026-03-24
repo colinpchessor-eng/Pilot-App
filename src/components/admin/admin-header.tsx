@@ -17,7 +17,7 @@ import {
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { deleteClientCookie } from '@/lib/cookies';
+import { clearSessionCookie } from '@/app/auth/actions';
 
 export function AdminHeader({ className }: { className?: string }) {
   const { user } = useUser();
@@ -26,9 +26,7 @@ export function AdminHeader({ className }: { className?: string }) {
   const handleSignOut = async () => {
     const auth = getAuth();
     await signOut(auth);
-    deleteClientCookie('ff_authed');
-    deleteClientCookie('ff_status');
-    deleteClientCookie('ff_role');
+    await clearSessionCookie();
     router.push('/login');
   };
 

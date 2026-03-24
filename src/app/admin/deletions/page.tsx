@@ -2,14 +2,16 @@
 
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { collection, doc, query, serverTimestamp, updateDoc, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useFirestore, useUser } from '@/firebase';
+import { useIdToken } from '@/firebase/auth/use-id-token';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle, Eye, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { adminCompleteDeletion } from '@/app/admin/actions';
 
 type DeletionRequest = {
   uid: string;
@@ -26,6 +28,7 @@ type DeletionRequest = {
 export default function AdminDeletionsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { getIdToken } = useIdToken();
   const { toast } = useToast();
 
   const [confirmTarget, setConfirmTarget] = useState<DeletionRequest | null>(null);
@@ -46,12 +49,18 @@ export default function AdminDeletionsPage() {
     if (!confirmTarget || !user) return;
     setCompleting(true);
     try {
-      await updateDoc(doc(firestore, 'deletionRequests', confirmTarget.uid), {
-        status: 'completed', completedAt: serverTimestamp(), completedBy: user.email || user.uid,
-      } as any);
-      toast({ title: 'Marked Complete', description: `Deletion for ${confirmTarget.email} recorded.` });
-      setConfirmTarget(null);
-      setChecks([false, false, false, false]);
+      const idToken = await getIdToken();
+      const result = await adminCompleteDeletion({
+        idToken,
+        requestUid: confirmTarget.uid,
+      });
+      if (result.success) {
+        toast({ title: 'Marked Complete', description: `Deletion for ${confirmTarget.email} recorded.` });
+        setConfirmTarget(null);
+        setChecks([false, false, false, false]);
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
+      }
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Error', description: e.message });
     }

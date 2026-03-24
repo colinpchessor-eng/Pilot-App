@@ -10,16 +10,15 @@ import {
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import type { ApplicantData } from '@/lib/types';
-import { useFirestore, useUser } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { useUser } from '@/firebase';
+import { useIdToken } from '@/firebase/auth/use-id-token';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { Badge } from '../ui/badge';
+import { adminSetUserAdmin } from '@/app/admin/actions';
 
 export function UsersTable({ users }: { users: ApplicantData[] }) {
-  const firestore = useFirestore();
   const { user: adminUser } = useUser();
+  const { getIdToken } = useIdToken();
   const { toast } = useToast();
 
   const handleAdminChange = async (
@@ -37,24 +36,35 @@ export function UsersTable({ users }: { users: ApplicantData[] }) {
       return;
     }
 
-    const userDocRef = doc(firestore, 'users', targetUser.uid);
-    updateDoc(userDocRef, { isAdmin })
-      .then(() => {
+    try {
+      const idToken = await getIdToken();
+      const result = await adminSetUserAdmin({
+        idToken,
+        targetUid: targetUser.uid,
+        isAdmin,
+      });
+
+      if (result.success) {
         toast({
           title: 'Success',
           description: `${targetUser.email} is ${
             isAdmin ? 'now an admin' : 'no longer an admin'
           }.`,
         });
-      })
-      .catch(() => {
-        const permissionError = new FirestorePermissionError({
-          path: userDocRef.path,
-          operation: 'update',
-          requestResourceData: { isAdmin },
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.message,
         });
-        errorEmitter.emit('permission-error', permissionError);
+      }
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update admin status.',
       });
+    }
   };
 
   return (

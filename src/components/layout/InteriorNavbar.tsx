@@ -46,6 +46,8 @@ export function InteriorNavbar() {
   const handleSignOut = async () => {
     const auth = getAuth();
     await signOut(auth);
+    const { clearSessionCookie } = await import('@/app/auth/actions');
+    await clearSessionCookie();
     router.push('/');
   };
 

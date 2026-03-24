@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { collection, doc, getDoc, query, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, query } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useFirestore } from '@/firebase';
+import { useIdToken } from '@/firebase/auth/use-id-token';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,7 @@ import {
 import { Download, X, Eye, RotateCcw, UserSearch } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { unparse } from 'papaparse';
+import { adminResetCandidateId } from '@/app/admin/actions';
 
 type CandidateRecord = {
   candidateId: string;
@@ -42,6 +44,7 @@ const PAGE_SIZE = 25;
 
 export default function AdminCandidatesPage() {
   const firestore = useFirestore();
+  const { getIdToken } = useIdToken();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<string>('All');
@@ -99,11 +102,17 @@ export default function AdminCandidatesPage() {
     if (!resetConfirm) return;
     setResetting(true);
     try {
-      await updateDoc(doc(firestore, 'candidateIds', resetConfirm.candidateId), {
-        status: 'unassigned', assignedUid: '', claimedAt: null,
-      } as any);
-      toast({ title: 'Candidate ID Reset', description: `${resetConfirm.candidateId} has been reset.` });
-      setResetConfirm(null);
+      const idToken = await getIdToken();
+      const result = await adminResetCandidateId({
+        idToken,
+        candidateId: resetConfirm.candidateId,
+      });
+      if (result.success) {
+        toast({ title: 'Candidate ID Reset', description: result.message });
+        setResetConfirm(null);
+      } else {
+        toast({ variant: 'destructive', title: 'Reset Failed', description: result.message });
+      }
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Reset Failed', description: e.message });
     }
