@@ -1,10 +1,19 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { collection, doc, getDoc, query } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, query, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
+import {
+  PIPELINE_STAGES,
+  canStartCandidateFlow,
+  candidateMatchesPipelineStage,
+  effectiveCandidateFlowStatus,
+  flowStatusBadge,
+} from '@/lib/candidate-pipeline';
 import { useIdToken } from '@/firebase/auth/use-id-token';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +39,7 @@ type CandidateRecord = {
   assignedUid?: string;
   claimedAt?: any;
   masterKey?: boolean;
+  flowStatus?: string;
 };
 
 type LegacyRecord = {
@@ -42,13 +52,40 @@ type LegacyRecord = {
 const FILTERS = ['All', 'Not Contacted', 'Verified', 'Has Legacy Data', 'No Legacy Data'] as const;
 const PAGE_SIZE = 25;
 
+const FLOW_START_BTN: CSSProperties = {
+  background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)',
+  color: 'white',
+  borderRadius: 8,
+  padding: '8px 16px',
+  fontSize: 13,
+  fontWeight: 600,
+};
+
+const VALID_STAGE_PARAMS = new Set([
+  ...PIPELINE_STAGES.map((s) => s.id),
+  'not_selected',
+]);
+
+function pipelineStageLabel(stageId: string): string {
+  if (stageId === 'not_selected') return 'Not selected';
+  return PIPELINE_STAGES.find((s) => s.id === stageId)?.label ?? stageId;
+}
+
 export default function AdminCandidatesPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { getIdToken } = useIdToken();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const stageParamRaw = searchParams.get('stage');
+  const stageParam =
+    stageParamRaw && VALID_STAGE_PARAMS.has(stageParamRaw) ? stageParamRaw : null;
+
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<string>('All');
   const [page, setPage] = useState(0);
+  const [flowStarting, setFlowStarting] = useState<Record<string, boolean>>({});
   const [legacyModal, setLegacyModal] = useState<{ open: boolean; data: LegacyRecord | null; id: string }>({ open: false, data: null, id: '' });
   const [loadingLegacy, setLoadingLegacy] = useState(false);
   const [resetConfirm, setResetConfirm] = useState<CandidateRecord | null>(null);
@@ -81,8 +118,46 @@ export default function AdminCandidatesPage() {
     else if (filter === 'Verified') list = list.filter((c) => c.status === 'claimed');
     else if (filter === 'Has Legacy Data') list = list.filter((c) => legacyMap.has(c.candidateId));
     else if (filter === 'No Legacy Data') list = list.filter((c) => !legacyMap.has(c.candidateId));
+    if (stageParam === 'not_selected') {
+      list = list.filter((c) => effectiveCandidateFlowStatus(c.flowStatus) === 'not_selected');
+    } else if (stageParam) {
+      list = list.filter((c) => candidateMatchesPipelineStage(c.flowStatus, stageParam));
+    }
     return list;
-  }, [allCandidates, search, filter, legacyMap]);
+  }, [allCandidates, search, filter, legacyMap, stageParam]);
+
+  const handleStartCandidateFlow = async (c: CandidateRecord) => {
+    if (!user?.uid) {
+      toast({ variant: 'destructive', title: 'Not signed in', description: 'Sign in as admin to start the flow.' });
+      return;
+    }
+    const id = c.candidateId;
+    setFlowStarting((prev) => ({ ...prev, [id]: true }));
+    try {
+      await updateDoc(doc(firestore, 'candidateIds', id), {
+        flowStatus: 'invited',
+        invitedAt: serverTimestamp(),
+        flowStatusUpdatedAt: serverTimestamp(),
+      });
+      await addDoc(collection(firestore, 'auditLog'), {
+        action: 'flow_started',
+        adminUid: user.uid,
+        adminEmail: user.email ?? '',
+        candidateId: id,
+        candidateName: c.name || '',
+        timestamp: serverTimestamp(),
+      });
+      toast({ title: 'Flow started', description: `${c.name || id} is now invited.` });
+    } catch (e: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not start flow',
+        description: e?.message ?? 'Unknown error',
+      });
+    } finally {
+      setFlowStarting((prev) => ({ ...prev, [id]: false }));
+    }
+  };
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -168,7 +243,7 @@ export default function AdminCandidatesPage() {
       </div>
 
       {/* Filter Pills */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 items-center">
         {FILTERS.map((f) => (
           <button
             key={f}
@@ -179,6 +254,19 @@ export default function AdminCandidatesPage() {
             {f}
           </button>
         ))}
+        {stageParam && (
+          <span className="inline-flex items-center gap-2 rounded-full pl-3.5 pr-2 py-1.5 text-[13px] font-medium bg-[#EDE7F6] text-[#4D148C] border border-[#D1C4E9]">
+            Pipeline: {pipelineStageLabel(stageParam)}
+            <button
+              type="button"
+              onClick={() => { router.push('/admin/candidates'); setPage(0); }}
+              className="rounded-full p-0.5 hover:bg-[#D1C4E9] text-[#4D148C]"
+              aria-label="Clear pipeline filter"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </span>
+        )}
       </div>
 
       {/* Table */}
@@ -242,6 +330,44 @@ export default function AdminCandidatesPage() {
                           <td className="px-4 py-3.5 text-[14px] text-[#333333] hidden md:table-cell">{c.claimedAt?.toDate ? format(c.claimedAt.toDate(), 'PPp') : '—'}</td>
                           <td className="px-4 py-3.5">
                             <div className="flex flex-col gap-2 items-end">
+                              {(c.flowStatus === 'submitted' || c.flowStatus === 'under_review') &&
+                                c.assignedUid && (
+                                  <span className="admin-tooltip">
+                                    <span className="admin-tooltip-text">View merged application data</span>
+                                    <Link
+                                      href={`/admin/review/${c.assignedUid}`}
+                                      className="inline-flex items-center justify-center rounded-md px-3.5 py-[7px] text-[12px] font-semibold text-white transition-all hover:brightness-110"
+                                      style={{ background: '#FF6200' }}
+                                    >
+                                      Review
+                                    </Link>
+                                  </span>
+                                )}
+                              {canStartCandidateFlow(c.flowStatus) ? (
+                                <button
+                                  type="button"
+                                  disabled={!!flowStarting[c.candidateId]}
+                                  onClick={() => handleStartCandidateFlow(c)}
+                                  className="inline-flex items-center justify-center border-0 cursor-pointer transition-opacity disabled:opacity-50"
+                                  style={FLOW_START_BTN}
+                                >
+                                  {flowStarting[c.candidateId] ? 'Starting…' : 'Start Flow'}
+                                </button>
+                              ) : (
+                                <span
+                                  className="inline-block whitespace-nowrap"
+                                  style={{
+                                    borderRadius: 99,
+                                    padding: '4px 12px',
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    background: flowStatusBadge(c.flowStatus).bg,
+                                    color: flowStatusBadge(c.flowStatus).color,
+                                  }}
+                                >
+                                  {flowStatusBadge(c.flowStatus).label}
+                                </span>
+                              )}
                               <span className="admin-tooltip">
                                 <span className="admin-tooltip-text">View flight hours and legacy records</span>
                                 <button

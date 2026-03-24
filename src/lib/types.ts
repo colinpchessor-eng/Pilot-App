@@ -1,12 +1,37 @@
 import { Timestamp } from 'firebase/firestore';
 
+/** Single aircraft line from legacy import HTML / Firestore. */
+export type LegacyAircraftRow = {
+  aircraft?: string;
+  type?: string;
+  pic?: number;
+  PIC?: number;
+  sic?: number;
+  SIC?: number;
+  instructor?: number;
+  Instructor?: number;
+  night?: number;
+  nightHours?: number;
+  multiEngine?: number;
+  lastFlown?: string;
+  lastFlownDate?: string;
+  turbinePIC?: number;
+  turbinePic?: number;
+};
+
 /** Legacy data imported from previous application (Paradox) */
 export type LegacyData = {
   candidateId?: string;
   legacyApplicationId?: string;
+  /** Per-aircraft rows when import stores a breakdown (enables review-page recalculation). */
   flightTime?: {
     total?: number;
     turbinePIC?: number;
+    /** Corrected rollup from import script (preferred over legacy totals). */
+    totalPIC?: number;
+    totalSIC?: number;
+    totalInstructor?: number;
+    nightHours?: number;
     military?: number;
     civilian?: number;
     multiEngine?: number;
@@ -16,6 +41,7 @@ export type LegacyData = {
     other?: number;
     dateLastFlown?: string;
     lastAircraftFlown?: string;
+    aircraft?: LegacyAircraftRow[];
   };
   lastEmployer?: {
     from?: string;
@@ -38,6 +64,20 @@ export type LegacyData = {
 
 export type VerificationStatus = 'pending' | 'token_sent' | 'verified';
 export type UserRole = 'admin';
+
+/** Hiring pipeline position; mirrors candidateIds.flowStatus on the user doc when linked. */
+export type CandidateFlowStatus =
+  | 'imported'
+  | 'invited'
+  | 'registered'
+  | 'verified'
+  | 'in_progress'
+  | 'submitted'
+  | 'under_review'
+  | 'interview_sent'
+  | 'scheduled'
+  | 'hired'
+  | 'not_selected';
 
 export type EmploymentHistory = {
   employerName: string;
@@ -78,6 +118,9 @@ export type ApplicantData = {
     evaluator: number;
     sic: number;
     other: number;
+    nightHours?: number;
+    lastAircraftFlown?: string;
+    dateLastFlown?: string;
   };
   typeRatings: string;
   employmentHistory: EmploymentHistory[];
@@ -101,4 +144,40 @@ export type ApplicantData = {
   printedName: string | null;
   candidateId?: string | null;
   legacyData?: LegacyData | null;
+  /** Mirrors linked candidateIds.flowStatus for this applicant. */
+  candidateFlowStatus?: CandidateFlowStatus | string | null;
+};
+
+export type InterviewSlotStatus = 'available' | 'booked' | 'cancelled';
+export type InterviewSlotFormat = 'In Person' | 'Video';
+
+export type InterviewSlotDoc = {
+  date: Timestamp;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  location: string;
+  format: InterviewSlotFormat;
+  videoLink: string;
+  status: InterviewSlotStatus;
+  bookedBy: string;
+  bookedByName: string;
+  bookedByEmail: string;
+  bookedAt: Timestamp | null;
+  createdBy: string;
+  notes: string;
+};
+
+export type InterviewBookingStatus = 'confirmed' | 'cancelled' | 'completed';
+
+export type InterviewBookingDoc = {
+  slotId: string;
+  candidateUid: string;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail: string;
+  adminUid: string;
+  scheduledFor: Timestamp;
+  status: InterviewBookingStatus;
+  createdAt: Timestamp;
 };

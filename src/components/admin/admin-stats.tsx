@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Clock,
   Trash2,
+  Calendar,
 } from 'lucide-react';
 
 type StatCard = {
@@ -24,6 +25,7 @@ export function AdminStats({
   totalSubmissions,
   pendingVerifications,
   pendingDeletions,
+  interviewsScheduled,
 }: {
   totalCandidates: number;
   verifiedCandidates: number;
@@ -31,6 +33,7 @@ export function AdminStats({
   totalSubmissions: number;
   pendingVerifications: number;
   pendingDeletions: number;
+  interviewsScheduled: number;
 }) {
   const cards: StatCard[] = [
     { title: 'Total Candidates', value: totalCandidates, icon: <Users />, color: '#4D148C' },
@@ -39,10 +42,11 @@ export function AdminStats({
     { title: 'Submitted', value: totalSubmissions, icon: <CheckCircle />, color: '#FF6200' },
     { title: 'Pending Verifications', value: pendingVerifications, icon: <Clock />, color: '#F7B118' },
     { title: 'Deletion Requests', value: pendingDeletions, icon: <Trash2 />, color: '#DE002E', pulse: pendingDeletions > 0 },
+    { title: 'Interviews Scheduled', value: interviewsScheduled, icon: <Calendar />, color: '#007AB7' },
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {cards.map((card) => (
         <div
           key={card.title}

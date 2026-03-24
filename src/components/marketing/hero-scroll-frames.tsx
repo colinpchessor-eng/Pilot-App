@@ -15,7 +15,7 @@ export function HeroScrollFrames() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/network-map-frames')
+    fetch('/assets/network-map-frames.json')
       .then((r) => r.json() as Promise<FramesResponse>)
       .then((data) => {
         if (!cancelled) setFrames(Array.isArray(data.frames) ? data.frames : []);

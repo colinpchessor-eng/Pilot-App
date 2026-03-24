@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import { cn } from '@/lib/utils';
-import { LogOut, Menu, X } from 'lucide-react';
+import { Calendar, LogOut, Menu, X, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAuth, signOut } from 'firebase/auth';
 import { doc, collection, query, where } from 'firebase/firestore';
@@ -59,9 +59,16 @@ export function InteriorNavbar() {
     { label: 'Help', href: '#' },
   ];
 
-  const adminNavItems = [
+  const adminNavItems: {
+    label: string;
+    href: string;
+    dot?: string;
+    Icon?: LucideIcon;
+  }[] = [
     { label: 'Dashboard', href: '/admin' },
     { label: 'Candidates', href: '/admin/candidates' },
+    { label: 'Import', href: '/admin/import' },
+    { label: 'Interviews', href: '/admin/interviews', Icon: Calendar },
     { label: 'Verifications', href: '/admin/verifications', dot: (pendingVerifs?.length ?? 0) > 0 ? '#FF6200' : undefined },
     { label: 'Users', href: '/admin/users' },
     { label: 'Deletions', href: '/admin/deletions', dot: (pendingDeletions?.length ?? 0) > 0 ? '#DE002E' : undefined },
@@ -146,8 +153,9 @@ export function InteriorNavbar() {
             const isActive = item.href === '/admin'
               ? pathname === '/admin' || (pathname.startsWith('/admin/applications') && item.href === '/admin')
               : pathname === item.href;
-            const dot = (item as any).dot;
-            const locked = (item as any).requiresVerified && !isVerified;
+            const dot = item.dot;
+            const NavIcon = item.Icon;
+            const locked = (item as { requiresVerified?: boolean }).requiresVerified && !isVerified;
             if (locked) {
               return (
                 <span
@@ -164,11 +172,12 @@ export function InteriorNavbar() {
                 key={item.label + item.href}
                 href={item.href}
                 className={cn(
-                  "px-3 py-2 rounded-full text-[13px] font-medium text-[#333333] transition-all duration-200 whitespace-nowrap shrink-0 relative",
+                  "inline-flex items-center px-3 py-2 rounded-full text-[13px] font-medium text-[#333333] transition-all duration-200 whitespace-nowrap shrink-0 relative",
                   "hover:bg-[#4D148C]/[0.08] hover:text-[#4D148C]",
                   isActive && "bg-[#4D148C]/[0.12] text-[#4D148C] font-semibold"
                 )}
               >
+                {NavIcon && <NavIcon className="h-3.5 w-3.5 mr-1.5 shrink-0 opacity-90" />}
                 {item.label}
                 {dot && <span className="inline-block ml-1.5 align-middle rounded-full" style={{ width: 7, height: 7, background: dot }} />}
               </Link>
@@ -209,8 +218,9 @@ export function InteriorNavbar() {
             <div className="flex flex-col gap-1">
               {allMobileItems.map((item) => {
                 const isActive = pathname === item.href;
-                const dot = (item as any).dot;
-                const mobileLocked = (item as any).requiresVerified && !isVerified;
+                const dot = (item as { dot?: string }).dot;
+                const MobileNavIcon = (item as { Icon?: LucideIcon }).Icon;
+                const mobileLocked = (item as { requiresVerified?: boolean }).requiresVerified && !isVerified;
                 if (mobileLocked) {
                   return (
                     <span
@@ -227,11 +237,12 @@ export function InteriorNavbar() {
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      "px-4 py-3 rounded-xl text-sm font-medium text-[#333333] transition-all",
+                      "flex items-center px-4 py-3 rounded-xl text-sm font-medium text-[#333333] transition-all",
                       "hover:bg-[#4D148C]/[0.08] hover:text-[#4D148C]",
                       isActive && "bg-[#4D148C]/[0.12] text-[#4D148C] font-semibold"
                     )}
                   >
+                    {MobileNavIcon && <MobileNavIcon className="h-4 w-4 mr-2 shrink-0 opacity-90" />}
                     {item.label}
                     {dot && <span className="inline-block ml-1.5 align-middle rounded-full" style={{ width: 7, height: 7, background: dot }} />}
                   </Link>

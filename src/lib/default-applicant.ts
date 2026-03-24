@@ -1,5 +1,5 @@
 import { serverTimestamp } from 'firebase/firestore';
-import type { ApplicantData } from '@/lib/types';
+import type { ApplicantData, CandidateFlowStatus } from '@/lib/types';
 
 export function buildDefaultApplicantData(input: {
   uid: string;
@@ -14,6 +14,7 @@ export function buildDefaultApplicantData(input: {
     lastName: null,
     createdAt: serverTimestamp() as any,
     status: 'pending',
+    candidateFlowStatus: 'registered' as CandidateFlowStatus,
     requestedAt: null,
     verifiedAt: null,
     firstClassMedicalDate: null,
@@ -28,6 +29,9 @@ export function buildDefaultApplicantData(input: {
       evaluator: 0,
       sic: 0,
       other: 0,
+      nightHours: 0,
+      lastAircraftFlown: '',
+      dateLastFlown: '',
     },
     typeRatings: '',
     employmentHistory: [],

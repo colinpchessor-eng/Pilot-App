@@ -16,9 +16,32 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Must match client checks (e.g. admin/layout.tsx): isAdmin flag OR role admin
     function isAdmin() {
-      return isSignedIn() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        );
+    }
+
+    // Assigned candidate: pipeline fields only (no status/assignedUid/identity changes)
+    function candidateIdsFlowKeysOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly([
+          'flowStatus', 'flowStatusUpdatedAt', 'verifiedAt', 'registeredAt',
+          'applicationStartedAt', 'submittedAt', 'interviewInvitedAt',
+          'interviewScheduledAt', 'interviewDate', 'invitedAt'
+        ]);
+    }
+
+    // Bootstrap admin (fedexadmin@fedex.com) may create their doc with isAdmin + role on signup.
+    function isBootstrapAdminSignup() {
+      return request.auth != null
+        && request.auth.token.email.lower() == 'fedexadmin@fedex.com'
+        && request.resource.data.isAdmin == true
+        && request.resource.data.role == 'admin';
     }
 
     // ── users ──────────────────────────────────────────────────────────
@@ -26,8 +49,13 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
 
       allow create: if isOwner(userId)
-        && request.resource.data.isAdmin == false
-        && (!('role' in request.resource.data) || request.resource.data.role == '');
+        && (
+          (
+            request.resource.data.isAdmin == false
+            && (!('role' in request.resource.data) || request.resource.data.role == '')
+          )
+          || isBootstrapAdminSignup()
+        );
 
       allow update: if isOwner(userId)
         && !touchesPrivilegedFields();
@@ -47,6 +75,14 @@ service cloud.firestore {
         && request.resource.data.status == 'claimed'
         && request.resource.data.assignedUid == request.auth.uid
         && resource.data.status != 'claimed';
+
+      // Assigned candidate: update hiring pipeline timestamps / flowStatus only
+      allow update: if isSignedIn()
+        && resource.data.status == 'claimed'
+        && resource.data.assignedUid == request.auth.uid
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.assignedUid == resource.data.assignedUid
+        && candidateIdsFlowKeysOnly();
 
       // Admins can update any candidate ID (reset, reassign, etc.)
       allow update: if isAdmin();
@@ -83,9 +119,26 @@ service cloud.firestore {
     }
 
     // ── auditLog ───────────────────────────────────────────────────────
+    function candidateSelfAuditCreateValid() {
+      let d = request.resource.data;
+      return d.keys().hasOnly([
+          'action', 'timestamp', 'uid', 'candidateName', 'candidateEmail', 'candidateId'
+        ])
+        && d.uid == request.auth.uid
+        && d.action in [
+          'candidate_registered',
+          'candidate_verified',
+          'application_started',
+          'application_submitted'
+        ]
+        && d.candidateName is string
+        && d.candidateEmail is string
+        && d.candidateId is string;
+    }
+
     match /auditLog/{logId} {
       allow read: if isAdmin();
-      allow create: if isAdmin();
+      allow create: if isAdmin() || (isSignedIn() && candidateSelfAuditCreateValid());
       allow update, delete: if false;
     }
 
@@ -118,6 +171,41 @@ service cloud.firestore {
     match /mail/{mailId} {
       allow read: if false;
       allow write: if false;
+    }
+
+    // ── interviewSlots ───────────────────────────────────────────────────
+    function interviewSlotBookKeysOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly([
+          'status', 'bookedBy', 'bookedByName', 'bookedByEmail', 'bookedAt'
+        ]);
+    }
+
+    match /interviewSlots/{slotId} {
+      allow read: if isSignedIn();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && resource.data.status == 'available'
+          && request.resource.data.status == 'booked'
+          && request.resource.data.bookedBy == request.auth.uid
+          && interviewSlotBookKeysOnly()
+        );
+    }
+
+    // ── interviewBookings ──────────────────────────────────────────────
+    match /interviewBookings/{bookingId} {
+      allow read: if isSignedIn()
+        && (resource.data.candidateUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && request.resource.data.candidateUid == request.auth.uid
+        && request.resource.data.status == 'confirmed'
+        && request.resource.data.keys().hasAll([
+          'slotId', 'candidateUid', 'candidateId', 'candidateName',
+          'candidateEmail', 'adminUid', 'scheduledFor', 'status', 'createdAt'
+        ]);
+      allow update, delete: if isAdmin();
     }
 
   }

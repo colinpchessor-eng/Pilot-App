@@ -6,6 +6,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
 import type { ApplicantData, VerificationStatus } from '@/lib/types';
 import { buildDefaultApplicantData } from '@/lib/default-applicant';
+import { writeCandidateAuditLog } from '@/lib/candidate-audit';
 import { createSessionCookie, clearSessionCookie } from '@/app/auth/actions';
 
 function normalizeStatus(value: unknown): VerificationStatus {
@@ -17,7 +18,15 @@ function getRedirectForStatus(pathname: string, status: VerificationStatus) {
   if (pathname.startsWith('/admin')) return null;
   if (pathname.startsWith('/verify/request')) return null;
   if (pathname.startsWith('/verify/token')) return null;
-  if (pathname === '/login' || pathname === '/signup' || pathname === '/' || pathname === '/dashboard') return null;
+  if (
+    pathname === '/login' ||
+    pathname === '/signup' ||
+    pathname === '/' ||
+    pathname === '/dashboard' ||
+    pathname.startsWith('/schedule')
+  ) {
+    return null;
+  }
   return null;
 }
 
@@ -30,7 +39,12 @@ export function AuthGate() {
 
   const shouldProtect = useMemo(() => {
     if (pathname === '/login' || pathname === '/signup' || pathname === '/') return false;
-    return pathname.startsWith('/dashboard') || pathname.startsWith('/admin') || pathname.startsWith('/verify');
+    return (
+      pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/verify') ||
+      pathname.startsWith('/schedule')
+    );
   }, [pathname]);
 
   useEffect(() => {
@@ -57,6 +71,17 @@ export function AuthGate() {
           displayName: user.displayName,
         });
         await setDoc(userRef, data);
+        try {
+          await writeCandidateAuditLog(firestore, {
+            uid: user.uid,
+            action: 'candidate_registered',
+            candidateName: (user.displayName || '').trim(),
+            candidateEmail: user.email,
+            candidateId: '',
+          });
+        } catch (e) {
+          console.error('candidate_registered audit:', e);
+        }
       } else {
         data = snap.data() as ApplicantData;
       }

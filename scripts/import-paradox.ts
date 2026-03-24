@@ -91,6 +91,99 @@ function getFieldValue(html: any, labelText: string): string {
   return '';
 }
 
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', {
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+/** Paradox real format: h3 section + 3-column table (question, order, answer). */
+function getParadoxValue(
+  html: any,
+  sectionHeading: string,
+  questionText: string,
+  order?: string,
+  exactMatch?: boolean
+): string {
+  const headings = html.querySelectorAll('h3');
+  let targetTable: any = null;
+
+  for (const h of headings) {
+    if (h.text.trim().toLowerCase() === sectionHeading.toLowerCase()) {
+      let next = h.nextElementSibling;
+      while (next && String(next.tagName).toLowerCase() !== 'table') {
+        next = next.nextElementSibling;
+      }
+      if (next) targetTable = next;
+    }
+  }
+
+  if (!targetTable) return '';
+
+  for (const row of targetTable.querySelectorAll('tr')) {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 3) {
+      const q = cells[0].text.trim() || '';
+      const o = cells[1].text.trim() || '';
+      const a = cells[2].text.trim() || '';
+
+      const questionMatch = exactMatch
+        ? q.toLowerCase() === questionText.toLowerCase()
+        : q.toLowerCase().includes(questionText.toLowerCase());
+
+      const orderMatch = !order || o === order;
+
+      if (questionMatch && orderMatch) {
+        return a;
+      }
+    }
+  }
+  return '';
+}
+
+/**
+ * All rows in a Paradox section table where the order column matches (e.g. "1").
+ * Use exact question text when reading answers (e.g. pick "Employer", not "Current Employer?").
+ */
+function getParadoxSectionFirstOrder(
+  html: any,
+  sectionHeading: string,
+  order: string
+): Array<{ question: string; answer: string }> {
+  const headings = html.querySelectorAll('h3');
+  let targetTable: any = null;
+
+  for (const h of headings) {
+    if (h.text.trim().toLowerCase() === sectionHeading.toLowerCase()) {
+      let next = h.nextElementSibling;
+      while (next && String(next.tagName).toLowerCase() !== 'table') {
+        next = next.nextElementSibling;
+      }
+      if (next) targetTable = next;
+    }
+  }
+
+  if (!targetTable) return [];
+
+  const out: Array<{ question: string; answer: string }> = [];
+  for (const row of targetTable.querySelectorAll('tr')) {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 3) {
+      const q = cells[0].text.trim() || '';
+      const o = cells[1].text.trim() || '';
+      const a = cells[2].text.trim() || '';
+      if (o === order) {
+        out.push({ question: q, answer: a });
+      }
+    }
+  }
+  return out;
+}
+
 // ═══════════════════════════════════════
 // HELPER: Get first row of a section table
 // ═══════════════════════════════════════
@@ -143,16 +236,38 @@ function parseHtmlFile(filePath: string, candidateId: string) {
   const dateLastFlown    = getFieldValue(html, 'Date Last Flown');
   const lastAircraftFlown = getFieldValue(html, 'Last Aircraft Flown');
 
-  // ─── LAST EMPLOYER (first row of employment table) ───
-  const employmentRow = getFirstDataRow(html, 'Employment History');
-  const lastEmployer = {
-    from:       employmentRow[0] || '',
-    to:         employmentRow[1] || '',
-    company:    employmentRow[2] || '',
-    title:      employmentRow[3] || '',
-    city:       employmentRow[4] || '',
-    state:      employmentRow[5] || '',
+  // ─── LAST EMPLOYER ───
+  // Paradox real HTML: h3 "Work Experience" + 3-col table; exact label match for Employer (not "Current Employer?").
+  const wxOrder1 = getParadoxSectionFirstOrder(html, 'Work Experience', '1');
+  let lastEmployer: {
+    from: string;
+    to: string;
+    company: string;
+    title: string;
+    city: string;
+    state: string;
   };
+
+  if (wxOrder1.length > 0) {
+    lastEmployer = {
+      company: getParadoxValue(html, 'Work Experience', 'Employer', '1', true),
+      title: getParadoxValue(html, 'Work Experience', 'Job Title', '1', true),
+      city: getParadoxValue(html, 'Work Experience', 'City', '1', true),
+      state: getParadoxValue(html, 'Work Experience', 'State', '1', true),
+      from: formatDate(getParadoxValue(html, 'Work Experience', 'Start Date', '1', false)),
+      to: formatDate(getParadoxValue(html, 'Work Experience', 'End Date', '1', false)),
+    };
+  } else {
+    const employmentRow = getFirstDataRow(html, 'Employment History');
+    lastEmployer = {
+      from: employmentRow[0] || '',
+      to: employmentRow[1] || '',
+      company: employmentRow[2] || '',
+      title: employmentRow[3] || '',
+      city: employmentRow[4] || '',
+      state: employmentRow[5] || '',
+    };
+  }
 
   // ─── LAST RESIDENCE (first row of residence table) ───
   const residenceRow = getFirstDataRow(html, 'Residence History');

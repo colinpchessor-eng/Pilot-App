@@ -27,6 +27,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { triggerWelcomeEmail } from '@/app/actions';
 import type { ApplicantData } from '@/lib/types';
+import { writeCandidateAuditLog } from '@/lib/candidate-audit';
+import { isBootstrapAdminEmail } from '@/lib/admin-bootstrap';
 
 export function SignupForm() {
   const router = useRouter();
@@ -70,6 +72,7 @@ export function SignupForm() {
         values.password
       );
       const user = userCredential.user;
+      const bootstrapAdmin = isBootstrapAdminEmail(values.email);
 
       const userProfile: ApplicantData = {
         uid: user.uid,
@@ -77,7 +80,8 @@ export function SignupForm() {
         firstName: values.firstName,
         lastName: values.lastName,
         createdAt: serverTimestamp() as any,
-        isAdmin: values.email.toLowerCase() === 'fedexadmin@fedex.com',
+        isAdmin: bootstrapAdmin,
+        ...(bootstrapAdmin ? { role: 'admin' as const } : {}),
         firstClassMedicalDate: null,
         atpNumber: null,
         flightTime: {
@@ -90,6 +94,9 @@ export function SignupForm() {
           evaluator: 0,
           sic: 0,
           other: 0,
+          nightHours: 0,
+          lastAircraftFlown: '',
+          dateLastFlown: '',
         },
         typeRatings: '',
         employmentHistory: [],
@@ -115,12 +122,24 @@ export function SignupForm() {
         consentTimestamp: serverTimestamp() as any,
         consentVersion: '1.0',
         privacyPolicyVersion: 'March 2026',
+        candidateFlowStatus: 'registered',
       };
 
       const userDocRef = doc(firestore, 'users', user.uid);
       await setDoc(userDocRef, userProfile);
 
       const fullName = `${values.firstName} ${values.lastName}`.trim();
+      try {
+        await writeCandidateAuditLog(firestore, {
+          uid: user.uid,
+          action: 'candidate_registered',
+          candidateName: fullName,
+          candidateEmail: user.email,
+          candidateId: '',
+        });
+      } catch (e) {
+        console.error('candidate_registered audit:', e);
+      }
       await triggerWelcomeEmail(user.email!, fullName);
 
       toast({
@@ -128,7 +147,7 @@ export function SignupForm() {
         description: "You've been successfully signed up.",
       });
 
-      if (userProfile.isAdmin) {
+      if (bootstrapAdmin) {
         router.push('/admin');
       } else {
         router.push('/dashboard');

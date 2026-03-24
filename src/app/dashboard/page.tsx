@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore';
+import { writeCandidateAuditLog } from '@/lib/candidate-audit';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -179,6 +180,9 @@ export default function DashboardPage() {
         status: 'claimed',
         assignedUid: user.uid,
         claimedAt: serverTimestamp(),
+        flowStatus: 'verified',
+        verifiedAt: serverTimestamp(),
+        flowStatusUpdatedAt: serverTimestamp(),
       });
 
       // Update user document to verified
@@ -189,9 +193,29 @@ export default function DashboardPage() {
         legacyApplicationId:
           candidateData.legacyApplicationId || '',
         candidateId: inputId,
+        candidateFlowStatus: 'verified',
       });
 
       await batch.commit();
+
+      try {
+        const displayName = [
+          applicantData?.firstName,
+          applicantData?.lastName,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        await writeCandidateAuditLog(firestore, {
+          uid: user.uid,
+          action: 'candidate_verified',
+          candidateName: displayName || user.displayName || '',
+          candidateEmail: user.email,
+          candidateId: inputId,
+        });
+      } catch (auditErr) {
+        console.error('candidate_verified audit:', auditErr);
+      }
 
       // Fetch legacy data and copy into user document
       const legacyRef = doc(firestore, 'legacyData', inputId);

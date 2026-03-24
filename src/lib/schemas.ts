@@ -87,6 +87,9 @@ export const applicationFormSchema = z
       evaluator: z.coerce.number().min(0, 'Cannot be negative.').optional(),
       sic: z.coerce.number().min(0, 'Cannot be negative.').optional(),
       other: z.coerce.number().min(0, 'Cannot be negative.').optional(),
+      nightHours: z.coerce.number().min(0, 'Cannot be negative.').optional().default(0),
+      lastAircraftFlown: z.string().optional().default(''),
+      dateLastFlown: z.string().optional().default(''),
     }),
     firstClassMedicalDate: z
       .date()

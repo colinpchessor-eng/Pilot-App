@@ -60,6 +60,7 @@ import {
 } from './ui/alert-dialog';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp, updateDoc, Timestamp } from 'firebase/firestore';
+import { writeCandidateAuditLog } from '@/lib/candidate-audit';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -200,6 +201,9 @@ export function ApplicationForm({
         evaluator: data.flightTime?.evaluator ?? 0,
         sic: data.flightTime?.sic ?? 0,
         other: data.flightTime?.other ?? 0,
+        nightHours: data.flightTime?.nightHours ?? 0,
+        lastAircraftFlown: data.flightTime?.lastAircraftFlown ?? '',
+        dateLastFlown: data.flightTime?.dateLastFlown ?? '',
       },
       firstClassMedicalDate: (() => {
         if (!data.firstClassMedicalDate) return null;
@@ -301,8 +305,45 @@ export function ApplicationForm({
         : null,
     };
     const docRef = doc(firestore, 'users', user.uid);
-    setDoc(docRef, { ...encryptedValues, submittedAt: serverTimestamp() }, { merge: true })
-      .then(() => {
+    setDoc(
+      docRef,
+      {
+        ...encryptedValues,
+        submittedAt: serverTimestamp(),
+        candidateFlowStatus: 'submitted',
+      },
+      { merge: true }
+    )
+      .then(async () => {
+        const cid = applicantData.candidateId;
+        if (cid) {
+          try {
+            await updateDoc(doc(firestore, 'candidateIds', cid), {
+              flowStatus: 'submitted',
+              submittedAt: serverTimestamp(),
+              flowStatusUpdatedAt: serverTimestamp(),
+            });
+          } catch (err) {
+            console.error('Candidate flow status (submitted):', err);
+          }
+        }
+        if (user) {
+          try {
+            const nm = [applicantData.firstName, applicantData.lastName]
+              .filter(Boolean)
+              .join(' ')
+              .trim();
+            await writeCandidateAuditLog(firestore, {
+              uid: user.uid,
+              action: 'application_submitted',
+              candidateName: nm,
+              candidateEmail: user.email,
+              candidateId: applicantData.candidateId ?? '',
+            });
+          } catch (auditErr) {
+            console.error('application_submitted audit:', auditErr);
+          }
+        }
         toast({ title: 'Application Submitted!' });
         router.push('/dashboard');
       })
@@ -321,9 +362,9 @@ export function ApplicationForm({
     // Flight Time Checks
     const flightFields = ['total', 'turbinePic', 'military', 'civilian', 'multiEngine', 'instructor', 'evaluator', 'sic', 'other'];
     let flightHasValue = false;
-    flightFields.forEach(f => {
+    flightFields.forEach((f) => {
       const val = data.flightTime[f as keyof typeof data.flightTime];
-      if (val > 0) flightHasValue = true;
+      if (typeof val === 'number' && val > 0) flightHasValue = true;
     });
     if (!flightHasValue) {
        errors.push({ tabValue: 'flight-time', tabLabel: 'Flight Time', message: 'No flight hours have been entered.' });
@@ -382,6 +423,8 @@ export function ApplicationForm({
 
   // Shared styles
   const inputStyle = "h-[42px] border-[1.5px] border-[#D0D0D0] rounded-[8px] bg-white text-[#333333] px-[14px] text-[15px] focus-visible:border-[#4D148C] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(77,20,140,0.12)] w-full";
+  const flightTimeMetaInputStyle =
+    'h-12 min-h-[48px] border-[1.5px] border-[#D0D0D0] rounded-[8px] bg-white text-[#333333] px-4 text-[15px] focus-visible:border-[#4D148C] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(77,20,140,0.12)] w-full max-w-[400px]';
   const labelStyle = "text-[13px] font-semibold text-[#565656] mb-[6px] block";
 
   const getTabErrorIndicator = (tabValue: string) => {
@@ -489,6 +532,50 @@ export function ApplicationForm({
                          </FormItem>
                        )} />
                     ))}
+                 </div>
+                 <div className="mt-8 space-y-6 max-w-[400px]">
+                    <FormField
+                      control={form.control}
+                      name="flightTime.lastAircraftFlown"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={labelStyle}>Last Aircraft Flown</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              className={flightTimeMetaInputStyle}
+                              placeholder="e.g. C-17, B737-800"
+                              {...field}
+                              value={field.value ?? ''}
+                            />
+                          </FormControl>
+                          <p className="text-[12px] text-[#8E8E8E] mt-1">
+                            Most recent aircraft you have flown
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="flightTime.dateLastFlown"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={labelStyle}>Date Last Flown</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              className={cn(flightTimeMetaInputStyle, 'max-w-[280px]')}
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value)}
+                            />
+                          </FormControl>
+                          <p className="text-[12px] text-[#8E8E8E] mt-1">
+                            Date of your most recent flight
+                          </p>
+                        </FormItem>
+                      )}
+                    />
                  </div>
               </TabsContent>
 

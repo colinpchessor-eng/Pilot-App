@@ -1,13 +1,16 @@
 'use client';
 
 import { AdminStats } from '@/components/admin/admin-stats';
+import { CandidatePipeline } from '@/components/admin/candidate-pipeline';
+import { ActivityFeed } from '@/components/admin/activity-feed';
 import { AdminCharts } from '@/components/admin/admin-charts';
 import { ApplicationsTable } from '@/components/admin/applications-table';
 import { useFirestore, useUser } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import type { ApplicantData } from '@/lib/types';
+import type { ApplicantData, InterviewBookingDoc } from '@/lib/types';
 import { collection, query, where } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
+import { startOfDay } from 'date-fns';
 import { Download, Trash2, FileText, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -41,12 +44,40 @@ export default function AdminDashboardPage() {
   );
   const { data: pendingDeletions } = useCollection<any>(pendingDeletionsQuery);
 
+  const confirmedInterviewsQuery = useMemo(
+    () => query(collection(firestore, 'interviewBookings'), where('status', '==', 'confirmed')),
+    [firestore]
+  );
+  const { data: confirmedInterviewBookings } = useCollection<InterviewBookingDoc>(confirmedInterviewsQuery);
+
   const submittedApplications = useMemo(() => allUsers?.filter((u) => u.submittedAt) ?? [], [allUsers]);
   const verifiedCandidates = useMemo(() => allCandidates?.filter((c: any) => c.status === 'claimed')?.length ?? 0, [allCandidates]);
   const inProgressCount = useMemo(
     () => allUsers?.filter((u) => !u.submittedAt && (u as any).legacyData && (u.flightTime?.total > 0))?.length ?? 0,
     [allUsers]
   );
+
+  const interviewsScheduledCount = confirmedInterviewBookings?.length ?? 0;
+
+  const upcomingInterviews = useMemo(() => {
+    if (!confirmedInterviewBookings?.length) return [];
+    const start = startOfDay(new Date());
+    return [...confirmedInterviewBookings]
+      .filter((b) => {
+        const d = b.scheduledFor?.toDate?.();
+        return d && d >= start;
+      })
+      .sort((a, b) => {
+        const ta = a.scheduledFor?.toDate?.()?.getTime() ?? 0;
+        const tb = b.scheduledFor?.toDate?.()?.getTime() ?? 0;
+        return ta - tb;
+      })
+      .slice(0, 8)
+      .map((b) => ({
+        when: b.scheduledFor!.toDate!(),
+        candidateName: b.candidateName || b.candidateEmail || 'Candidate',
+      }));
+  }, [confirmedInterviewBookings]);
 
   if (usersLoading) {
     return <div className="text-[#8E8E8E] text-sm py-12 text-center">Loading data...</div>;
@@ -107,7 +138,10 @@ export default function AdminDashboardPage() {
         totalSubmissions={submittedApplications.length}
         pendingVerifications={pendingVerifs?.length ?? 0}
         pendingDeletions={pendingDeletions?.length ?? 0}
+        interviewsScheduled={interviewsScheduledCount}
       />
+
+      <CandidatePipeline candidates={allCandidates ?? []} upcomingInterviews={upcomingInterviews} />
 
       <AdminCharts allUsers={allUsers ?? []} submittedApplications={submittedApplications} />
 
@@ -139,12 +173,19 @@ export default function AdminDashboardPage() {
         </Link>
       </div>
 
-      {/* Submitted Applications */}
+      {/* Submitted Applications + live activity */}
       <div>
         <h2 className="text-[20px] font-bold text-[#333333] mb-4">Submitted Applications</h2>
-        <div className="bg-white rounded-xl border border-[#E3E3E3] shadow-[0_2px_12px_rgba(0,0,0,0.06)] overflow-hidden">
-          <div className="p-5">
-            <ApplicationsTable applications={submittedApplications} />
+        <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+          <div className="w-full lg:w-[60%] lg:min-w-0">
+            <div className="bg-white rounded-xl border border-[#E3E3E3] shadow-[0_2px_12px_rgba(0,0,0,0.06)] overflow-hidden h-full">
+              <div className="p-5">
+                <ApplicationsTable applications={submittedApplications} />
+              </div>
+            </div>
+          </div>
+          <div className="w-full lg:w-[40%] lg:min-w-0 lg:max-w-none shrink-0">
+            <ActivityFeed />
           </div>
         </div>
       </div>

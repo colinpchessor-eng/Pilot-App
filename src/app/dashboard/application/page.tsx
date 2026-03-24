@@ -8,13 +8,15 @@ import {
 } from '@/components/ui/card';
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import type { ApplicantData } from '@/lib/types';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { useEffect } from 'react';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { writeCandidateAuditLog } from '@/lib/candidate-audit';
+import { useEffect, useRef } from 'react';
 import { InteriorNavbar } from '@/components/layout/InteriorNavbar';
 
 export default function ApplicationPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const flowOpenedRef = useRef(false);
 
   const userDocRef = user ? doc(firestore, 'users', user.uid) : undefined;
   const {
@@ -41,6 +43,55 @@ export default function ApplicationPage() {
         }
       } catch (e) {
         console.error('Failed to fetch legacy data:', e);
+      }
+    })();
+  }, [user, firestore, applicantData]);
+
+  // First open: mark candidate pipeline as in_progress (once per mount when eligible)
+  useEffect(() => {
+    if (!user || !firestore || !applicantData || flowOpenedRef.current) return;
+    const candidateId = applicantData.candidateId;
+    const status = applicantData.status;
+    if (!candidateId || status !== 'verified') return;
+
+    flowOpenedRef.current = true;
+    (async () => {
+      try {
+        const ref = doc(firestore, 'candidateIds', candidateId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          flowOpenedRef.current = false;
+          return;
+        }
+        const d = snap.data();
+        if (d.applicationStartedAt) return;
+
+        await updateDoc(ref, {
+          flowStatus: 'in_progress',
+          applicationStartedAt: serverTimestamp(),
+          flowStatusUpdatedAt: serverTimestamp(),
+        });
+        await updateDoc(doc(firestore, 'users', user.uid), {
+          candidateFlowStatus: 'in_progress',
+        });
+        try {
+          const nm = [applicantData.firstName, applicantData.lastName]
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+          await writeCandidateAuditLog(firestore, {
+            uid: user.uid,
+            action: 'application_started',
+            candidateName: nm,
+            candidateEmail: user.email,
+            candidateId,
+          });
+        } catch (auditErr) {
+          console.error('application_started audit:', auditErr);
+        }
+      } catch (e) {
+        console.error('Flow status (application opened):', e);
+        flowOpenedRef.current = false;
       }
     })();
   }, [user, firestore, applicantData]);

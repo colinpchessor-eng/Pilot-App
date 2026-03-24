@@ -394,3 +394,70 @@
     display: none !important;
   }
 }
+
+@keyframes activity-feed-live-pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.activity-feed-live-dot {
+  animation: activity-feed-live-pulse 2s infinite;
+}
+
+/* Admin merged application review — print */
+@media print {
+  body.admin-review-print-active .interior-navbar {
+    display: none !important;
+  }
+
+  body.admin-review-print-active .review-action-buttons,
+  body.admin-review-print-active .review-hr-notes {
+    display: none !important;
+  }
+
+  body.admin-review-print-active main {
+    max-width: 100% !important;
+    padding: 16px !important;
+  }
+
+  body.admin-review-print-active .admin-review-page .review-section,
+  body.admin-review-print-active .admin-review-page section.review-section {
+    background: #fff !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #333 !important;
+  }
+
+  body.admin-review-print-active .admin-review-page .review-section + .review-section {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  body.admin-review-print-active .admin-review-page .review-section:first-of-type {
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  body.admin-review-print-active .admin-review-print-header {
+    display: block !important;
+  }
+
+  body.admin-review-print-active .review-compare-head-legacy,
+  body.admin-review-print-active .review-compare-head-updated {
+    background: #fff !important;
+    border-color: #333 !important;
+  }
+
+  body.admin-review-print-active .review-flight-row-highlight {
+    background: #fff !important;
+    border-left: 3px solid #333 !important;
+  }
+}
