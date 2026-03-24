@@ -98,7 +98,7 @@ export function ApplicationViewer({ applicantData }: { applicantData: ApplicantD
   return (
     <div className="space-y-6 print:space-y-4 print-sans">
       <div className="hidden print:block text-center mb-8">
-          <Icons.logo className="h-12 w-auto mx-auto" />
+          <Icons.logo className="mx-auto" height={48} />
           <h1 className="text-xl font-bold mt-4 uppercase">
               PILOT APPLICATION SUMMARY - CANDIDATE ID: <span className="print-mono">{applicantData.uid}</span>
           </h1>

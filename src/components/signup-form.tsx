@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   createUserWithEmailAndPassword,
   type AuthError,
@@ -24,7 +23,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { PrivacyPolicyArticle } from '@/components/legal/privacy-policy-article';
 import { triggerWelcomeEmail } from '@/app/actions';
 import type { ApplicantData } from '@/lib/types';
 import { writeCandidateAuditLog } from '@/lib/candidate-audit';
@@ -39,6 +47,7 @@ export function SignupForm() {
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [dataConsent, setDataConsent] = useState(false);
   const [consentError, setConsentError] = useState(false);
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
   const bothConsented = privacyConsent && dataConsent;
 
@@ -183,19 +192,34 @@ export function SignupForm() {
     }
   }
 
-  const labelStyle = "text-[13px] font-semibold text-[#565656] mb-1.5 block";
-  const inputStyle = "h-12 border-[1.5px] border-[#E3E3E3] rounded-lg px-4 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus-visible:ring-[#4D148C] focus-visible:ring-offset-0 focus-visible:border-[#4D148C]";
+  const labelClassName = 'auth-field-label';
+  const inputStyle =
+    'auth-inset-field h-14 rounded-2xl border-0 bg-white px-6 text-[15px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0';
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <Dialog open={privacyModalOpen} onOpenChange={setPrivacyModalOpen}>
+        <DialogContent className="max-h-[min(90vh,820px)] w-[min(42rem,calc(100vw-1.5rem))] max-w-none flex flex-col gap-0 overflow-hidden p-0 sm:max-w-none">
+          <DialogHeader className="shrink-0 space-y-1 border-b border-[#E3E3E3] px-6 pb-4 pt-6 pr-14 text-left">
+            <DialogTitle className="text-xl font-bold text-[#333333]">Privacy Policy</DialogTitle>
+            <DialogDescription className="text-[13px] text-[#565656]">
+              FedEx Pilot Application Portal — review before you agree.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[min(58vh,540px)] px-6 py-4">
+            <PrivacyPolicyArticle showBranding={false} />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className={labelStyle}>First Name</FormLabel>
+                <FormLabel className={labelClassName}>First Name</FormLabel>
                 <FormControl>
                   <Input placeholder="John" className={inputStyle} {...field} />
                 </FormControl>
@@ -208,7 +232,7 @@ export function SignupForm() {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className={labelStyle}>Last Name</FormLabel>
+                <FormLabel className={labelClassName}>Last Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Doe" className={inputStyle} {...field} />
                 </FormControl>
@@ -222,7 +246,7 @@ export function SignupForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className={labelStyle}>Email Address</FormLabel>
+              <FormLabel className={labelClassName}>Email Address</FormLabel>
               <FormControl>
                 <Input
                   type="email"
@@ -240,7 +264,7 @@ export function SignupForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className={labelStyle}>Password</FormLabel>
+              <FormLabel className={labelClassName}>Password</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="••••••••" className={inputStyle} {...field} />
               </FormControl>
@@ -253,7 +277,7 @@ export function SignupForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className={labelStyle}>Confirm Password</FormLabel>
+              <FormLabel className={labelClassName}>Confirm Password</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="••••••••" className={inputStyle} {...field} />
               </FormControl>
@@ -279,9 +303,13 @@ export function SignupForm() {
             />
             <span className="text-[13px] text-[#565656] leading-[1.5]">
               I have read and agree to the{' '}
-              <Link href="/privacy" target="_blank" className="text-[#4D148C] font-semibold underline">
+              <button
+                type="button"
+                onClick={() => setPrivacyModalOpen(true)}
+                className="inline p-0 align-baseline text-[#4D148C] font-semibold underline decoration-[#4D148C] hover:text-[#3d1070] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4D148C]"
+              >
                 Privacy Policy
-              </Link>{' '}
+              </button>{' '}
               regarding how my application data will be collected and used.
             </span>
           </label>
@@ -311,15 +339,21 @@ export function SignupForm() {
           onClick={bothConsented ? undefined : () => setConsentError(true)}
           className={
             bothConsented
-              ? '!mt-6 w-full h-12 fedex-gradient text-white font-bold rounded-lg shadow-[0_4px_15px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 active:translate-y-0.5'
-              : '!mt-6 w-full h-12 font-bold rounded-lg transition-all !bg-[#E3E3E3] !text-[#8E8E8E] cursor-not-allowed !shadow-none'
+              ? 'group !mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl fedex-gradient text-base font-bold text-white shadow-[0_12px_40px_-10px_rgba(77,20,140,0.45)] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]'
+              : '!mt-6 h-14 w-full cursor-not-allowed rounded-2xl !bg-[#E3E3E3] text-base font-bold !text-[#8E8E8E] !shadow-none transition-all'
           }
           disabled={loading}
         >
           {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : null}
-          Create Account
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : bothConsented ? (
+            <>
+              <span>Create Account</span>
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+            </>
+          ) : (
+            <span>Create Account</span>
+          )}
         </Button>
       </form>
     </Form>

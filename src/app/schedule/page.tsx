@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { InteriorNavbar } from '@/components/layout/InteriorNavbar';
+import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
 type SlotRow = InterviewSlotDoc & { id: string };
 
@@ -318,11 +319,8 @@ function ScheduleInterviewPageInner() {
       <InteriorNavbar />
       <div className="container max-w-3xl mx-auto px-4 py-8">
         <div className="text-center mb-10">
-          <div className="flex justify-center mb-4">
-            <div className="text-3xl font-bold italic">
-              <span className="text-[#4D148C]">Fed</span>
-              <span className="text-[#FF6200]">Ex</span>
-            </div>
+          <div className="mb-4 flex justify-center">
+            <FedExBrandMark height={40} />
           </div>
           <h1 className="text-[28px] font-bold text-[#333333]">Schedule Your Interview</h1>
           <p className="text-[15px] text-[#8E8E8E] mt-2">Select a time that works for you</p>

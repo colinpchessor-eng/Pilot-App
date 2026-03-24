@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -23,18 +24,10 @@ export function Navbar() {
       )}
     >
       <div className="flex h-full w-full items-center justify-between px-6 md:px-12">
-        <Link href="/" className="leading-none">
-          <span style={{ color: '#6b21e8', fontWeight: 900, fontSize: 20 }}>
-            FedEx
-          </span>
+        <Link href="/" className="flex flex-col items-start leading-none">
+          <FedExBrandMark height={36} className="max-w-[160px]" />
           <span
-            style={{
-              color: '#ff6200',
-              fontSize: '0.6em',
-              display: 'block',
-              marginTop: 2,
-              letterSpacing: 0.6,
-            }}
+            className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/80"
           >
             Express
           </span>

@@ -159,6 +159,34 @@
     @apply bg-white border border-[#4D148C] text-[#4D148C] font-bold rounded-lg hover:bg-[#F2F2F2] transition-colors;
   }
 
+  /* Login / signup marketing split (hero + glass form column) */
+  .auth-topo-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg width='400' height='400' viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 380c20-5 40-15 60-15s40 10 60 10 40-20 60-20 40 10 60 10 40-15 60-15 40 5 60 5v25H0v-25zM0 340c20-5 40-15 60-15s40 10 60 10 40-20 60-20 40 10 60 10 40-15 60-15 40 5 60 5v25H0v-25zM0 300c20-5 40-15 60-15s40 10 60 10 40-20 60-20 40 10 60 10 40-15 60-15 40 5 60 5v25H0v-25z' fill='%234D148C' fill-opacity='0.12' fill-rule='evenodd'/%3E%3C/svg%3E");
+  }
+
+  .auth-glass-panel {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .auth-inset-field {
+    box-shadow:
+      inset 2px 2px 5px rgba(217, 218, 222, 0.65),
+      inset -1px -1px 2px rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(227, 227, 227, 0.6) !important;
+  }
+
+  .auth-field-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #8e8e8e !important;
+  }
+
   /* Persistent fixed background - Only show on dark theme pages */
   body:not(.light-theme) .global-bg {
     position: fixed;

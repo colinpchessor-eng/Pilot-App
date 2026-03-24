@@ -1,85 +1,45 @@
 import { LoginForm } from '@/components/login-form';
 import Link from 'next/link';
+import {
+  AuthMarketingSplit,
+  AuthTransactionalFooter,
+} from '@/components/auth/auth-marketing-split';
+import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen w-full flex-col md:flex-row bg-[#FAFAFA]">
-      {/* Left Pane */}
-      <div className="relative h-64 md:h-auto md:w-1/2 overflow-hidden bg-black">
-        {/* FedEx Heartbeat Map animation placeholder */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/assets/network-map-animated.webp"
-            alt="FedEx Heartbeat Map"
-            className="h-full w-full object-cover opacity-80"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        </div>
-
-        {/* Overlay Elements */}
-        <div className="relative z-10 flex h-full flex-col justify-between p-8 md:p-12">
-          <div className="flex items-center gap-2 text-white font-black italic text-2xl">
-            <span className="text-white">Fed</span>
-            <span className="text-[#FF6200]">Ex</span>
-          </div>
-
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-white uppercase">
-              CHART YOUR <br /> COURSE.
-            </h1>
-            <p className="max-w-md text-lg text-gray-300">
-              Your next destination starts here. Log in to manage your flight path and career milestones.
-            </p>
-            
-            {/* Pagination Indicator */}
-            <div className="flex gap-2 pt-4">
-              <div className="h-1 w-8 rounded-full bg-white" />
-              <div className="h-1 w-8 rounded-full bg-white/30" />
-              <div className="h-1 w-8 rounded-full bg-white/30" />
-            </div>
-          </div>
-        </div>
+    <AuthMarketingSplit
+      variant="login"
+      heroDescription="Your next destination starts here. Log in to manage your flight path and career milestones."
+    >
+      <div className="mb-10 flex justify-center lg:hidden">
+        <FedExBrandMark height={44} />
       </div>
 
-      {/* Right Pane */}
-      <div className="flex flex-1 items-center justify-center p-8 md:p-12">
-        <div className="w-full max-w-md">
-          {/* Logo above card */}
-          <div className="mb-6 text-center">
-             <div className="inline-flex items-center text-[22px] font-black italic tracking-tighter">
-                <span className="text-[#4D148C]">Fed</span>
-                <span className="text-[#FF6200]">Ex</span>
-                <span className="text-[#FF6200] ml-0.5 text-3xl leading-[0]">.</span>
-             </div>
-          </div>
-
-          {/* Login Card */}
-          <div className="bg-white rounded-[16px] border border-[#E3E3E3] shadow-[0_8px_40px_rgba(77,20,140,0.10)] p-10">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-[#333333] tracking-tight">
-                Welcome Back
-              </h2>
-              <p className="text-[14px] text-[#8E8E8E] mt-1">
-                Sign in to continue your application
-              </p>
-            </div>
-
-            <LoginForm />
-
-            <div className="mt-10 text-center">
-              <p className="text-sm text-[#8E8E8E]">
-                Don&apos;t have any account?{' '}
-                <Link
-                  href="/signup"
-                  className="font-bold text-[#4D148C] hover:underline"
-                >
-                  Register
-                </Link>
-              </p>
-            </div>
-          </div>
+      <div className="auth-glass-panel rounded-3xl border border-white/50 p-10 shadow-[0_25px_60px_-15px_rgba(77,20,140,0.12)] md:p-12">
+        <div className="mb-8 text-center lg:mb-10 lg:text-left">
+          <h2 className="font-headline text-3xl font-bold tracking-tight text-[#042048] sm:text-4xl">
+            Welcome Back
+          </h2>
+          <p className="mt-2 text-[15px] font-medium text-[#565656]">
+            Access your flight deck dashboard.
+          </p>
         </div>
+
+        <LoginForm />
+
+        <p className="mt-10 text-center text-sm font-medium text-[#565656]">
+          Don&apos;t have an account?{' '}
+          <Link
+            href="/signup"
+            className="ml-1 font-extrabold text-[#4D148C] transition-colors hover:text-[#FF6200]"
+          >
+            Register Now
+          </Link>
+        </p>
       </div>
-    </main>
+
+      <AuthTransactionalFooter />
+    </AuthMarketingSplit>
   );
 }

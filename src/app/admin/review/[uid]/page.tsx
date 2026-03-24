@@ -18,6 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import Link from 'next/link';
+import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import {
@@ -655,9 +656,8 @@ FedEx Express Pilot Recruiting`;
   return (
     <div className="admin-review-page space-y-8 pb-16">
       <div className="hidden print:block review-print-header text-center border-b border-[#333] pb-4 mb-6">
-        <div className="text-2xl font-bold italic">
-          <span className="text-[#4D148C]">Fed</span>
-          <span className="text-[#FF6200]">Ex</span>
+        <div className="flex justify-center">
+          <FedExBrandMark height={36} />
         </div>
         <h1 className="text-lg font-bold mt-3 text-[#333333]">Pilot Application Review</h1>
         <p className="text-sm mt-1 text-[#333333]">

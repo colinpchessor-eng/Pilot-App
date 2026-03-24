@@ -37,7 +37,7 @@ export function AdminHeader({ className }: { className?: string }) {
         className="flex items-center gap-2"
         aria-label="Back to admin home"
       >
-        <Icons.logo className="h-8 w-auto" />
+        <Icons.logo height={32} />
         <span className="hidden font-semibold sm:inline-block text-white">
           Admin Portal
         </span>

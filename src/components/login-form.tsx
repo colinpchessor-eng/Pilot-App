@@ -26,8 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
-import { Checkbox } from './ui/checkbox';
+import { ArrowRight, Loader2, Lock, Mail } from 'lucide-react';
 
 export function LoginForm() {
   const router = useRouter();
@@ -105,84 +104,104 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[13px] font-semibold text-[#565656] mb-1.5 block">
-                Email Address
-              </FormLabel>
-              <FormControl>
-                <Input 
-                  type="email" 
-                  placeholder="name@fedex.com" 
-                  className="h-12 border-[1.5px] border-[#E3E3E3] rounded-lg px-4 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus-visible:ring-[#4D148C] focus-visible:ring-offset-0 focus-visible:border-[#4D148C]"
-                  {...field} 
+              <FormLabel className="auth-field-label">Email Address</FormLabel>
+              <div className="relative">
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="name@fedex.com"
+                    className="auth-inset-field h-14 rounded-2xl border-0 bg-white pl-6 pr-12 text-[15px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0"
+                    {...field}
+                  />
+                </FormControl>
+                <Mail
+                  className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#B8B8C8]"
+                  aria-hidden
                 />
-              </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div className="space-y-1">
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[13px] font-semibold text-[#565656] mb-1.5 block">
-                  Password
-                </FormLabel>
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <div className="mb-2 flex items-end justify-between gap-3">
+                <FormLabel className="auth-field-label !mb-0">Password</FormLabel>
+                <button
+                  type="button"
+                  className="shrink-0 cursor-pointer text-[11px] font-bold text-[#4D148C] transition-colors hover:text-[#FF6200]"
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <div className="relative">
                 <FormControl>
-                  <Input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    className="h-12 border-[1.5px] border-[#E3E3E3] rounded-lg px-4 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] focus-visible:ring-[#4D148C] focus-visible:ring-offset-0 focus-visible:border-[#4D148C]"
-                    {...field} 
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    className="auth-inset-field h-14 rounded-2xl border-0 bg-white pl-6 pr-12 text-[15px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0"
+                    {...field}
                   />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="flex justify-end">
-            <button type="button" className="text-[13px] text-[#4D148C] font-medium hover:underline cursor-pointer">
-              Forgot password?
-            </button>
-          </div>
-        </div>
+                <Lock
+                  className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#B8B8C8]"
+                  aria-hidden
+                />
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
           name="keepSignedIn"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center space-x-2 space-y-0 py-2">
+            <FormItem className="flex flex-row items-center gap-3 space-y-0 py-2">
               <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="border-[#E3E3E3] data-[state=checked]:bg-[#4D148C] data-[state=checked]:border-[#4D148C]"
+                <input
+                  type="checkbox"
+                  checked={!!field.value}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                  className="shrink-0 cursor-pointer rounded border-[#E3E3E3] text-[#4D148C] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4D148C]"
+                  style={{ width: 18, height: 18, minWidth: 18, accentColor: '#4D148C' }}
                 />
               </FormControl>
-              <FormLabel className="text-[13px] font-medium text-[#565656] cursor-pointer">
+              <FormLabel className="!mt-0 cursor-pointer text-[13px] font-medium leading-normal text-[#565656]">
                 Remember me
               </FormLabel>
             </FormItem>
           )}
         />
 
-        <Button
-          type="submit"
-          className="w-full h-12 fedex-gradient text-white font-bold rounded-lg shadow-[0_4px_15px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 active:translate-y-0.5"
-          disabled={loading}
-        >
-          {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : null}
-          Sign In
-        </Button>
+        <div className="pt-2">
+          <Button
+            type="submit"
+            className="group flex h-14 w-full items-center justify-center gap-2 rounded-2xl fedex-gradient text-base font-bold text-white shadow-[0_12px_40px_-10px_rgba(77,20,140,0.45)] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <>
+                <span>Sign In to Portal</span>
+                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+              </>
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

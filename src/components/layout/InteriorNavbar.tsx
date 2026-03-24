@@ -11,6 +11,7 @@ import { getAuth, signOut } from 'firebase/auth';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { ApplicantData } from '@/lib/types';
+import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
 export function InteriorNavbar() {
   const pathname = usePathname();
@@ -80,17 +81,9 @@ export function InteriorNavbar() {
 
   const userInitials = user?.email?.[0].toUpperCase() || 'U';
 
-  const FedExLogo = ({ className }: { className?: string }) => (
-    <div className={cn("flex items-center font-bold italic", className)}>
-      <span className="text-[#4D148C]">Fed</span>
-      <span className="text-[#FF6200]">Ex</span>
-      <span className="text-[#FF6200] ml-0.5 text-[0.6em] align-top">®</span>
-    </div>
-  );
-
   const allDesktopItems = isOnAdminPage
     ? [
-        ...navItems.slice(0, 2),
+        ...navItems.slice(0, 1),
         { label: '__divider__', href: '' },
         ...adminNavItems,
       ]
@@ -103,7 +96,7 @@ export function InteriorNavbar() {
     : navItems;
 
   const allMobileItems = isOnAdminPage
-    ? [...navItems.slice(0, 2), ...adminNavItems]
+    ? [...navItems.slice(0, 1), ...adminNavItems]
     : isAdmin
     ? [...navItems, { label: 'Admin', href: '/admin' }]
     : navItems;
@@ -112,8 +105,8 @@ export function InteriorNavbar() {
     <div className="interior-navbar sticky top-0 z-50 w-full pointer-events-none">
       {/* Layer 1: Top Bar */}
       <div className="h-[36px] w-full bg-white/85 backdrop-blur-md border-b border-[#E3E3E3] flex items-center justify-between px-6 pointer-events-auto">
-        <Link href="/">
-          <FedExLogo className="text-xl" />
+        <Link href="/" className="flex items-center">
+          <FedExBrandMark height={26} />
         </Link>
         <div className="flex items-center gap-4">
           <button 
@@ -140,8 +133,8 @@ export function InteriorNavbar() {
         scrolled && "bg-white/88 shadow-[0_8px_32px_rgba(77,20,140,0.15),0_2px_8px_rgba(0,0,0,0.10)]"
       )}>
         {/* Pill Logo */}
-        <Link href="/" className="mr-4 shrink-0">
-          <FedExLogo className="text-lg" />
+        <Link href="/" className="mr-4 flex shrink-0 items-center">
+          <FedExBrandMark height={24} />
         </Link>
 
         {/* Desktop Nav Items */}
@@ -187,21 +180,22 @@ export function InteriorNavbar() {
 
         {/* Right Side Action */}
         <div className="ml-auto flex items-center shrink-0">
-          {isVerified ? (
-            <Link href="/dashboard/application">
-              <Button className="hidden sm:flex bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-full px-5 py-2 text-[13px] font-bold shadow-[0_2px_12px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 hover:-translate-y-0.5">
+          {!isOnAdminPage &&
+            (isVerified ? (
+              <Link href="/dashboard/application">
+                <Button className="hidden sm:flex bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-full px-5 py-2 text-[13px] font-bold shadow-[0_2px_12px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 hover:-translate-y-0.5">
+                  My Application
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                disabled
+                title="Verify your Candidate ID to access your application"
+                className="hidden sm:flex bg-[#E3E3E3] text-[#8E8E8E] rounded-full px-5 py-2 text-[13px] font-bold cursor-not-allowed shadow-none"
+              >
                 My Application
               </Button>
-            </Link>
-          ) : (
-            <Button
-              disabled
-              title="Verify your Candidate ID to access your application"
-              className="hidden sm:flex bg-[#E3E3E3] text-[#8E8E8E] rounded-full px-5 py-2 text-[13px] font-bold cursor-not-allowed shadow-none"
-            >
-              My Application
-            </Button>
-          )}
+            ))}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -248,24 +242,25 @@ export function InteriorNavbar() {
                   </Link>
                 );
               })}
-              {isVerified ? (
-                <Link
-                  href="/dashboard/application"
-                  className="mt-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Button className="w-full bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-xl py-6 text-sm font-bold">
+              {!isOnAdminPage &&
+                (isVerified ? (
+                  <Link
+                    href="/dashboard/application"
+                    className="mt-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Button className="w-full bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-xl py-6 text-sm font-bold">
+                      My Application
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    disabled
+                    className="mt-2 w-full bg-[#E3E3E3] text-[#8E8E8E] rounded-xl py-6 text-sm font-bold cursor-not-allowed shadow-none"
+                  >
                     My Application
                   </Button>
-                </Link>
-              ) : (
-                <Button
-                  disabled
-                  className="mt-2 w-full bg-[#E3E3E3] text-[#8E8E8E] rounded-xl py-6 text-sm font-bold cursor-not-allowed shadow-none"
-                >
-                  My Application
-                </Button>
-              )}
+                ))}
             </div>
           </div>
         )}
