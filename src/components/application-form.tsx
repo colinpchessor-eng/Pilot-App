@@ -364,7 +364,8 @@ export function ApplicationForm({
     let flightHasValue = false;
     flightFields.forEach((f) => {
       const val = data.flightTime[f as keyof typeof data.flightTime];
-      if (typeof val === 'number' && val > 0) flightHasValue = true;
+      const numVal = typeof val === 'string' ? parseFloat(val) : (typeof val === 'number' ? val : 0);
+      if (!isNaN(numVal) && numVal > 0) flightHasValue = true;
     });
     if (!flightHasValue) {
        errors.push({ tabValue: 'flight-time', tabLabel: 'Flight Time', message: 'No flight hours have been entered.' });
