@@ -84,6 +84,7 @@ import { LegacyRecordsContent } from './legacy-records-content';
 import { Database, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { encryptField, decryptField, isEncrypted } from '@/lib/encryption';
+import { sendEmail, buildSubmissionEmail } from '@/lib/email';
 
 const TABS = [
   { value: 'flight-time', label: 'Flight Time' },
@@ -255,6 +256,7 @@ export function ApplicationForm({
     !applicantData.employmentHistory || applicantData.employmentHistory.length === 0
   );
 
+  // Firestore: owner write keys must stay within firestore.rules → userSelfUpdateAffectedKeysAllowlist
   const saveDataToFirestore = async () => {
     if (!user || !firestore) return false;
     setIsSaving(true);
@@ -344,6 +346,32 @@ export function ApplicationForm({
             console.error('application_submitted audit:', auditErr);
           }
         }
+        try {
+          if (user?.email && firestore) {
+            const nm = [applicantData.firstName, applicantData.lastName]
+              .filter(Boolean)
+              .join(' ')
+              .trim();
+            const submittedAt = new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+            await sendEmail(firestore, {
+              to: user.email,
+              subject: 'FedEx Pilot Application Received — Thank You',
+              html: buildSubmissionEmail(nm, user.email, submittedAt),
+              type: 'application_submitted',
+              candidateId: applicantData.candidateId || '',
+              candidateName: nm,
+              sentBy: 'system',
+              sentByEmail: 'system',
+            });
+          }
+        } catch (emailErr) {
+          console.error('Submission confirmation email:', emailErr);
+        }
         toast({ title: 'Application Submitted!' });
         router.push('/dashboard');
       })
@@ -355,7 +383,6 @@ export function ApplicationForm({
 
   const checkValidationAndShowErrors = () => {
     const data = form.getValues();
-    console.log('Form data at submission:', JSON.stringify(data, null, 2));
 
     const errors: IncompleteItem[] = [];
 

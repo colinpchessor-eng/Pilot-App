@@ -8,6 +8,7 @@ import {
   Clock,
   Trash2,
   Calendar,
+  Mail,
 } from 'lucide-react';
 
 type StatCard = {
@@ -26,6 +27,7 @@ export function AdminStats({
   pendingVerifications,
   pendingDeletions,
   interviewsScheduled,
+  emailsSentToday,
 }: {
   totalCandidates: number;
   verifiedCandidates: number;
@@ -34,6 +36,7 @@ export function AdminStats({
   pendingVerifications: number;
   pendingDeletions: number;
   interviewsScheduled: number;
+  emailsSentToday: number;
 }) {
   const cards: StatCard[] = [
     { title: 'Total Candidates', value: totalCandidates, icon: <Users />, color: '#4D148C' },
@@ -43,6 +46,7 @@ export function AdminStats({
     { title: 'Pending Verifications', value: pendingVerifications, icon: <Clock />, color: '#F7B118' },
     { title: 'Deletion Requests', value: pendingDeletions, icon: <Trash2 />, color: '#DE002E', pulse: pendingDeletions > 0 },
     { title: 'Interviews Scheduled', value: interviewsScheduled, icon: <Calendar />, color: '#007AB7' },
+    { title: 'Emails Sent Today', value: emailsSentToday, icon: <Mail />, color: '#007AB7' },
   ];
 
   return (

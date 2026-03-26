@@ -2,10 +2,36 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Privileged fields that only admins (or the Admin SDK) may set ──
-    function touchesPrivilegedFields() {
+    // ── Fields owners must not mutate (verification, identity, privilege); use Admin SDK / admins ──
+    function touchesProtectedUserFields() {
       return request.resource.data.diff(resource.data).affectedKeys()
-        .hasAny(['isAdmin', 'role']);
+        .hasAny([
+          'isAdmin', 'role',
+          'status', 'verifiedAt', 'requestedAt',
+          'candidateId', 'legacyApplicationId', 'legacyData',
+          'email', 'uid', 'createdAt'
+        ]);
+    }
+
+    // Client owner updates: application + optional profile fields only (see application-form.tsx).
+    function userSelfUpdateAffectedKeysAllowlist() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly([
+          'flightTime', 'firstClassMedicalDate', 'atpNumber', 'typeRatings', 'employmentHistory',
+          'safetyQuestions', 'isCertified', 'printedName', 'submittedAt', 'candidateFlowStatus',
+          'displayName', 'firstName', 'lastName'
+        ]);
+    }
+
+    // Union of keys from auth-gate buildDefaultApplicantData + signup-form userProfile.
+    function usersCreateKeysValid() {
+      return request.resource.data.keys().hasOnly([
+        'atpNumber', 'candidateFlowStatus', 'consentGiven', 'consentTimestamp', 'consentVersion',
+        'createdAt', 'displayName', 'email', 'employmentHistory', 'firstClassMedicalDate',
+        'firstName', 'flightTime', 'isAdmin', 'isCertified', 'lastName', 'printedName',
+        'privacyPolicyVersion', 'requestedAt', 'role', 'safetyQuestions', 'status', 'submittedAt',
+        'typeRatings', 'uid', 'verifiedAt'
+      ]);
     }
 
     function isSignedIn() {
@@ -36,6 +62,13 @@ service cloud.firestore {
         ]);
     }
 
+    function candidateIdsClaimAffectedKeysOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly([
+          'status', 'assignedUid', 'claimedAt', 'flowStatus', 'verifiedAt', 'flowStatusUpdatedAt'
+        ]);
+    }
+
     // Bootstrap admin (fedexadmin@fedex.com) may create their doc with isAdmin + role on signup.
     function isBootstrapAdminSignup() {
       return request.auth != null
@@ -49,16 +82,18 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
 
       allow create: if isOwner(userId)
+        && usersCreateKeysValid()
         && (
-          (
-            request.resource.data.isAdmin == false
+          isBootstrapAdminSignup()
+          || (
+            (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == false)
             && (!('role' in request.resource.data) || request.resource.data.role == '')
           )
-          || isBootstrapAdminSignup()
         );
 
       allow update: if isOwner(userId)
-        && !touchesPrivilegedFields();
+        && !touchesProtectedUserFields()
+        && userSelfUpdateAffectedKeysAllowlist();
 
       // Admins can read/write any user doc (including isAdmin/role)
       allow read, write: if isAdmin();
@@ -66,17 +101,40 @@ service cloud.firestore {
 
     // ── candidateIds ───────────────────────────────────────────────────
     match /candidateIds/{candidateId} {
-      allow get: if isSignedIn();
+      function candidateIdAssignedToMe() {
+        return isSignedIn() && resource.data.assignedUid == request.auth.uid;
+      }
+      function masterKeyAllowsRead() {
+        return (!('masterKeyExpiry' in resource.data) || resource.data.masterKeyExpiry > request.time)
+          && (
+            !('masterKeyEmails' in resource.data)
+            || resource.data.masterKeyEmails.size() == 0
+            || resource.data.masterKeyEmails.hasAny([request.auth.token.email.lower()])
+          );
+      }
+      function candidateIdUnclaimedReadableByApplicant() {
+        return isSignedIn()
+          && request.auth.token.email != null
+          && (!('status' in resource.data) || resource.data.status != 'claimed')
+          && (
+            ('email' in resource.data && resource.data.email is string
+              && resource.data.email.lower() == request.auth.token.email.lower())
+            || ('masterKey' in resource.data && resource.data.masterKey == true && masterKeyAllowsRead())
+          );
+      }
+
+      allow get: if isAdmin() || candidateIdAssignedToMe() || candidateIdUnclaimedReadableByApplicant();
       allow list: if isAdmin();
       allow create, delete: if isAdmin();
 
-      // Regular users: can only claim an unclaimed candidate ID for themselves
+      // Regular users: claim unclaimed row (defense-in-depth: key allowlist)
       allow update: if isSignedIn()
         && request.resource.data.status == 'claimed'
         && request.resource.data.assignedUid == request.auth.uid
-        && resource.data.status != 'claimed';
+        && resource.data.status != 'claimed'
+        && candidateIdsClaimAffectedKeysOnly();
 
-      // Assigned candidate: update hiring pipeline timestamps / flowStatus only
+      // Assigned candidate: pipeline timestamps / flowStatus only
       allow update: if isSignedIn()
         && resource.data.status == 'claimed'
         && resource.data.assignedUid == request.auth.uid
@@ -84,35 +142,62 @@ service cloud.firestore {
         && request.resource.data.assignedUid == resource.data.assignedUid
         && candidateIdsFlowKeysOnly();
 
-      // Admins can update any candidate ID (reset, reassign, etc.)
       allow update: if isAdmin();
     }
 
     // ── legacyData ─────────────────────────────────────────────────────
     match /legacyData/{candidateId} {
-      allow get: if isSignedIn();
+      allow get: if isAdmin()
+        || (
+          isSignedIn()
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.candidateId == candidateId
+        );
       allow list: if isAdmin();
       allow write: if isAdmin();
     }
 
     // ── pendingVerifications ───────────────────────────────────────────
     match /pendingVerifications/{userId} {
-      allow read, create: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
+
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'requestedAt', 'status'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.email is string
+        && (!('displayName' in request.resource.data)
+          || request.resource.data.displayName == null
+          || request.resource.data.displayName is string);
+
+      // Owner may cancel while pending (no other client fields)
       allow update: if isOwner(userId)
-        && resource.data.status == 'pending';
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'cancelled';
+
       allow read, write: if isAdmin();
     }
 
     // ── applicants ─────────────────────────────────────────────────────
     match /applicants/{tokenId} {
-      allow get: if isSignedIn();
+      allow get: if isAdmin()
+        || (
+          isSignedIn()
+          && request.auth.token.email != null
+          && resource.data.email is string
+          && resource.data.email.lower() == request.auth.token.email.lower()
+        );
       allow list: if isAdmin();
 
-      // Users can claim their own token
       allow update: if isSignedIn()
         && resource.data.email == request.auth.token.email
         && request.resource.data.assignedUid == request.auth.uid
-        && request.resource.data.status == 'claimed';
+        && request.resource.data.status == 'claimed'
+        && request.resource.data.assignedUid is string
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['assignedUid', 'status']);
 
       allow create, delete: if isAdmin();
       allow update: if isAdmin();
@@ -133,7 +218,8 @@ service cloud.firestore {
         ]
         && d.candidateName is string
         && d.candidateEmail is string
-        && d.candidateId is string;
+        && d.candidateId is string
+        && d.timestamp is timestamp;
     }
 
     match /auditLog/{logId} {
@@ -145,7 +231,18 @@ service cloud.firestore {
     // ── deletionRequests ───────────────────────────────────────────────
     match /deletionRequests/{requestId} {
       allow create: if isSignedIn()
-        && request.resource.data.uid == request.auth.uid;
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'name', 'candidateId', 'requestedAt', 'status', 'notes'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && (!('email' in request.resource.data) || request.resource.data.email is string)
+        && (!('name' in request.resource.data) || request.resource.data.name is string)
+        && (!('candidateId' in request.resource.data)
+          || request.resource.data.candidateId == null
+          || request.resource.data.candidateId is string)
+        && (!('notes' in request.resource.data) || request.resource.data.notes is string);
+
       allow read: if isAdmin();
       allow update, delete: if isAdmin();
     }
@@ -153,7 +250,14 @@ service cloud.firestore {
     // ── bridge_requests ────────────────────────────────────────────────
     match /bridge_requests/{requestId} {
       allow create: if isSignedIn()
-        && request.resource.data.uid == request.auth.uid;
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'fullName', 'status', 'requestedAt'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.email is string
+        && request.resource.data.fullName is string;
+
       allow read: if isSignedIn()
         && resource.data.uid == request.auth.uid;
       allow read, write: if isAdmin();
@@ -161,16 +265,65 @@ service cloud.firestore {
 
     // ── bridge_codes ───────────────────────────────────────────────────
     match /bridge_codes/{codeId} {
-      allow get: if isSignedIn();
+      allow get: if isAdmin()
+        || (
+          isSignedIn()
+          && (!('isClaimed' in resource.data) || resource.data.isClaimed == false)
+        );
       allow update: if isSignedIn()
-        && request.resource.data.claimedByUid == request.auth.uid;
+        && request.resource.data.claimedByUid == request.auth.uid
+        && (!('isClaimed' in resource.data) || resource.data.isClaimed == false)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isClaimed', 'claimedByUid'])
+        && request.resource.data.isClaimed is bool
+        && request.resource.data.claimedByUid is string;
+
       allow read, write: if isAdmin();
     }
 
-    // ── mail (for Firebase Trigger Email extension) ────────────────────
+    // ── mail (Trigger Email extension + client-queued templates) ─────────
+    function mailCreateCoreValid() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['to', 'message', 'type', 'status', 'createdAt'])
+        && d.message is map
+        && d.message.keys().hasAll(['subject', 'html'])
+        && d.message.subject is string
+        && d.message.html is string
+        && d.type is string
+        && d.status == 'pending'
+        && d.createdAt is timestamp;
+    }
+    function mailCreateAdminExtras() {
+      let d = request.resource.data;
+      return (!('from' in d) || d.from is string)
+        && (!('replyTo' in d) || d.replyTo is string)
+        && (!('candidateId' in d) || d.candidateId is string)
+        && (!('candidateName' in d) || d.candidateName is string)
+        && (!('sentBy' in d) || d.sentBy is string)
+        && (!('sentByEmail' in d) || d.sentByEmail is string)
+        && (!('portalOrigin' in d) || d.portalOrigin is string);
+    }
+    function mailApplicationSubmittedSelf() {
+      let d = request.resource.data;
+      return d.type == 'application_submitted'
+        && d.to is string
+        && d.to.lower() == request.auth.token.email.lower();
+    }
+
     match /mail/{mailId} {
-      allow read: if false;
-      allow write: if false;
+      allow read: if isAdmin();
+      allow create: if isSignedIn()
+        && mailCreateCoreValid()
+        && mailCreateAdminExtras()
+        && (
+          (isAdmin() && request.resource.data.type in ['flow_started', 'interview_invite'])
+          || mailApplicationSubmittedSelf()
+        );
+      allow update, delete: if false;
+    }
+
+    match /emailTemplates/{templateId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // ── interviewSlots ───────────────────────────────────────────────────
@@ -182,7 +335,7 @@ service cloud.firestore {
     }
 
     match /interviewSlots/{slotId} {
-      allow read: if isSignedIn();
+      allow read: if isAdmin() || (isSignedIn() && resource.data.status == 'available');
       allow create, delete: if isAdmin();
       allow update: if isAdmin()
         || (
@@ -191,6 +344,9 @@ service cloud.firestore {
           && request.resource.data.status == 'booked'
           && request.resource.data.bookedBy == request.auth.uid
           && interviewSlotBookKeysOnly()
+          && request.resource.data.bookedByName is string
+          && request.resource.data.bookedByEmail is string
+          && request.resource.data.bookedAt is timestamp
         );
     }
 
@@ -201,10 +357,19 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.candidateUid == request.auth.uid
         && request.resource.data.status == 'confirmed'
-        && request.resource.data.keys().hasAll([
+        && request.resource.data.keys().hasOnly([
           'slotId', 'candidateUid', 'candidateId', 'candidateName',
           'candidateEmail', 'adminUid', 'scheduledFor', 'status', 'createdAt'
-        ]);
+        ])
+        && request.resource.data.slotId is string
+        && request.resource.data.candidateUid is string
+        && request.resource.data.candidateId is string
+        && request.resource.data.candidateName is string
+        && request.resource.data.candidateEmail is string
+        && request.resource.data.adminUid is string
+        && request.resource.data.scheduledFor is timestamp
+        && request.resource.data.createdAt is timestamp;
+
       allow update, delete: if isAdmin();
     }
 

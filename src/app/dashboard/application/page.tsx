@@ -8,9 +8,14 @@ import {
 } from '@/components/ui/card';
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import type { ApplicantData } from '@/lib/types';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { writeCandidateAuditLog } from '@/lib/candidate-audit';
+import { doc, getDoc } from 'firebase/firestore';
+import {
+  markApplicationFlowOpened,
+  syncLegacyDataForUser,
+} from '@/app/applicant/verification-actions';
 import { useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { InteriorNavbar } from '@/components/layout/InteriorNavbar';
 
 export default function ApplicationPage() {
@@ -25,9 +30,8 @@ export default function ApplicationPage() {
     error,
   } = useDoc<ApplicantData>(userDocRef);
 
-  // Fetch and save legacy data when user is verified but legacyData is missing
   useEffect(() => {
-    if (!user || !firestore || !applicantData) return;
+    if (!user || !applicantData) return;
     const status = applicantData.status || 'pending';
     const candidateId = applicantData.candidateId;
     const hasLegacy = applicantData.legacyData != null;
@@ -35,17 +39,13 @@ export default function ApplicationPage() {
 
     (async () => {
       try {
-        const legacyRef = doc(firestore, 'legacyData', candidateId);
-        const legacySnap = await getDoc(legacyRef);
-        if (legacySnap.exists()) {
-          const userRef = doc(firestore, 'users', user.uid);
-          await updateDoc(userRef, { legacyData: legacySnap.data() });
-        }
+        const idToken = await user.getIdToken();
+        await syncLegacyDataForUser({ idToken });
       } catch (e) {
         console.error('Failed to fetch legacy data:', e);
       }
     })();
-  }, [user, firestore, applicantData]);
+  }, [user, applicantData]);
 
   // First open: mark candidate pipeline as in_progress (once per mount when eligible)
   useEffect(() => {
@@ -66,28 +66,11 @@ export default function ApplicationPage() {
         const d = snap.data();
         if (d.applicationStartedAt) return;
 
-        await updateDoc(ref, {
-          flowStatus: 'in_progress',
-          applicationStartedAt: serverTimestamp(),
-          flowStatusUpdatedAt: serverTimestamp(),
-        });
-        await updateDoc(doc(firestore, 'users', user.uid), {
-          candidateFlowStatus: 'in_progress',
-        });
-        try {
-          const nm = [applicantData.firstName, applicantData.lastName]
-            .filter(Boolean)
-            .join(' ')
-            .trim();
-          await writeCandidateAuditLog(firestore, {
-            uid: user.uid,
-            action: 'application_started',
-            candidateName: nm,
-            candidateEmail: user.email,
-            candidateId,
-          });
-        } catch (auditErr) {
-          console.error('application_started audit:', auditErr);
+        const idToken = await user.getIdToken();
+        const result = await markApplicationFlowOpened({ idToken });
+        if (!result.ok) {
+          console.error('Flow status (application opened):', result.error);
+          flowOpenedRef.current = false;
         }
       } catch (e) {
         console.error('Flow status (application opened):', e);
@@ -134,6 +117,30 @@ export default function ApplicationPage() {
             </p>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if ((applicantData.status || 'pending') !== 'verified') {
+    return (
+      <div className="min-h-screen interior-bg pb-12">
+        <InteriorNavbar />
+        <div className="container mx-auto max-w-5xl py-8">
+          <Card className="border-[#E3E3E3] bg-white">
+            <CardHeader>
+              <CardTitle className="text-[#333333]">Verification required</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-[#565656]">
+                Complete candidate verification on your dashboard before opening the
+                application.
+              </p>
+              <Button asChild className="fedex-btn-primary">
+                <Link href="/dashboard">Back to dashboard</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

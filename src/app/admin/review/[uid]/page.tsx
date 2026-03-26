@@ -48,6 +48,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { sendEmail, buildInterviewEmail, getPublicPortalOrigin } from '@/lib/email';
 
 const SAFETY_LABELS: Record<string, string> = {
   terminations: 'Terminations or resignations in lieu of from any FAA covered positions?',
@@ -439,6 +441,7 @@ export default function AdminReviewPage() {
   const uid = typeof params.uid === 'string' ? params.uid : '';
   const firestore = useFirestore();
   const { user: adminUser } = useUser();
+  const { toast } = useToast();
 
   const userRef = uid ? doc(firestore, 'users', uid) : undefined;
   const { data: applicant, loading: userLoading, error: userError } = useDoc<ApplicantData>(userRef);
@@ -562,8 +565,29 @@ FedEx Express Pilot Recruiting`;
 
   const markInterviewSent = useCallback(async () => {
     if (!candidateId || !uid || !adminUser) return;
+    const toEmail = applicant?.email?.trim();
+    if (!toEmail) {
+      toast({
+        variant: 'destructive',
+        title: 'No email',
+        description: 'Applicant has no email on file.',
+      });
+      return;
+    }
     setMarkingInterview(true);
     try {
+      const scheduleUrl = `${getPublicPortalOrigin()}/schedule?candidateId=${encodeURIComponent(candidateId)}`;
+      const html = buildInterviewEmail(fullName, toEmail, scheduleUrl);
+      await sendEmail(firestore, {
+        to: toEmail,
+        subject: 'FedEx Pilot Interview Invitation',
+        html,
+        type: 'interview_invite',
+        candidateId,
+        candidateName: fullName,
+        sentBy: adminUser.uid,
+        sentByEmail: adminUser.email || '',
+      });
       await updateDoc(doc(firestore, 'candidateIds', candidateId), {
         flowStatus: 'interview_sent',
         interviewInvitedAt: serverTimestamp(),
@@ -580,13 +604,22 @@ FedEx Express Pilot Recruiting`;
         candidateName: fullName,
         timestamp: serverTimestamp(),
       });
+      toast({
+        title: 'Interview invitation sent',
+        description: `Interview invitation sent to ${toEmail}`,
+      });
       setInviteOpen(false);
     } catch (e) {
       console.error(e);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to send invitation',
+        description: e instanceof Error ? e.message : 'Unknown error',
+      });
     } finally {
       setMarkingInterview(false);
     }
-  }, [candidateId, firestore, uid, adminUser, fullName]);
+  }, [candidateId, firestore, uid, adminUser, fullName, applicant?.email, toast]);
 
   const copyInviteMessage = useCallback(() => {
     void navigator.clipboard.writeText(inviteMessage);

@@ -2,14 +2,11 @@
 
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import type { ApplicantData } from '@/lib/types';
+import { doc } from 'firebase/firestore';
 import {
-  doc,
-  getDoc,
-  writeBatch,
-  serverTimestamp,
-  updateDoc,
-} from 'firebase/firestore';
-import { writeCandidateAuditLog } from '@/lib/candidate-audit';
+  completeCandidateIdVerification,
+  syncLegacyDataForUser,
+} from '@/app/applicant/verification-actions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -61,9 +58,8 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Fetch and save legacy data when user is verified but legacyData is missing
   useEffect(() => {
-    if (!user || !firestore || !applicantData) return;
+    if (!user || !applicantData) return;
     const status = applicantData.status || 'pending';
     const candidateId = applicantData.candidateId;
     const hasLegacy = applicantData.legacyData != null;
@@ -71,17 +67,13 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const legacyRef = doc(firestore, 'legacyData', candidateId);
-        const legacySnap = await getDoc(legacyRef);
-        if (legacySnap.exists()) {
-          const userRef = doc(firestore, 'users', user.uid);
-          await updateDoc(userRef, { legacyData: legacySnap.data() });
-        }
+        const idToken = await user.getIdToken();
+        await syncLegacyDataForUser({ idToken });
       } catch (e) {
         console.error('Failed to fetch legacy data:', e);
       }
     })();
-  }, [user, firestore, applicantData]);
+  }, [user, applicantData]);
 
   const handleVerifyCandidateId = async () => {
     if (!user || !candidateIdInput.trim()) return;
@@ -90,150 +82,22 @@ export default function DashboardPage() {
     setVerifyError('');
 
     try {
-      const inputId = candidateIdInput.trim().toUpperCase();
-
-      // Look up the candidate ID in Firestore
-      const candidateRef = doc(
-        firestore,
-        'candidateIds',
-        inputId
-      );
-      const candidateSnap = await getDoc(candidateRef);
-
-      // Check 1: Does document exist?
-      if (!candidateSnap.exists()) {
-        setVerifyError(
-          'Invalid Candidate ID. Please check ' +
-          'your email and try again.'
-        );
-        setIsVerifying(false);
+      const idToken = await user.getIdToken();
+      const result = await completeCandidateIdVerification({
+        idToken,
+        candidateId: candidateIdInput.trim(),
+      });
+      if (!result.ok) {
+        setVerifyError(result.error);
         return;
       }
-
-      const candidateData = candidateSnap.data();
-
-      // Check 2: Already claimed by someone else?
-      if (
-        candidateData.status === 'claimed' &&
-        candidateData.assignedUid !== user.uid
-      ) {
-        setVerifyError(
-          'This Candidate ID has already been used.'
-        );
-        setIsVerifying(false);
-        return;
-      }
-
-      // Check 3: Email match unless masterKey
-      const isMasterKey = candidateData.masterKey === true;
-
-      if (isMasterKey) {
-        const expiry = candidateData.masterKeyExpiry;
-        if (expiry && expiry.toDate() < new Date()) {
-          setVerifyError(
-            'This Candidate ID has expired. ' +
-            'Please contact HR for assistance.'
-          );
-          setIsVerifying(false);
-          return;
-        }
-
-        const authorizedEmails =
-          candidateData.masterKeyEmails || [];
-
-        if (
-          authorizedEmails.length > 0 &&
-          !authorizedEmails
-            .map((e: string) => e.toLowerCase())
-            .includes(user.email?.toLowerCase() || '')
-        ) {
-          setVerifyError(
-            'This Candidate ID is not authorized ' +
-            'for your account.'
-          );
-          setIsVerifying(false);
-          return;
-        }
-      }
-
-      if (!isMasterKey && candidateData.email) {
-        if (
-          candidateData.email.toLowerCase() !==
-          user.email?.toLowerCase()
-        ) {
-          setVerifyError(
-            'This Candidate ID is not associated ' +
-            'with your account. Please use the ' +
-            'email address your Candidate ID ' +
-            'was sent to.'
-          );
-          setIsVerifying(false);
-          return;
-        }
-      }
-
-      // All checks passed — write updates atomically
-      const batch = writeBatch(firestore);
-
-      // Mark candidate ID as claimed
-      batch.update(candidateRef, {
-        status: 'claimed',
-        assignedUid: user.uid,
-        claimedAt: serverTimestamp(),
-        flowStatus: 'verified',
-        verifiedAt: serverTimestamp(),
-        flowStatusUpdatedAt: serverTimestamp(),
-      });
-
-      // Update user document to verified
-      const userRef = doc(firestore, 'users', user.uid);
-      batch.update(userRef, {
-        status: 'verified',
-        verifiedAt: serverTimestamp(),
-        legacyApplicationId:
-          candidateData.legacyApplicationId || '',
-        candidateId: inputId,
-        candidateFlowStatus: 'verified',
-      });
-
-      await batch.commit();
-
-      try {
-        const displayName = [
-          applicantData?.firstName,
-          applicantData?.lastName,
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .trim();
-        await writeCandidateAuditLog(firestore, {
-          uid: user.uid,
-          action: 'candidate_verified',
-          candidateName: displayName || user.displayName || '',
-          candidateEmail: user.email,
-          candidateId: inputId,
-        });
-      } catch (auditErr) {
-        console.error('candidate_verified audit:', auditErr);
-      }
-
-      // Fetch legacy data and copy into user document
-      const legacyRef = doc(firestore, 'legacyData', inputId);
-      const legacySnap = await getDoc(legacyRef);
-      if (legacySnap.exists()) {
-        const userRef = doc(firestore, 'users', user.uid);
-        await updateDoc(userRef, {
-          legacyData: legacySnap.data(),
-        });
-      }
+      setCandidateIdInput('');
     } catch (error) {
       console.error('Verification error:', error);
-      setVerifyError(
-        'Something went wrong. Please try again.'
-      );
+      setVerifyError('Something went wrong. Please try again.');
+    } finally {
+      setIsVerifying(false);
     }
-
-    setIsVerifying(false);
   };
 
   const loading = userLoading || appDataLoading;

@@ -29,6 +29,7 @@ import { Download, X, Eye, RotateCcw, UserSearch } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { unparse } from 'papaparse';
 import { adminResetCandidateId } from '@/app/admin/actions';
+import { sendEmail, buildFlowStartedEmail } from '@/lib/email';
 
 type CandidateRecord = {
   candidateId: string;
@@ -132,6 +133,15 @@ export default function AdminCandidatesPage() {
       return;
     }
     const id = c.candidateId;
+    const email = (c.email || '').trim();
+    if (!email) {
+      toast({
+        variant: 'destructive',
+        title: 'No email on file',
+        description: 'Add an email to this candidate before starting the flow.',
+      });
+      return;
+    }
     setFlowStarting((prev) => ({ ...prev, [id]: true }));
     try {
       await updateDoc(doc(firestore, 'candidateIds', id), {
@@ -147,7 +157,21 @@ export default function AdminCandidatesPage() {
         candidateName: c.name || '',
         timestamp: serverTimestamp(),
       });
-      toast({ title: 'Flow started', description: `${c.name || id} is now invited.` });
+      const html = buildFlowStartedEmail(c.name || 'Candidate', email, id);
+      await sendEmail(firestore, {
+        to: email,
+        subject: 'Your FedEx Pilot Application — Action Required',
+        html,
+        type: 'flow_started',
+        candidateId: id,
+        candidateName: c.name || '',
+        sentBy: user.uid,
+        sentByEmail: user.email || '',
+      });
+      toast({
+        title: 'Flow started',
+        description: `Email sent to ${email}. ${c.name || id} is now invited.`,
+      });
     } catch (e: any) {
       toast({
         variant: 'destructive',

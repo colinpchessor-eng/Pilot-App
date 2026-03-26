@@ -27,14 +27,26 @@ import { getFirestore } from 'firebase-admin/firestore';
 // ═══════════════════════════════════════
 
 const HTML_FOLDER = path.join(process.cwd(), 'scripts', 'paradox-files');
-const SERVICE_ACCOUNT_PATH = path.join(process.cwd(), 'scripts', 'service-account.json');
+
+function resolveServiceAccountPath(): string {
+  const candidates = [
+    path.join(process.cwd(), 'scripts', 'service-account.json'),
+    path.join(process.cwd(), 'scripts', 'service_account.json'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  throw new Error(
+    'Service account not found. Add scripts/service-account.json or scripts/service_account.json'
+  );
+}
 
 // ═══════════════════════════════════════
 // FIREBASE SETUP
 // ═══════════════════════════════════════
 
 const serviceAccount = JSON.parse(
-  fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf8')
+  fs.readFileSync(resolveServiceAccountPath(), 'utf8')
 );
 
 initializeApp({ credential: cert(serviceAccount) });

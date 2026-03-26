@@ -14,6 +14,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
+import { sendEmail, buildFlowStartedEmail } from '@/lib/email';
 
 // ─── Types ──────────────────────────────────────────────────────────
 type ParsedCandidate = {
@@ -441,9 +442,11 @@ export default function AdminImportPage() {
     setImporting(false);
   };
 
-  const startCandidateFlow = async (candidateId: string, candidateName: string) => {
+  const startCandidateFlow = async (candidateId: string, candidateName: string, candidateEmail: string) => {
     if (!user?.uid || !candidateId) return;
     if (flowStartedRef.current[candidateId]) return;
+    const email = (candidateEmail || '').trim();
+    if (!email) return;
     setFlowStarting((prev) => ({ ...prev, [candidateId]: true }));
     try {
       await updateDoc(doc(firestore, 'candidateIds', candidateId), {
@@ -459,6 +462,17 @@ export default function AdminImportPage() {
         candidateName: candidateName || '',
         timestamp: serverTimestamp(),
       });
+      const html = buildFlowStartedEmail(candidateName || 'Candidate', email, candidateId);
+      await sendEmail(firestore, {
+        to: email,
+        subject: 'Your FedEx Pilot Application — Action Required',
+        html,
+        type: 'flow_started',
+        candidateId,
+        candidateName: candidateName || '',
+        sentBy: user.uid,
+        sentByEmail: user.email || '',
+      });
       flowStartedRef.current = { ...flowStartedRef.current, [candidateId]: true };
       setFlowStarted((prev) => ({ ...prev, [candidateId]: true }));
     } finally {
@@ -473,7 +487,7 @@ export default function AdminImportPage() {
     try {
       for (const r of rows) {
         if (flowStartedRef.current[r.candidateId]) continue;
-        await startCandidateFlow(r.candidateId, r.name || '');
+        await startCandidateFlow(r.candidateId, r.name || '', r.email || '');
       }
     } finally {
       setStartAllBusy(false);
@@ -584,7 +598,7 @@ export default function AdminImportPage() {
                             <button
                               type="button"
                               disabled={busy}
-                              onClick={() => startCandidateFlow(r.candidateId, r.name || '')}
+                              onClick={() => startCandidateFlow(r.candidateId, r.name || '', r.email || '')}
                               className="shrink-0 border-0 cursor-pointer transition-opacity disabled:opacity-50"
                               style={flowStartBtnStyle}
                             >

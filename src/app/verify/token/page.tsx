@@ -2,30 +2,15 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  doc,
-  getDoc,
-  serverTimestamp,
-  updateDoc,
-} from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-
-type ApplicantRecord = {
-  token: string;
-  email: string;
-  name: string;
-  legacyApplicationId: string;
-  assignedUid: string | null;
-  status: 'unassigned' | 'token_sent' | 'claimed';
-};
+import { completeApplicantTokenVerification } from '@/app/applicant/verification-actions';
 
 export default function VerifyTokenPage() {
   const router = useRouter();
-  const firestore = useFirestore();
   const { user, loading: userLoading } = useUser();
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,39 +26,19 @@ export default function VerifyTokenPage() {
     setLoading(true);
     setError(null);
     try {
-      const tokenId = normalizedToken;
-      if (!tokenId) {
+      if (!normalizedToken) {
         setError('Please enter your token.');
         return;
       }
-
-      const applicantRef = doc(firestore, 'applicants', tokenId);
-      const snap = await getDoc(applicantRef);
-      if (!snap.exists()) {
-        setError('Token not found or does not match your account');
+      const idToken = await user.getIdToken();
+      const result = await completeApplicantTokenVerification({
+        idToken,
+        tokenId: normalizedToken,
+      });
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
-
-      const applicant = snap.data() as ApplicantRecord;
-      const emailMatches =
-        applicant.email?.toLowerCase() === user.email.toLowerCase();
-      if (!emailMatches) {
-        setError('Token not found or does not match your account');
-        return;
-      }
-
-      // Claim token
-      await updateDoc(applicantRef, {
-        assignedUid: user.uid,
-        status: 'claimed',
-      } as any);
-
-      const userRef = doc(firestore, 'users', user.uid);
-      await updateDoc(userRef, {
-        status: 'verified',
-        verifiedAt: serverTimestamp(),
-      } as any);
-
       router.replace('/dashboard');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to verify token.');
@@ -144,4 +109,3 @@ export default function VerifyTokenPage() {
     </div>
   );
 }
-

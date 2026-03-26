@@ -8,7 +8,7 @@ import { ApplicationsTable } from '@/components/admin/applications-table';
 import { useFirestore, useUser } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { ApplicantData, InterviewBookingDoc } from '@/lib/types';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import { startOfDay } from 'date-fns';
 import { Download, Trash2, FileText, ShieldCheck } from 'lucide-react';
@@ -49,6 +49,16 @@ export default function AdminDashboardPage() {
     [firestore]
   );
   const { data: confirmedInterviewBookings } = useCollection<InterviewBookingDoc>(confirmedInterviewsQuery);
+
+  const mailTodayQuery = useMemo(
+    () =>
+      query(
+        collection(firestore, 'mail'),
+        where('createdAt', '>=', Timestamp.fromDate(startOfDay(new Date())))
+      ),
+    [firestore]
+  );
+  const { data: mailTodayRows } = useCollection<any>(mailTodayQuery);
 
   const submittedApplications = useMemo(() => allUsers?.filter((u) => u.submittedAt) ?? [], [allUsers]);
   const verifiedCandidates = useMemo(() => allCandidates?.filter((c: any) => c.status === 'claimed')?.length ?? 0, [allCandidates]);
@@ -139,6 +149,7 @@ export default function AdminDashboardPage() {
         pendingVerifications={pendingVerifs?.length ?? 0}
         pendingDeletions={pendingDeletions?.length ?? 0}
         interviewsScheduled={interviewsScheduledCount}
+        emailsSentToday={mailTodayRows?.length ?? 0}
       />
 
       <CandidatePipeline candidates={allCandidates ?? []} upcomingInterviews={upcomingInterviews} />

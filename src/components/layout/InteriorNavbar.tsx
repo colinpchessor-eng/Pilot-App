@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import { cn } from '@/lib/utils';
-import { Calendar, LogOut, Menu, X, type LucideIcon } from 'lucide-react';
+import { Calendar, LogOut, Mail, Menu, X, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAuth, signOut } from 'firebase/auth';
 import { doc, collection, query, where } from 'firebase/firestore';
@@ -72,8 +72,9 @@ export function InteriorNavbar() {
     { label: 'Interviews', href: '/admin/interviews', Icon: Calendar },
     { label: 'Verifications', href: '/admin/verifications', dot: (pendingVerifs?.length ?? 0) > 0 ? '#FF6200' : undefined },
     { label: 'Users', href: '/admin/users' },
-    { label: 'Deletions', href: '/admin/deletions', dot: (pendingDeletions?.length ?? 0) > 0 ? '#DE002E' : undefined },
     { label: 'Audit Log', href: '/admin/audit' },
+    { label: 'Email Log', href: '/admin/emails', Icon: Mail },
+    { label: 'Deletions', href: '/admin/deletions', dot: (pendingDeletions?.length ?? 0) > 0 ? '#DE002E' : undefined },
   ];
 
   const isVerified = userData?.status === 'verified';

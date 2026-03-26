@@ -8,6 +8,20 @@ let adminApp: App;
 let adminAuth: Auth;
 let adminFirestore: Firestore;
 
+/** Prefer hyphenated name; underscore variant matches common download naming. */
+function readLocalServiceAccountJson(): object | null {
+  const candidates = [
+    path.join(process.cwd(), 'scripts', 'service-account.json'),
+    path.join(process.cwd(), 'scripts', 'service_account.json'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return JSON.parse(fs.readFileSync(p, 'utf8')) as object;
+    }
+  }
+  return null;
+}
+
 function getAdminApp() {
   if (!adminApp) {
     if (getApps().length === 0) {
@@ -16,10 +30,9 @@ function getAdminApp() {
         const serviceAccount = JSON.parse(serviceAccountJson);
         adminApp = initializeApp({ credential: cert(serviceAccount) });
       } else {
-        const localPath = path.join(process.cwd(), 'scripts', 'service-account.json');
-        if (fs.existsSync(localPath)) {
-          const serviceAccount = JSON.parse(fs.readFileSync(localPath, 'utf8'));
-          adminApp = initializeApp({ credential: cert(serviceAccount) });
+        const localAccount = readLocalServiceAccountJson();
+        if (localAccount) {
+          adminApp = initializeApp({ credential: cert(localAccount) });
         } else {
           adminApp = initializeApp();
         }
