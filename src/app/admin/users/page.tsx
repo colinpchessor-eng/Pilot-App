@@ -22,8 +22,8 @@ export default function ManageUsersPage() {
   return (
     <div className="space-y-6">
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#333333]">Manage Users</h1>
-        <p className="text-[14px] text-[#8E8E8E] mt-1">View all registered users and manage their admin status</p>
+        <h1 className="text-[28px] font-bold text-[#333333]">Role Management</h1>
+        <p className="text-[14px] text-[#8E8E8E] mt-1">View all registered users and manage roles / admin access</p>
       </div>
 
       {(!allUsers || allUsers.length === 0) ? (

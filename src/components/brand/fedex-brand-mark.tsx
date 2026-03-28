@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-/** PNG first (official raster with transparency), then SVG. Files in `public/assets/`. */
-const LOGO_SOURCES = ['/assets/fedex-official-logo.png', '/assets/fedex-official-logo.svg'] as const;
+/** Collective Engineering wordmark (FedEx Collective); `public/assets/collective_eng_2c_pos_rgb.svg`. */
+const LOGO_SOURCES = ['/assets/collective_eng_2c_pos_rgb.svg'] as const;
 
 type FedExBrandMarkProps = {
   className?: string;
@@ -13,14 +13,8 @@ type FedExBrandMarkProps = {
 };
 
 /**
- * Official FedEx wordmark image with text fallback.
- *
- * Add your approved asset (e.g. the transparent PNG you were given) as:
- * - **`public/assets/fedex-official-logo.png`** (recommended)
- * - optionally `public/assets/fedex-official-logo.svg`
- *
- * Served as `/assets/fedex-official-logo.png` (or `.svg`). If both are missing or fail to load,
- * falls back to styled “FedEx®” text matching app colors.
+ * Brand mark image with text fallback matching app colors.
+ * Asset: `public/assets/collective_eng_2c_pos_rgb.svg`
  */
 export function FedExBrandMark({ className, height = 28 }: FedExBrandMarkProps) {
   const [sourceIndex, setSourceIndex] = useState(0);

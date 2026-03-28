@@ -63,7 +63,7 @@ export type LegacyData = {
 };
 
 export type VerificationStatus = 'pending' | 'token_sent' | 'verified';
-export type UserRole = 'admin';
+export type UserRole = 'admin' | 'candidate';
 
 /** Hiring pipeline position; mirrors candidateIds.flowStatus on the user doc when linked. */
 export type CandidateFlowStatus =
@@ -102,6 +102,8 @@ export type ApplicantData = {
   lastName: string | null;
   createdAt: Timestamp;
   isAdmin?: boolean;
+  /** When true with role admin, allows Developer Tools in production builds. */
+  devToolsEnabled?: boolean;
   role?: UserRole;
   status?: VerificationStatus;
   requestedAt?: Timestamp | null;

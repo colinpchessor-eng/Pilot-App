@@ -54,45 +54,51 @@ export function AuthMarketingSplit({ variant, heroDescription, children }: AuthM
   return (
     <>
       <main className="relative z-[1] flex min-h-screen w-full bg-[#FAFAFA]">
-        {/* Left: brand / hero — desktop */}
-        <section className="relative hidden w-full flex-col justify-between overflow-hidden bg-[#0a1628] p-12 xl:p-16 lg:flex lg:w-[58.333333%]">
-          <div className="absolute inset-0 z-0">
+        {/* Left: hero — desktop only; right form unchanged */}
+        <section className="relative hidden min-h-screen w-full flex-col overflow-hidden lg:flex lg:w-[58.333333%]">
+          <div className="absolute inset-0">
             <AuthHeroBackground />
-            <div className="auth-topo-overlay absolute inset-0 opacity-30" aria-hidden />
+            {/* Light scrim (~20%) — keep scene bright */}
+            <div className="absolute inset-0 bg-black/20" aria-hidden />
+            {/* Subtle bottom fade for legibility (~15% max at bottom edge) */}
             <div
-              className="absolute inset-0 bg-gradient-to-tr from-[#0a1628] via-[#4D148C]/25 to-transparent"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/15 via-transparent to-transparent"
               aria-hidden
             />
           </div>
 
-          <div className="relative z-10">
-            <div className="mb-10 inline-flex items-center gap-2">
-              <div className="h-1 w-8 rounded-full bg-[#FF6200]" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#B8C5E8]">
-                Flight Operations Division
-              </span>
-            </div>
-            <h1 className="max-w-2xl font-headline text-5xl font-black leading-[0.9] tracking-tighter text-white sm:text-6xl xl:text-7xl 2xl:text-8xl">
-              CHART YOUR <br />
-              COURSE.
-            </h1>
-            <p className="mt-6 max-w-md text-lg font-medium leading-relaxed text-[#B8C5E8]/90">
-              {heroDescription}
-            </p>
-          </div>
-
-          <div className="relative z-10 flex items-end justify-between">
-            <ProgressMarkers variant={variant} />
-            <div className="flex flex-col items-end text-right">
-              <FedExBrandMark height={32} />
-              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#B8C5E8]/80">
-                Express Portal
+          <div className="relative z-10 flex min-h-screen flex-1 flex-col">
+            <div className="shrink-0 px-12 pt-12 xl:px-16 xl:pt-16">
+              <div className="inline-flex items-center gap-2">
+                <div className="h-1 w-8 rounded-full bg-[#FF6200]" />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
+                  FedEx Flight Operations
+                </span>
+              </div>
+              <h1 className="mt-4 max-w-[95%] font-headline text-[64px] font-black uppercase leading-[0.95] tracking-tight text-white">
+                Chart your
+                <br />
+                course.
+              </h1>
+              <p className="mt-4 max-w-md text-left text-lg font-medium leading-relaxed text-white/90">
+                {heroDescription}
               </p>
+            </div>
+
+            <div className="min-h-4 flex-1" aria-hidden />
+
+            <div className="flex shrink-0 items-end justify-between px-12 pb-12 xl:px-16">
+              <ProgressMarkers variant={variant} />
+              <div className="flex flex-col items-end text-right">
+                <FedExBrandMark height={32} />
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/85">
+                  FedEx Flight Operations
+                </p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Right: form column */}
         <section className="relative flex w-full flex-1 items-center justify-center overflow-y-auto bg-[#f9f9fe] p-8 md:p-12 lg:w-5/12 lg:p-16">
           <div
             className="pointer-events-none absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/2 rounded-full bg-[#E8DDFF]/40 blur-3xl"

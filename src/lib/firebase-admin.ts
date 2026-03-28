@@ -1,6 +1,6 @@
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getAuth, type Auth } from 'firebase-admin/auth';
-import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { getFirestore, type DocumentData, type Firestore } from 'firebase-admin/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -62,14 +62,39 @@ export async function verifyIdToken(idToken: string) {
   return getAdminAuth().verifyIdToken(idToken);
 }
 
+function userDocIsAdmin(data: DocumentData | undefined): boolean {
+  return !!(data?.isAdmin || data?.role === 'admin');
+}
+
 export async function verifyIsAdmin(idToken: string): Promise<{ uid: string; email: string }> {
   const decoded = await verifyIdToken(idToken);
   const userDoc = await getAdminFirestore().collection('users').doc(decoded.uid).get();
   const data = userDoc.data();
 
-  if (!data?.isAdmin) {
+  if (!userDocIsAdmin(data)) {
     throw new Error('Unauthorized: not an admin');
   }
 
   return { uid: decoded.uid, email: decoded.email || '' };
+}
+
+/** Developer Tools API routes: admins in development, or prod admins with devToolsEnabled. */
+export async function verifyDevToolsAccess(idToken: string): Promise<{ uid: string; email: string }> {
+  const decoded = await verifyIdToken(idToken);
+  const userDoc = await getAdminFirestore().collection('users').doc(decoded.uid).get();
+  const data = userDoc.data();
+
+  if (!userDocIsAdmin(data)) {
+    throw new Error('Unauthorized: not an admin');
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    return { uid: decoded.uid, email: decoded.email || '' };
+  }
+
+  if (data?.role === 'admin' && data?.devToolsEnabled === true) {
+    return { uid: decoded.uid, email: decoded.email || '' };
+  }
+
+  throw new Error('Unauthorized: Developer Tools not enabled for this user');
 }

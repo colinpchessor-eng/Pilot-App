@@ -13,24 +13,27 @@ service cloud.firestore {
         ]);
     }
 
-    // Client owner updates: application + optional profile fields only (see application-form.tsx).
+    // Client owner updates: application + consent + profile fields (application-form.tsx, signup merge after verify).
+    // Identity / verification fields are set only by Admin SDK (completeCandidateIdVerification, etc.).
     function userSelfUpdateAffectedKeysAllowlist() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly([
           'flightTime', 'firstClassMedicalDate', 'atpNumber', 'typeRatings', 'employmentHistory',
           'safetyQuestions', 'isCertified', 'printedName', 'submittedAt', 'candidateFlowStatus',
-          'displayName', 'firstName', 'lastName'
+          'displayName', 'firstName', 'lastName',
+          'consentGiven', 'consentTimestamp', 'consentVersion', 'privacyPolicyVersion'
         ]);
     }
 
-    // Union of keys from auth-gate buildDefaultApplicantData + signup-form userProfile.
+    // Allowed keys on users/{uid} create (bootstrap admin or rare client creates). Verified applicants:
+    // server writes identity first; client merge must use userSelfUpdateAffectedKeysAllowlist only.
     function usersCreateKeysValid() {
       return request.resource.data.keys().hasOnly([
-        'atpNumber', 'candidateFlowStatus', 'consentGiven', 'consentTimestamp', 'consentVersion',
-        'createdAt', 'displayName', 'email', 'employmentHistory', 'firstClassMedicalDate',
-        'firstName', 'flightTime', 'isAdmin', 'isCertified', 'lastName', 'printedName',
-        'privacyPolicyVersion', 'requestedAt', 'role', 'safetyQuestions', 'status', 'submittedAt',
-        'typeRatings', 'uid', 'verifiedAt'
+        'atpNumber', 'candidateFlowStatus', 'candidateId', 'consentGiven', 'consentTimestamp',
+        'consentVersion', 'createdAt', 'displayName', 'email', 'employmentHistory',
+        'firstClassMedicalDate', 'firstName', 'flightTime', 'isAdmin', 'isCertified', 'lastName',
+        'legacyApplicationId', 'printedName', 'privacyPolicyVersion', 'requestedAt', 'role',
+        'safetyQuestions', 'status', 'submittedAt', 'typeRatings', 'uid', 'verifiedAt'
       ]);
     }
 

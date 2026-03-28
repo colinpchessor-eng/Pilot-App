@@ -125,7 +125,8 @@ export async function completeCandidateIdVerification(input: {
     }
 
     const userRef = db.collection('users').doc(uid);
-    const legacyApplicationId = (candidateData.legacyApplicationId as string) || '';
+    const legacyApplicationId =
+      ((candidateData.legacyApplicationId as string) || '').trim() || inputId;
 
     const batch = db.batch();
     batch.update(candidateRef, {
@@ -140,6 +141,10 @@ export async function completeCandidateIdVerification(input: {
     const legacySnap = await legacyRef.get();
 
     const userPatch: UpdateData<DocumentData> = {
+      uid,
+      email: decoded.email ?? null,
+      createdAt: FieldValue.serverTimestamp(),
+      isAdmin: false,
       status: 'verified',
       verifiedAt: FieldValue.serverTimestamp(),
       legacyApplicationId,
@@ -149,7 +154,8 @@ export async function completeCandidateIdVerification(input: {
     if (legacySnap.exists) {
       userPatch.legacyData = legacySnap.data() as DocumentData;
     }
-    batch.update(userRef, userPatch);
+    // merge: signup may not have written users/{uid} yet; update would fail on missing doc
+    batch.set(userRef, userPatch, { merge: true });
 
     await batch.commit();
 

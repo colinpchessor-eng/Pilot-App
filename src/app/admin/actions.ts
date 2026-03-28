@@ -173,11 +173,7 @@ export async function adminResetCandidateId(input: {
     await verifyIsAdmin(input.idToken);
     const db = getAdminFirestore();
 
-    await db.collection('candidateIds').doc(input.candidateId).update({
-      status: 'unassigned',
-      assignedUid: '',
-      claimedAt: null,
-    });
+    await db.collection('candidateIds').doc(input.candidateId).delete();
 
     return { success: true, message: `Candidate ID ${input.candidateId} has been reset.` };
   } catch (err: any) {

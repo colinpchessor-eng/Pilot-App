@@ -15,6 +15,16 @@ import {
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
 import { sendEmail, buildFlowStartedEmail } from '@/lib/email';
+import {
+  CandidateRowsTableShell,
+  candidateRowsTableBodyClass,
+  candidateRowsCardFooterClass,
+  candidateRowsTableHeadRowClass,
+  candidateRowsTableTdClass,
+  candidateRowsTableThClass,
+  candidateRowsTableTrClass,
+} from '@/components/admin/candidate-rows-table-shell';
+import { cn } from '@/lib/utils';
 
 // ─── Types ──────────────────────────────────────────────────────────
 type ParsedCandidate = {
@@ -707,88 +717,132 @@ export default function AdminImportPage() {
       {/* ── PREVIEW TABLE ──────────────────────────────────────── */}
       {files.length > 0 && !importing && !done && (
         <div className="space-y-4">
-          <h2 className="text-[20px] font-bold text-[#333333]">
-            Ready to Import — {files.length} candidate{files.length !== 1 ? 's' : ''}
-          </h2>
-
-          <div className="bg-white rounded-xl border border-[#E3E3E3] shadow-[0_2px_12px_rgba(0,0,0,0.06)] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-[#F2F2F2] border-b-2 border-[#E3E3E3]">
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-[#8E8E8E] uppercase tracking-[0.06em] w-[50px]">Status</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-[#8E8E8E] uppercase tracking-[0.06em]">Filename</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-[#8E8E8E] uppercase tracking-[0.06em]">Candidate ID</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-[#8E8E8E] uppercase tracking-[0.06em]">Name</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-[#8E8E8E] uppercase tracking-[0.06em]">Email</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-[#8E8E8E] uppercase tracking-[0.06em]">Total Hours</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-[#8E8E8E] uppercase tracking-[0.06em]">Last Employer</th>
-                    <th className="text-right px-4 py-3 text-[11px] font-bold text-[#8E8E8E] uppercase tracking-[0.06em] w-[100px]">Actions</th>
+          <CandidateRowsTableShell
+            toolbar={
+              <h2 className="text-[20px] font-bold text-[#333333]">
+                Ready to Import — {files.length} candidate{files.length !== 1 ? 's' : ''}
+              </h2>
+            }
+            footer={
+              <div className={candidateRowsCardFooterClass}>
+                <span>
+                  {files.length} file{files.length !== 1 ? 's' : ''} in queue
+                </span>
+                <span className="text-[12px]">
+                  <span className="text-[#008A00]">{readyCount} ready</span>
+                  <span className="mx-2 text-[#E3E3E3]">·</span>
+                  <span className="text-[#F7B118]">
+                    {warningCount} warning{warningCount !== 1 ? 's' : ''}
+                  </span>
+                  <span className="mx-2 text-[#E3E3E3]">·</span>
+                  <span className="text-[#DE002E]">
+                    {errorCount} error{errorCount !== 1 ? 's' : ''}
+                  </span>
+                </span>
+              </div>
+            }
+          >
+            <table className="w-full min-w-[900px] border-collapse text-left">
+              <thead>
+                <tr className={candidateRowsTableHeadRowClass}>
+                  <th className={cn(candidateRowsTableThClass, 'w-[50px]')}>Status</th>
+                  <th className={candidateRowsTableThClass}>Filename</th>
+                  <th className={candidateRowsTableThClass}>Candidate ID</th>
+                  <th className={candidateRowsTableThClass}>Name</th>
+                  <th className={candidateRowsTableThClass}>Email</th>
+                  <th className={candidateRowsTableThClass}>Total Hours</th>
+                  <th className={candidateRowsTableThClass}>Last Employer</th>
+                  <th className={cn(candidateRowsTableThClass, 'w-[100px] text-right')}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={candidateRowsTableBodyClass}>
+                {files.map((f) => (
+                  <tr key={f.id} className={candidateRowsTableTrClass}>
+                    <td className={candidateRowsTableTdClass}>
+                      <StatusIcon status={f.status} />
+                    </td>
+                    <td
+                      className={cn(candidateRowsTableTdClass, 'max-w-[200px] truncate text-[13px] text-[#333333]')}
+                      title={f.file.name}
+                    >
+                      {f.file.name}
+                    </td>
+                    <td className={cn(candidateRowsTableTdClass, 'font-mono text-[13px] text-[#333333]')}>
+                      {f.editing ? (
+                        <Input
+                          value={f.editCandidateId}
+                          onChange={(e) =>
+                            setFiles((prev) =>
+                              prev.map((x) =>
+                                x.id === f.id ? { ...x, editCandidateId: e.target.value } : x
+                              )
+                            )
+                          }
+                          className="h-8 w-[120px] text-[13px] font-mono"
+                          placeholder="Enter ID"
+                        />
+                      ) : (
+                        f.candidateId || (
+                          <span className="text-[12px] text-[#DE002E]">No ID found</span>
+                        )
+                      )}
+                    </td>
+                    <td className={cn(candidateRowsTableTdClass, 'text-[13px] text-[#333333]')}>
+                      {f.parsed?.name || '—'}
+                    </td>
+                    <td className={cn(candidateRowsTableTdClass, 'text-[13px] text-[#333333]')}>
+                      {f.editing ? (
+                        <Input
+                          value={f.editEmail}
+                          onChange={(e) =>
+                            setFiles((prev) =>
+                              prev.map((x) =>
+                                x.id === f.id ? { ...x, editEmail: e.target.value } : x
+                              )
+                            )
+                          }
+                          className="h-8 w-[180px] text-[13px]"
+                          placeholder="email@example.com"
+                        />
+                      ) : (
+                        f.parsed?.email || (
+                          <span className="text-[12px] text-[#F7B118]">Not found</span>
+                        )
+                      )}
+                    </td>
+                    <td className={cn(candidateRowsTableTdClass, 'text-[13px] text-[#333333]')}>
+                      {f.parsed?.flightTime.total
+                        ? f.parsed.flightTime.total.toLocaleString()
+                        : '—'}
+                    </td>
+                    <td className={cn(candidateRowsTableTdClass, 'text-[13px] text-[#333333]')}>
+                      {f.parsed?.lastEmployer.company || '—'}
+                    </td>
+                    <td className={cn(candidateRowsTableTdClass, 'space-x-1 text-right')}>
+                      <button
+                        type="button"
+                        onClick={() => toggleEdit(f.id)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#E3E3E3] text-[#565656] transition-colors hover:border-[#4D148C] hover:text-[#4D148C]"
+                        title={f.editing ? 'Save' : 'Edit'}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(f.id)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#E3E3E3] text-[#565656] transition-colors hover:border-[#DE002E] hover:text-[#DE002E]"
+                        title="Remove"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {files.map(f => (
-                    <tr key={f.id} className="border-b border-[#F2F2F2] hover:bg-[#FAFAFA] transition-colors">
-                      <td className="px-4 py-3"><StatusIcon status={f.status} /></td>
-                      <td className="px-4 py-3 text-[13px] text-[#333333] max-w-[200px] truncate" title={f.file.name}>{f.file.name}</td>
-                      <td className="px-4 py-3 text-[13px] font-mono text-[#333333]">
-                        {f.editing ? (
-                          <Input
-                            value={f.editCandidateId}
-                            onChange={e => setFiles(prev => prev.map(x => x.id === f.id ? { ...x, editCandidateId: e.target.value } : x))}
-                            className="h-8 w-[120px] text-[13px] font-mono"
-                            placeholder="Enter ID"
-                          />
-                        ) : (
-                          f.candidateId || <span className="text-[#DE002E] text-[12px]">No ID found</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-[13px] text-[#333333]">{f.parsed?.name || '—'}</td>
-                      <td className="px-4 py-3 text-[13px] text-[#333333]">
-                        {f.editing ? (
-                          <Input
-                            value={f.editEmail}
-                            onChange={e => setFiles(prev => prev.map(x => x.id === f.id ? { ...x, editEmail: e.target.value } : x))}
-                            className="h-8 w-[180px] text-[13px]"
-                            placeholder="email@example.com"
-                          />
-                        ) : (
-                          f.parsed?.email || <span className="text-[#F7B118] text-[12px]">Not found</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-[13px] text-[#333333]">
-                        {f.parsed?.flightTime.total ? f.parsed.flightTime.total.toLocaleString() : '—'}
-                      </td>
-                      <td className="px-4 py-3 text-[13px] text-[#333333]">{f.parsed?.lastEmployer.company || '—'}</td>
-                      <td className="px-4 py-3 text-right space-x-1">
-                        <button
-                          onClick={() => toggleEdit(f.id)}
-                          className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-[#E3E3E3] text-[#565656] hover:border-[#4D148C] hover:text-[#4D148C] transition-colors"
-                          title={f.editing ? 'Save' : 'Edit'}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => removeFile(f.id)}
-                          className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-[#E3E3E3] text-[#565656] hover:border-[#DE002E] hover:text-[#DE002E] transition-colors"
-                          title="Remove"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Summary line */}
-          <div className="flex items-center gap-4 text-[13px]">
-            <span className="text-[#008A00] font-medium">{readyCount} ready</span>
-            <span className="text-[#F7B118] font-medium">{warningCount} warning{warningCount !== 1 ? 's' : ''}</span>
-            <span className="text-[#DE002E] font-medium">{errorCount} error{errorCount !== 1 ? 's' : ''}</span>
-          </div>
+                ))}
+              </tbody>
+            </table>
+          </CandidateRowsTableShell>
 
           {/* Import button */}
           <button

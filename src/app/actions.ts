@@ -42,7 +42,7 @@ export async function triggerAdminVerificationRequestEmail(input: {
       `Name: ${input.displayName ?? 'N/A'}\n` +
       `Email: ${input.email}\n` +
       `UID: ${input.uid}\n\n` +
-      `Open the admin panel to approve/reject: /admin/verifications`,
+      `Open the admin dashboard (Identity Verifications): /admin#identity-verifications`,
   });
 
   return { success: true, message: 'Admin notified.' };

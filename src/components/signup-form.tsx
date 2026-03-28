@@ -8,6 +8,10 @@ import {
   createUserWithEmailAndPassword,
   type AuthError,
 } from 'firebase/auth';
+import {
+  completeCandidateIdVerification,
+  syncLegacyDataForUser,
+} from '@/app/applicant/verification-actions';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { signupSchema, type SignupSchema } from '@/lib/schemas';
@@ -15,6 +19,7 @@ import { useAuth, useFirestore } from '@/firebase';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -59,6 +64,7 @@ export function SignupForm() {
       email: '',
       password: '',
       confirmPassword: '',
+      candidateId: '',
     },
   });
 
@@ -83,14 +89,33 @@ export function SignupForm() {
       const user = userCredential.user;
       const bootstrapAdmin = isBootstrapAdminEmail(values.email);
 
-      const userProfile: ApplicantData = {
-        uid: user.uid,
-        email: user.email,
+      if (!bootstrapAdmin) {
+        let verifyResult: Awaited<ReturnType<typeof completeCandidateIdVerification>>;
+        try {
+          const idToken = await user.getIdToken();
+          verifyResult = await completeCandidateIdVerification({
+            idToken,
+            candidateId: values.candidateId,
+          });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : 'Verification failed.';
+          verifyResult = { ok: false, error: msg };
+        }
+        if (!verifyResult.ok) {
+          await user.delete().catch(() => {});
+          form.setError('candidateId', {
+            type: 'manual',
+            message: verifyResult.error,
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      /** Fields allowed on users/{uid} merge after server verification (see firestore.rules). */
+      const applicantOnlyMerge = {
         firstName: values.firstName,
         lastName: values.lastName,
-        createdAt: serverTimestamp() as any,
-        isAdmin: bootstrapAdmin,
-        ...(bootstrapAdmin ? { role: 'admin' as const } : {}),
         firstClassMedicalDate: null,
         atpNumber: null,
         flightTime: {
@@ -131,11 +156,43 @@ export function SignupForm() {
         consentTimestamp: serverTimestamp() as any,
         consentVersion: '1.0',
         privacyPolicyVersion: 'March 2026',
-        candidateFlowStatus: 'registered',
       };
 
       const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, userProfile);
+      if (bootstrapAdmin) {
+        const bootstrapProfile: ApplicantData = {
+          uid: user.uid,
+          email: user.email,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          createdAt: serverTimestamp() as any,
+          isAdmin: true,
+          role: 'admin' as const,
+          status: 'pending' as const,
+          candidateFlowStatus: 'registered',
+          firstClassMedicalDate: null,
+          atpNumber: null,
+          flightTime: applicantOnlyMerge.flightTime,
+          typeRatings: '',
+          employmentHistory: [],
+          safetyQuestions: applicantOnlyMerge.safetyQuestions,
+          submittedAt: null,
+          isCertified: false,
+          printedName: null,
+          consentGiven: true,
+          consentTimestamp: serverTimestamp() as any,
+          consentVersion: '1.0',
+          privacyPolicyVersion: 'March 2026',
+        };
+        await setDoc(userDocRef, bootstrapProfile, { merge: true });
+      } else {
+        await setDoc(userDocRef, applicantOnlyMerge, { merge: true });
+      }
+
+      if (!bootstrapAdmin) {
+        const idToken = await user.getIdToken();
+        void syncLegacyDataForUser({ idToken }).catch(() => {});
+      }
 
       const fullName = `${values.firstName} ${values.lastName}`.trim();
       try {
@@ -144,7 +201,7 @@ export function SignupForm() {
           action: 'candidate_registered',
           candidateName: fullName,
           candidateEmail: user.email,
-          candidateId: '',
+          candidateId: bootstrapAdmin ? '' : values.candidateId.trim().toUpperCase(),
         });
       } catch (e) {
         console.error('candidate_registered audit:', e);
@@ -281,6 +338,22 @@ export function SignupForm() {
               <FormControl>
                 <Input type="password" placeholder="••••••••" className={inputStyle} {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="candidateId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelClassName}>Candidate ID</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. 12345678" className={inputStyle} autoComplete="off" {...field} />
+              </FormControl>
+              <FormDescription className="text-[13px] text-[#8E8E8E]">
+                Enter your unique candidate ID.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

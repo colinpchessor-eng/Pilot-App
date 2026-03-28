@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isBootstrapAdminEmail } from '@/lib/admin-bootstrap';
 
 export const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid Employee ID (email).' }),
@@ -17,10 +18,21 @@ export const signupSchema = z
       .string()
       .min(6, { message: 'Password must be at least 6 characters long.' }),
     confirmPassword: z.string(),
+    candidateId: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
+  })
+  .superRefine((data, ctx) => {
+    if (isBootstrapAdminEmail(data.email)) return;
+    if (data.candidateId.trim().length < 6) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Please enter a valid Candidate ID',
+        path: ['candidateId'],
+      });
+    }
   });
 
 export type SignupSchema = z.infer<typeof signupSchema>;
