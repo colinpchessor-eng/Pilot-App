@@ -9,7 +9,7 @@ service cloud.firestore {
           'isAdmin', 'role',
           'status', 'verifiedAt', 'requestedAt',
           'candidateId', 'legacyApplicationId', 'legacyData',
-          'email', 'uid', 'createdAt'
+          'email', 'uid', 'createdAt', 'skipCandidateVerification'
         ]);
     }
 
@@ -33,7 +33,8 @@ service cloud.firestore {
         'consentVersion', 'createdAt', 'displayName', 'email', 'employmentHistory',
         'firstClassMedicalDate', 'firstName', 'flightTime', 'isAdmin', 'isCertified', 'lastName',
         'legacyApplicationId', 'printedName', 'privacyPolicyVersion', 'requestedAt', 'role',
-        'safetyQuestions', 'status', 'submittedAt', 'typeRatings', 'uid', 'verifiedAt'
+        'safetyQuestions', 'skipCandidateVerification', 'status', 'submittedAt', 'typeRatings', 'uid',
+        'verifiedAt'
       ]);
     }
 
@@ -45,13 +46,24 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Must match client checks (e.g. admin/layout.tsx): isAdmin flag OR role admin
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isDev() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userRole() == 'dev';
+    }
+
+    // HR admin or developer — matches client isAdmin() helper (includes legacy isAdmin flag).
     function isAdmin() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && (
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+          || userRole() == 'admin'
+          || userRole() == 'dev'
         );
     }
 
@@ -72,12 +84,53 @@ service cloud.firestore {
         ]);
     }
 
-    // Bootstrap admin (fedexadmin@fedex.com) may create their doc with isAdmin + role on signup.
+    // Legacy bootstrap (fedexadmin@fedex.com) without authorizedAdmins row.
+    function staffSelfSignupCore() {
+      return request.resource.data.status == 'verified'
+        && request.resource.data.skipCandidateVerification == true
+        && (!('candidateId' in request.resource.data) || request.resource.data.candidateId == '');
+    }
+
     function isBootstrapAdminSignup() {
       return request.auth != null
         && request.auth.token.email.lower() == 'fedexadmin@fedex.com'
         && request.resource.data.isAdmin == true
-        && request.resource.data.role == 'admin';
+        && request.resource.data.role in ['admin', 'dev']
+        && staffSelfSignupCore();
+    }
+
+    function authorizedAdminUserCreate() {
+      let email = request.auth.token.email;
+      let key = email.lower();
+      return request.auth != null
+        && email is string
+        && exists(/databases/$(database)/documents/authorizedAdmins/$(key))
+        && get(/databases/$(database)/documents/authorizedAdmins/$(key)).data.active == true
+        && get(/databases/$(database)/documents/authorizedAdmins/$(key)).data.role in ['admin', 'dev']
+        && request.resource.data.role == get(/databases/$(database)/documents/authorizedAdmins/$(key)).data.role
+        && request.resource.data.isAdmin == true
+        && request.resource.data.email is string
+        && request.resource.data.email.lower() == key
+        && staffSelfSignupCore();
+    }
+
+    function candidateUserCreate() {
+      return (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == false)
+        && (!('role' in request.resource.data)
+          || request.resource.data.role == ''
+          || request.resource.data.role == 'candidate');
+    }
+
+    function adminHrOtherUserUpdateKeysOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['candidateFlowStatus']);
+    }
+
+    // ── authorizedAdmins (pre-authorized staff emails; doc id = lowercased email) ──
+    // get: public so signup/login UX can check an email before Auth exists; list blocked (no enumeration).
+    match /authorizedAdmins/{emailKey} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow write: if isDev();
     }
 
     // ── users ──────────────────────────────────────────────────────────
@@ -88,18 +141,19 @@ service cloud.firestore {
         && usersCreateKeysValid()
         && (
           isBootstrapAdminSignup()
-          || (
-            (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == false)
-            && (!('role' in request.resource.data) || request.resource.data.role == '')
-          )
+          || authorizedAdminUserCreate()
+          || candidateUserCreate()
         );
 
       allow update: if isOwner(userId)
         && !touchesProtectedUserFields()
         && userSelfUpdateAffectedKeysAllowlist();
 
-      // Admins can read/write any user doc (including isAdmin/role)
-      allow read, write: if isAdmin();
+      // HR admins may update pipeline fields on other users; privilege changes use Admin SDK (dev-only server action).
+      allow update: if isAdmin() && !isOwner(userId) && adminHrOtherUserUpdateKeysOnly();
+
+      // Developers may update any other user document from the client (e.g. rare admin tooling).
+      allow update: if isDev() && !isOwner(userId);
     }
 
     // ── candidateIds ───────────────────────────────────────────────────

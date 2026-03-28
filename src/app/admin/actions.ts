@@ -1,6 +1,6 @@
 'use server';
 
-import { getAdminFirestore, verifyIsAdmin } from '@/lib/firebase-admin';
+import { getAdminFirestore, verifyCallerIsDev, verifyIsAdmin } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { triggerApplicantTokenEmail, triggerApplicantRejectionEmail } from '@/app/actions';
 
@@ -121,20 +121,31 @@ export async function adminSetUserAdmin(input: {
   isAdmin: boolean;
 }): Promise<ActionResult> {
   try {
-    const admin = await verifyIsAdmin(input.idToken);
+    const admin = await verifyCallerIsDev(input.idToken);
     const db = getAdminFirestore();
 
     if (admin.uid === input.targetUid) {
       return { success: false, message: 'You cannot change your own admin status.' };
     }
 
-    await db.collection('users').doc(input.targetUid).update({
+    const targetRef = db.collection('users').doc(input.targetUid);
+    const targetSnap = await targetRef.get();
+    const targetData = targetSnap.data();
+    if (targetData?.role === 'dev') {
+      return {
+        success: false,
+        message: 'Developer accounts cannot be changed from the users table.',
+      };
+    }
+
+    await targetRef.update({
       isAdmin: input.isAdmin,
+      role: input.isAdmin ? 'admin' : 'candidate',
     });
 
     return {
       success: true,
-      message: `User is ${input.isAdmin ? 'now an admin' : 'no longer an admin'}.`,
+      message: `User is ${input.isAdmin ? 'now an HR admin' : 'no longer an admin'}.`,
     };
   } catch (err: any) {
     console.error('adminSetUserAdmin error:', err);

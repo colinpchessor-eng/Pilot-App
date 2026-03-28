@@ -63,7 +63,8 @@ export async function verifyIdToken(idToken: string) {
 }
 
 function userDocIsAdmin(data: DocumentData | undefined): boolean {
-  return !!(data?.isAdmin || data?.role === 'admin');
+  const r = data?.role;
+  return !!(data?.isAdmin || r === 'admin' || r === 'dev');
 }
 
 export async function verifyIsAdmin(idToken: string): Promise<{ uid: string; email: string }> {
@@ -78,23 +79,19 @@ export async function verifyIsAdmin(idToken: string): Promise<{ uid: string; ema
   return { uid: decoded.uid, email: decoded.email || '' };
 }
 
-/** Developer Tools API routes: admins in development, or prod admins with devToolsEnabled. */
+/** Developer Tools API routes and destructive actions — `role: dev` only. */
 export async function verifyDevToolsAccess(idToken: string): Promise<{ uid: string; email: string }> {
   const decoded = await verifyIdToken(idToken);
   const userDoc = await getAdminFirestore().collection('users').doc(decoded.uid).get();
   const data = userDoc.data();
 
-  if (!userDocIsAdmin(data)) {
-    throw new Error('Unauthorized: not an admin');
+  if (data?.role !== 'dev') {
+    throw new Error('Unauthorized: developer role required');
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    return { uid: decoded.uid, email: decoded.email || '' };
-  }
+  return { uid: decoded.uid, email: decoded.email || '' };
+}
 
-  if (data?.role === 'admin' && data?.devToolsEnabled === true) {
-    return { uid: decoded.uid, email: decoded.email || '' };
-  }
-
-  throw new Error('Unauthorized: Developer Tools not enabled for this user');
+export async function verifyCallerIsDev(idToken: string): Promise<{ uid: string; email: string }> {
+  return verifyDevToolsAccess(idToken);
 }

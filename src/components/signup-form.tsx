@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import {
@@ -12,7 +12,7 @@ import {
   completeCandidateIdVerification,
   syncLegacyDataForUser,
 } from '@/app/applicant/verification-actions';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { signupSchema, type SignupSchema } from '@/lib/schemas';
 import { useAuth, useFirestore } from '@/firebase';
@@ -53,6 +53,7 @@ export function SignupForm() {
   const [dataConsent, setDataConsent] = useState(false);
   const [consentError, setConsentError] = useState(false);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+  const [isAdminEmail, setIsAdminEmail] = useState(false);
 
   const bothConsented = privacyConsent && dataConsent;
 
@@ -68,6 +69,33 @@ export function SignupForm() {
     },
   });
 
+  const watchedEmail = useWatch({ control: form.control, name: 'email', defaultValue: '' });
+
+  useEffect(() => {
+    if (!firestore) return;
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      const raw = (watchedEmail || '').trim().toLowerCase();
+      if (!raw || !raw.includes('@')) {
+        if (!cancelled) setIsAdminEmail(false);
+        return;
+      }
+      void (async () => {
+        try {
+          const snap = await getDoc(doc(firestore, 'authorizedAdmins', raw));
+          const ok = snap.exists() && snap.data()?.active === true;
+          if (!cancelled) setIsAdminEmail(ok);
+        } catch {
+          if (!cancelled) setIsAdminEmail(false);
+        }
+      })();
+    }, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [watchedEmail, firestore]);
+
   async function onSubmit(values: SignupSchema) {
     setLoading(true);
     if (!auth || !firestore) {
@@ -80,6 +108,28 @@ export function SignupForm() {
       return;
     }
 
+    const emailLower = values.email.trim().toLowerCase();
+    const adminRef = doc(firestore, 'authorizedAdmins', emailLower);
+    const adminSnap = await getDoc(adminRef);
+    const isAuthorizedAdmin = adminSnap.exists() && adminSnap.data()?.active === true;
+    const authorizedRole =
+      isAuthorizedAdmin &&
+      (adminSnap.data()?.role === 'admin' || adminSnap.data()?.role === 'dev')
+        ? (adminSnap.data()?.role as 'admin' | 'dev')
+        : null;
+    const legacyBootstrap = isBootstrapAdminEmail(values.email);
+    const skipCandidateVerify = authorizedRole !== null || legacyBootstrap;
+    const staffRole = authorizedRole ?? (legacyBootstrap ? ('admin' as const) : null);
+
+    if (!skipCandidateVerify && values.candidateId.trim().length < 6) {
+      form.setError('candidateId', {
+        type: 'manual',
+        message: 'Please enter a valid Candidate ID',
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -87,9 +137,8 @@ export function SignupForm() {
         values.password
       );
       const user = userCredential.user;
-      const bootstrapAdmin = isBootstrapAdminEmail(values.email);
 
-      if (!bootstrapAdmin) {
+      if (!skipCandidateVerify) {
         let verifyResult: Awaited<ReturnType<typeof completeCandidateIdVerification>>;
         try {
           const idToken = await user.getIdToken();
@@ -159,16 +208,19 @@ export function SignupForm() {
       };
 
       const userDocRef = doc(firestore, 'users', user.uid);
-      if (bootstrapAdmin) {
-        const bootstrapProfile: ApplicantData = {
+      if (staffRole) {
+        const staffProfile: ApplicantData = {
           uid: user.uid,
           email: user.email,
           firstName: values.firstName,
           lastName: values.lastName,
           createdAt: serverTimestamp() as any,
           isAdmin: true,
-          role: 'admin' as const,
-          status: 'pending' as const,
+          role: staffRole,
+          status: 'verified',
+          verifiedAt: serverTimestamp() as any,
+          candidateId: '',
+          skipCandidateVerification: true,
           candidateFlowStatus: 'registered',
           firstClassMedicalDate: null,
           atpNumber: null,
@@ -184,12 +236,12 @@ export function SignupForm() {
           consentVersion: '1.0',
           privacyPolicyVersion: 'March 2026',
         };
-        await setDoc(userDocRef, bootstrapProfile, { merge: true });
+        await setDoc(userDocRef, staffProfile, { merge: true });
       } else {
         await setDoc(userDocRef, applicantOnlyMerge, { merge: true });
       }
 
-      if (!bootstrapAdmin) {
+      if (!skipCandidateVerify) {
         const idToken = await user.getIdToken();
         void syncLegacyDataForUser({ idToken }).catch(() => {});
       }
@@ -201,19 +253,21 @@ export function SignupForm() {
           action: 'candidate_registered',
           candidateName: fullName,
           candidateEmail: user.email,
-          candidateId: bootstrapAdmin ? '' : values.candidateId.trim().toUpperCase(),
+          candidateId: skipCandidateVerify ? '' : values.candidateId.trim().toUpperCase(),
         });
       } catch (e) {
         console.error('candidate_registered audit:', e);
       }
-      await triggerWelcomeEmail(user.email!, fullName);
+      if (!staffRole) {
+        await triggerWelcomeEmail(user.email!, fullName);
+      }
 
       toast({
         title: 'Account Created!',
-        description: "You've been successfully signed up.",
+        description: staffRole ? 'Welcome — opening the admin portal.' : "You've been successfully signed up.",
       });
 
-      if (bootstrapAdmin) {
+      if (staffRole) {
         router.push('/admin');
       } else {
         router.push('/dashboard');
@@ -313,6 +367,20 @@ export function SignupForm() {
                 />
               </FormControl>
               <FormMessage />
+              {isAdminEmail ? (
+                <div
+                  className="mt-2 text-[12px] font-medium leading-snug text-[#008A00]"
+                  style={{
+                    background: 'rgba(0,138,0,0.06)',
+                    border: '1px solid rgba(0,138,0,0.2)',
+                    borderRadius: 8,
+                    padding: '10px 14px',
+                  }}
+                >
+                  ✓ HR Staff account detected — no Candidate ID required. You will be directed to the admin portal
+                  after registration.
+                </div>
+              ) : null}
             </FormItem>
           )}
         />
@@ -342,22 +410,24 @@ export function SignupForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="candidateId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className={labelClassName}>Candidate ID</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. 12345678" className={inputStyle} autoComplete="off" {...field} />
-              </FormControl>
-              <FormDescription className="text-[13px] text-[#8E8E8E]">
-                Enter your unique candidate ID.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!isAdminEmail ? (
+          <FormField
+            control={form.control}
+            name="candidateId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelClassName}>Candidate ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. 12345678" className={inputStyle} autoComplete="off" {...field} />
+                </FormControl>
+                <FormDescription className="text-[13px] text-[#8E8E8E]">
+                  Enter your unique candidate ID.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
         {/* Consent Checkboxes */}
         <div
           className="!mt-5 flex flex-col gap-3 rounded-lg p-4"

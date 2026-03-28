@@ -1,6 +1,11 @@
 {
   "indexes": [
     {
+      "collectionGroup": "authorizedAdmins",
+      "queryScope": "COLLECTION",
+      "fields": [{ "fieldPath": "addedAt", "order": "DESCENDING" }]
+    },
+    {
       "collectionGroup": "interviewSlots",
       "queryScope": "COLLECTION",
       "fields": [

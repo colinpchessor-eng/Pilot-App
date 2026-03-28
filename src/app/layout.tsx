@@ -2,13 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { Inter, Orbitron } from 'next/font/google';
 import { AuthGate } from '@/components/auth-gate';
 import { ParallaxRoot } from '@/components/parallax-root';
 import { PageTransition } from '@/components/page-transition';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
-const orbitron = Orbitron({ subsets: ['latin'], variable: '--font-headline' });
 
 export const metadata: Metadata = {
   title: 'FedexFlow',
@@ -21,9 +17,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${orbitron.variable}`}>
+    <html lang="en">
       <head />
-      <body className="font-body antialiased [text-rendering:optimizeLegibility] [-webkit-font-smoothing:antialiased] [-moz-osx-font-smoothing:grayscale] bg-[#FAFAFA]">
+      <body className="font-sans antialiased [text-rendering:optimizeLegibility] [-webkit-font-smoothing:antialiased] [-moz-osx-font-smoothing:grayscale] bg-[#FAFAFA]">
         <FirebaseClientProvider>
           <ParallaxRoot />
           <AuthGate />

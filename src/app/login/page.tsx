@@ -28,6 +28,10 @@ export default function LoginPage() {
 
         <LoginForm />
 
+        <p className="mt-4 text-center text-[12px] text-[#8E8E8E]">
+          HR Staff — use your FedEx email to sign in. No Candidate ID required.
+        </p>
+
         <p className="mt-10 text-center text-sm font-medium text-[#565656]">
           Don&apos;t have an account?{' '}
           <Link

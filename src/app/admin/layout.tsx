@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { doc } from 'firebase/firestore';
 import { InteriorNavbar } from '@/components/layout/InteriorNavbar';
+import { isAdmin as userIsStaff } from '@/lib/roles';
 
 export default function AdminLayout({
   children,
@@ -24,8 +25,8 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (!loading) {
-      const isAdmin = !!applicantData?.isAdmin || applicantData?.role === 'admin';
-      if (!user || !isAdmin) {
+      const staff = userIsStaff(applicantData);
+      if (!user || !staff) {
         router.push('/login');
       }
     }
@@ -39,7 +40,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!applicantData?.isAdmin && applicantData?.role !== 'admin') {
+  if (!userIsStaff(applicantData)) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: 'linear-gradient(160deg, #f5f0ff 0%, #fafafa 40%, #fff8f4 100%)' }}>
         <p className="text-[#8E8E8E] text-sm">Access Denied. Redirecting...</p>

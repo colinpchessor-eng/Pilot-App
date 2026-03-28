@@ -1,5 +1,11 @@
 'use client';
 
+// INITIAL SETUP: Manually create these documents in Firestore `authorizedAdmins` (doc ID = lowercased email), or use
+// "Initialize Default Admins" on Developer Tools when the collection is empty:
+//
+// Document ID: colinpchessor@gmail.com — role: dev, active: true, email, name, addedBy, addedAt
+// Document ID: fedexadmin@fedex.com — role: dev, active: true, email, name, addedBy, addedAt
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { initializeApp, getApp, type FirebaseApp } from 'firebase/app';
@@ -20,7 +26,8 @@ import {
 import { useFirestore, useUser } from '@/firebase';
 import { firebaseConfig } from '@/firebase/config';
 import type { ApplicantData } from '@/lib/types';
-import { canAccessDevTools } from '@/lib/devtools-access';
+import { canAccessDevTools } from '@/lib/roles';
+import { AdminAccessManagement } from '@/components/admin/devtools/admin-access-management';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -722,14 +729,15 @@ export function DevToolsPage() {
       <div>
         <h1 className="text-[28px] font-bold text-[#333333]">Developer Tools</h1>
         <p className="mt-1 text-[14px] text-[#8E8E8E]">
-          Test reset utilities — not visible in production
-          {isProdBuild && (
-            <span className="ml-2 font-semibold text-[#DE002E]">
-              (production build: requires devToolsEnabled on your admin user)
-            </span>
-          )}
+          Pre-authorized admin list, test resets, and destructive utilities — for accounts with the Developer role
+          only.
+          {isProdBuild ? (
+            <span className="ml-2 font-semibold text-[#565656]">(production: developer role required.)</span>
+          ) : null}
         </p>
       </div>
+
+      <AdminAccessManagement />
 
       <div
         className="text-sm font-medium text-[#333333]"

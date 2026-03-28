@@ -53,6 +53,8 @@ export function buildDefaultApplicantData(input: {
     submittedAt: null,
     isCertified: false,
     printedName: null,
+    role: 'candidate',
+    isAdmin: false,
   };
 }
 

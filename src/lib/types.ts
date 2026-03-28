@@ -63,7 +63,7 @@ export type LegacyData = {
 };
 
 export type VerificationStatus = 'pending' | 'token_sent' | 'verified';
-export type UserRole = 'admin' | 'candidate';
+export type UserRole = 'admin' | 'dev' | 'candidate';
 
 /** Hiring pipeline position; mirrors candidateIds.flowStatus on the user doc when linked. */
 export type CandidateFlowStatus =
@@ -148,6 +148,8 @@ export type ApplicantData = {
   legacyData?: LegacyData | null;
   /** Mirrors linked candidateIds.flowStatus for this applicant. */
   candidateFlowStatus?: CandidateFlowStatus | string | null;
+  /** Pre-authorized HR/dev accounts: skip Candidate ID gate on dashboard. */
+  skipCandidateVerification?: boolean;
 };
 
 export type InterviewSlotStatus = 'available' | 'booked' | 'cancelled';

@@ -26,9 +26,17 @@ export async function createSessionCookie(idToken: string) {
       sameSite: 'lax',
     });
 
+    const r = userData?.role;
+    const roleStr =
+      r === 'dev' || r === 'admin'
+        ? r
+        : userData?.isAdmin
+          ? 'admin'
+          : r || '';
+
     return {
       success: true,
-      role: userData?.isAdmin ? 'admin' : (userData?.role || ''),
+      role: roleStr,
       status: userData?.status || 'pending',
     };
   } catch (error) {
@@ -59,10 +67,18 @@ export async function verifySessionCookie(): Promise<{
     const userDoc = await db.collection('users').doc(decodedClaims.uid).get();
     const userData = userDoc.data();
 
+    const r = userData?.role;
+    const roleStr =
+      r === 'dev' || r === 'admin'
+        ? r
+        : userData?.isAdmin
+          ? 'admin'
+          : r || '';
+
     return {
       authenticated: true,
       uid: decodedClaims.uid,
-      role: userData?.isAdmin ? 'admin' : (userData?.role || ''),
+      role: roleStr,
       status: userData?.status || 'pending',
     };
   } catch {

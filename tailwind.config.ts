@@ -10,8 +10,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['var(--font-body)', 'sans-serif'],
-        headline: ['var(--font-headline)', 'sans-serif'],
+        sans: ['FedExSans', 'Arial', 'Helvetica', 'sans-serif'],
+        body: ['FedExSans', 'Arial', 'Helvetica', 'sans-serif'],
+        headline: ['FedExSans', 'Arial', 'Helvetica', 'sans-serif'],
+        fedex: ['FedExSans', 'Arial', 'sans-serif'],
+        'fedex-condensed': ['FedExSansCondensed', 'Arial Narrow', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

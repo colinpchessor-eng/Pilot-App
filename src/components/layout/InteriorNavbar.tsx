@@ -29,7 +29,7 @@ import {
 import { getAuth, signOut } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import type { ApplicantData } from '@/lib/types';
-import { canAccessDevTools } from '@/lib/devtools-access';
+import { canAccessDevTools, isAdmin as userIsStaff, isDev as userIsDev } from '@/lib/roles';
 import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
 function displayInitials(user: { displayName?: string | null; email?: string | null } | null): string {
@@ -80,6 +80,29 @@ type MobileAdminRow =
   | { kind: 'link' } & NavLinkFields
   | { kind: 'subheader'; label: string; devToolsDanger?: boolean };
 
+function adminEntriesToDesktopPieces(entries: AdminDesktopEntry[]): DesktopPiece[] {
+  return entries.map((e) => {
+    if (e.kind === 'link') {
+      return {
+        type: 'link' as const,
+        label: e.label,
+        href: e.href,
+        dot: e.dot,
+        Icon: e.Icon,
+        devToolsDanger: e.devToolsDanger,
+        requiresVerified: e.requiresVerified,
+      };
+    }
+    return {
+      type: 'dropdown' as const,
+      label: e.label,
+      Icon: e.Icon,
+      devToolsDanger: e.devToolsDanger,
+      items: e.items,
+    };
+  });
+}
+
 export function InteriorNavbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -90,7 +113,8 @@ export function InteriorNavbar() {
 
   const userDocRef = user ? doc(firestore, 'users', user.uid) : undefined;
   const { data: userData } = useDoc<ApplicantData>(userDocRef);
-  const isAdmin = !!userData?.isAdmin || userData?.role === 'admin';
+  const isAdmin = userIsStaff(userData);
+  const isDevUser = userIsDev(userData);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -161,49 +185,27 @@ export function InteriorNavbar() {
     return rows;
   }, [userData]);
 
+  const adminNavDesktopPieces = useMemo(
+    () => adminEntriesToDesktopPieces(adminDesktopEntries),
+    [adminDesktopEntries]
+  );
+
   const desktopPieces = useMemo((): DesktopPiece[] => {
     if (pathname.startsWith('/admin')) {
-      return [
-        { type: 'link', ...navItems[0]! },
-        { type: 'divider' },
-        ...adminDesktopEntries.map((e): DesktopPiece => {
-          if (e.kind === 'link') {
-            return {
-              type: 'link',
-              label: e.label,
-              href: e.href,
-              dot: e.dot,
-              Icon: e.Icon,
-              devToolsDanger: e.devToolsDanger,
-              requiresVerified: e.requiresVerified,
-            };
-          }
-          return {
-            type: 'dropdown',
-            label: e.label,
-            Icon: e.Icon,
-            devToolsDanger: e.devToolsDanger,
-            items: e.items,
-          };
-        }),
-      ];
+      return [{ type: 'link', ...navItems[0]! }, { type: 'divider' }, ...adminNavDesktopPieces];
     }
     if (isAdmin) {
-      return [
-        ...navItems.map((n) => ({ type: 'link' as const, ...n })),
-        { type: 'divider' },
-        { type: 'link', label: 'Admin', href: '/admin' },
-      ];
+      return adminNavDesktopPieces;
     }
     return navItems.map((n) => ({ type: 'link' as const, ...n }));
-  }, [pathname, isAdmin, adminDesktopEntries]);
+  }, [pathname, isAdmin, adminNavDesktopPieces]);
 
   const mobilePieces = useMemo((): (MobileAdminRow | NavLinkFields)[] => {
     if (pathname.startsWith('/admin')) {
       return [navItems[0]!, ...adminMobileRows];
     }
     if (isAdmin) {
-      return [...navItems, { label: 'Admin', href: '/admin' }];
+      return adminMobileRows;
     }
     return navItems;
   }, [pathname, isAdmin, adminMobileRows]);
@@ -219,10 +221,11 @@ export function InteriorNavbar() {
 
   const userInitials = displayInitials(user);
   const roleLabel = useMemo(() => {
-    if (isAdmin) return 'Administrator';
+    if (isDevUser) return 'Developer';
+    if (isAdmin) return 'HR Admin';
     if (isVerified) return 'Verified pilot';
     return 'Applicant';
-  }, [isAdmin, isVerified]);
+  }, [isAdmin, isDevUser, isVerified]);
 
   function linkIsActive(href: string): boolean {
     if (href === '/admin') {
@@ -339,6 +342,7 @@ export function InteriorNavbar() {
         {/* Right: My Application + notifications + settings + avatar + mobile menu */}
         <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
           {!isOnAdminPage &&
+            !isAdmin &&
             (isVerified ? (
               <Link href="/dashboard/application" className="hidden sm:block">
                 <Button className="mr-1 rounded-full bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] px-5 py-2.5 text-[15px] font-bold text-white shadow-[0_2px_12px_rgba(77,20,140,0.3)] transition-all hover:-translate-y-0.5 hover:brightness-110 lg:mr-2 lg:px-6">
@@ -364,10 +368,10 @@ export function InteriorNavbar() {
             <Bell className="h-5 w-5 sm:h-[23px] sm:w-[23px]" />
           </button>
           <Link
-            href="/dashboard"
+            href={isAdmin ? '/admin' : '/dashboard'}
             className="rounded-full p-2 text-[#4D148C] transition-colors hover:bg-[#4D148C]/10"
-            aria-label="Dashboard"
-            title="Dashboard"
+            aria-label={isAdmin ? 'Admin' : 'Dashboard'}
+            title={isAdmin ? 'Admin' : 'Dashboard'}
           >
             <Settings className="h-5 w-5 sm:h-[23px] sm:w-[23px]" />
           </Link>
@@ -400,7 +404,7 @@ export function InteriorNavbar() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-[#E3E3E3]" />
               <DropdownMenuItem asChild className="cursor-pointer focus:bg-[#4D148C]/10 focus:text-[#4D148C]">
-                <Link href="/dashboard">
+                <Link href={isAdmin ? '/admin' : '/dashboard'}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </Link>
@@ -490,6 +494,7 @@ export function InteriorNavbar() {
                 );
               })}
               {!isOnAdminPage &&
+                !isAdmin &&
                 (isVerified ? (
                   <Link
                     href="/dashboard/application"

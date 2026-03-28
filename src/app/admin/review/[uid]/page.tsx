@@ -628,6 +628,13 @@ FedEx Express Pilot Recruiting`;
   const userCreated = applicant?.createdAt?.toDate?.() ?? null;
   const flow = String(candidate?.flowStatus || applicant?.candidateFlowStatus || 'submitted');
 
+  const interviewSentAt =
+    candidate?.interviewInvitedAt && typeof candidate.interviewInvitedAt.toDate === 'function'
+      ? candidate.interviewInvitedAt.toDate()
+      : null;
+  const interviewAlreadySent =
+    flow === 'interview_sent' || flow === 'scheduled' || interviewSentAt != null;
+
   const loading = userLoading || (!!candidateId && (candLoading || legLoading));
 
   if (!uid) {
@@ -716,13 +723,24 @@ FedEx Express Pilot Recruiting`;
           >
             Print Full Report
           </button>
-          <button
-            type="button"
-            onClick={() => setInviteOpen(true)}
-            className="rounded-lg px-4 py-2 text-[13px] font-semibold bg-[#4D148C] text-white hover:brightness-110"
-          >
-            Invite to Interview
-          </button>
+          {interviewAlreadySent ? (
+            <button
+              type="button"
+              onClick={() => setInviteOpen(true)}
+              className="rounded-lg px-4 py-2 text-[13px] font-semibold border border-[#008A00] bg-[#E8F5E9] text-[#1B5E20] hover:bg-[#C8E6C9] transition-colors"
+            >
+              Interview invitation sent
+              {interviewSentAt ? ` · ${format(interviewSentAt, 'MMM d, yyyy')}` : ''}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setInviteOpen(true)}
+              className="rounded-lg px-4 py-2 text-[13px] font-semibold bg-[#4D148C] text-white hover:brightness-110"
+            >
+              Invite to Interview
+            </button>
+          )}
           <button
             type="button"
             disabled={markingReview}
@@ -1391,9 +1409,18 @@ FedEx Express Pilot Recruiting`;
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Invite to Interview</DialogTitle>
+            <DialogTitle>
+              {interviewAlreadySent ? 'Interview invitation (sent)' : 'Invite to Interview'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-[14px] text-[#333333]">
+            {interviewAlreadySent ? (
+              <p className="text-[13px] text-[#565656] rounded-lg bg-[#FAFAFA] border border-[#E3E3E3] px-3 py-2">
+                This candidate was already marked as invited
+                {interviewSentAt ? ` on ${format(interviewSentAt, 'PP')}` : ''}. You can edit the message and
+                send again if needed.
+              </p>
+            ) : null}
             <p>
               <span className="font-semibold">{fullName}</span>
               <br />
@@ -1419,7 +1446,7 @@ FedEx Express Pilot Recruiting`;
               onClick={() => void markInterviewSent()}
               className="bg-[#4D148C] hover:bg-[#7D22C3] text-white"
             >
-              {markingInterview ? 'Saving…' : 'Mark as Invited'}
+              {markingInterview ? 'Saving…' : interviewAlreadySent ? 'Send again' : 'Mark as Invited'}
             </Button>
           </DialogFooter>
         </DialogContent>

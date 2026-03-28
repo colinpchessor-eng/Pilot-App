@@ -62,6 +62,7 @@ import {
   Eye,
   MailPlus,
   RotateCcw,
+  User,
   UserSearch,
   X,
 } from 'lucide-react';
@@ -766,11 +767,32 @@ export default function AdminCandidatesPage() {
                       </td>
                       <td className={cn(candidateRowsTableTdClass, 'text-right')}>
                         <div className="inline-flex flex-wrap justify-end gap-2">
+                          {c.assignedUid ? (
+                            <span className="admin-tooltip">
+                              <span className="admin-tooltip-text">
+                                Full portal profile and application data
+                              </span>
+                              <Link
+                                href={`/admin/applications/${c.assignedUid}`}
+                                className="inline-flex items-center justify-center rounded-full border border-[#E3E3E3] bg-white px-3.5 py-1.5 text-[11px] font-bold text-[#4D148C] transition-all hover:border-[#4D148C]"
+                              >
+                                <User className="mr-1 h-3 w-3" />
+                                Profile
+                              </Link>
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex cursor-default items-center justify-center rounded-full border border-[#F2F2F2] bg-[#FAFAFA] px-3.5 py-1.5 text-[11px] font-medium text-[#B8B8B8]"
+                              title="No portal account linked yet — use Start Flow or wait for the candidate to register"
+                            >
+                              No account
+                            </span>
+                          )}
                           {(c.flowStatus === 'submitted' || c.flowStatus === 'under_review') &&
                             c.assignedUid && (
                               <span className="admin-tooltip">
                                 <span className="admin-tooltip-text">
-                                  View merged application data
+                                  Merged application review (submitted)
                                 </span>
                                 <Link
                                   href={`/admin/review/${c.assignedUid}`}

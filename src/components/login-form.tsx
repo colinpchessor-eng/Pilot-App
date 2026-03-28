@@ -74,11 +74,15 @@ export function LoginForm() {
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
-      const profile = userDocSnap.exists() ? userDocSnap.data() : null;
-      const isAdminUser =
-        profile?.isAdmin === true || profile?.role === 'admin';
+      const userData = userDocSnap.exists() ? userDocSnap.data() : null;
+      const goAdmin =
+        !!userData &&
+        (userData.role === 'admin' ||
+          userData.role === 'dev' ||
+          userData.isAdmin === true ||
+          userData.skipCandidateVerification === true);
 
-      if (userDocSnap.exists() && isAdminUser) {
+      if (goAdmin) {
         toast({
           title: 'Admin Sign In',
           description: 'Welcome, Admin.',

@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
 import type { ApplicantData, VerificationStatus } from '@/lib/types';
 import { buildDefaultApplicantData } from '@/lib/default-applicant';
+import { checkAuthorizedAdminRole } from '@/lib/authorized-admins';
+import { canAccessDevTools, isAdmin as userIsStaff } from '@/lib/roles';
 import { writeCandidateAuditLog } from '@/lib/candidate-audit';
 import { createSessionCookie, clearSessionCookie } from '@/app/auth/actions';
 
@@ -65,11 +67,24 @@ export function AuthGate() {
 
       let data: ApplicantData;
       if (!snap.exists()) {
-        data = buildDefaultApplicantData({
+        const base = buildDefaultApplicantData({
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
         });
+        const staffRole =
+          user.email != null ? await checkAuthorizedAdminRole(firestore, user.email) : null;
+        data = staffRole
+          ? {
+              ...base,
+              role: staffRole,
+              isAdmin: true,
+              status: 'verified',
+              verifiedAt: serverTimestamp() as any,
+              candidateId: '',
+              skipCandidateVerification: true,
+            }
+          : base;
         await setDoc(userRef, data);
         try {
           await writeCandidateAuditLog(firestore, {
@@ -87,8 +102,6 @@ export function AuthGate() {
       }
 
       const status = normalizeStatus((data as any).status);
-      const isAdmin = (data as any).isAdmin === true;
-      const role = (data as any).role ?? (isAdmin ? 'admin' : '');
 
       const idToken = await user.getIdToken();
       await createSessionCookie(idToken);
@@ -99,7 +112,12 @@ export function AuthGate() {
         return;
       }
 
-      if (pathname.startsWith('/admin') && role !== 'admin') {
+      if (pathname.startsWith('/admin/devtools') && !canAccessDevTools(data)) {
+        router.replace('/admin');
+        return;
+      }
+
+      if (pathname.startsWith('/admin') && !userIsStaff(data)) {
         router.replace('/dashboard');
         return;
       }

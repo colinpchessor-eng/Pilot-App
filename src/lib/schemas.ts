@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { isBootstrapAdminEmail } from '@/lib/admin-bootstrap';
 
 export const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid Employee ID (email).' }),
@@ -9,6 +8,7 @@ export const loginSchema = z.object({
 
 export type LoginSchema = z.infer<typeof loginSchema>;
 
+/** Candidate ID length is enforced in SignupForm onSubmit (after authorizedAdmins check), not here — so pre-authorized HR emails are not blocked by Zod. */
 export const signupSchema = z
   .object({
     firstName: z.string().min(1, { message: 'First name is required.' }),
@@ -23,16 +23,6 @@ export const signupSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
-  })
-  .superRefine((data, ctx) => {
-    if (isBootstrapAdminEmail(data.email)) return;
-    if (data.candidateId.trim().length < 6) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Please enter a valid Candidate ID',
-        path: ['candidateId'],
-      });
-    }
   });
 
 export type SignupSchema = z.infer<typeof signupSchema>;

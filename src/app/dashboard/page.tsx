@@ -50,6 +50,19 @@ export default function DashboardPage() {
     error,
   } = useDoc<ApplicantData>(userDocRef);
 
+  const staffShouldUseAdminPortal =
+    !!applicantData &&
+    (applicantData.role === 'admin' ||
+      applicantData.role === 'dev' ||
+      applicantData.skipCandidateVerification === true ||
+      applicantData.isAdmin === true);
+
+  useEffect(() => {
+    if (staffShouldUseAdminPortal) {
+      router.replace('/admin');
+    }
+  }, [staffShouldUseAdminPortal, router]);
+
   useEffect(() => {
     const success = sessionStorage.getItem('verificationRequested');
     if (success === 'true') {
@@ -108,6 +121,17 @@ export default function DashboardPage() {
         <div className="flex flex-col items-center gap-4">
            <div className="h-12 w-12 border-4 border-[#4D148C] border-t-transparent rounded-full animate-spin" />
            <p className="text-[#565656] font-medium">Fetching your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (staffShouldUseAdminPortal) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 border-4 border-[#4D148C] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#565656] font-medium">Opening admin portal…</p>
         </div>
       </div>
     );

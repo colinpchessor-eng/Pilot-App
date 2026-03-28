@@ -1,3 +1,163 @@
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_Rg.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_It.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_Lt.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_LtIt.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_Md.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_MdIt.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_Bd.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_BdIt.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_XBd.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSans';
+  src: url('/fonts/fedex-sans/FedExSans_XBdIt.ttf') format('truetype');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_Cd.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdIt.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdLt.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdLtIt.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdMd.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdMdIt.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdBd.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdBdIt.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdXBd.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FedExSansCondensed';
+  src: url('/fonts/fedex-sans/FedExSans_CdXBdIt.ttf') format('truetype');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -110,6 +270,7 @@
     @apply border-border;
   }
   body {
+    font-family: 'FedExSans', Arial, Helvetica, sans-serif;
     @apply text-foreground;
     min-height: 100vh;
   }
