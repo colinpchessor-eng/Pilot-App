@@ -187,11 +187,7 @@ export function AdminPendingVerificationsPanel() {
                           type="button"
                           onClick={() => openApprove(row)}
                           disabled={saving}
-                          className="inline-flex items-center rounded-lg px-4 py-2 text-[13px] font-semibold text-white transition-all disabled:opacity-50"
-                          style={{
-                            background:
-                              'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)',
-                          }}
+                          className="fedex-btn-primary-sm !px-4 !py-2 disabled:opacity-50"
                         >
                           Approve &amp; Send Token
                         </button>
@@ -200,7 +196,7 @@ export function AdminPendingVerificationsPanel() {
                         <span className="admin-tooltip-text">Deny this verification request</span>
                         <button
                           type="button"
-                          className="inline-flex items-center bg-white border-[1.5px] border-[#E3E3E3] rounded-lg px-4 py-2 text-[13px] font-semibold text-[#8E8E8E] transition-all hover:border-[#DE002E] hover:text-[#DE002E] disabled:opacity-50"
+                          className="fedex-btn-outline-danger disabled:opacity-50"
                           onClick={() => handleReject(row)}
                           disabled={saving}
                         >
@@ -307,10 +303,7 @@ export function AdminPendingVerificationsPanel() {
               type="button"
               onClick={handleApprove}
               disabled={saving}
-              className="inline-flex items-center rounded-lg px-4 py-2 text-[13px] font-semibold text-white transition-all disabled:opacity-50"
-              style={{
-                background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)',
-              }}
+              className="fedex-btn-primary-sm !px-4 !py-2 disabled:opacity-50"
             >
               Confirm
             </button>

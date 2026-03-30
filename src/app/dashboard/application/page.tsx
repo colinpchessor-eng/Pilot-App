@@ -146,9 +146,17 @@ export default function ApplicationPage() {
   }
 
   return (
-    <div className="min-h-screen interior-bg pb-12">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#F5F5F7] pb-12">
+      <div
+        className="pointer-events-none fixed top-[-10%] left-[-5%] z-0 h-[40%] w-[40%] rounded-full bg-[#4D148C]/5 blur-[120px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none fixed bottom-[-10%] right-[-5%] z-0 h-[30%] w-[30%] rounded-full bg-[#FF6200]/5 blur-[100px]"
+        aria-hidden
+      />
       <InteriorNavbar />
-      <div className="container mx-auto max-w-5xl py-8">
+      <div className="relative z-[1] container mx-auto max-w-5xl px-4 py-8">
         <ApplicationForm applicantData={applicantData} />
       </div>
     </div>

@@ -175,6 +175,27 @@ export async function adminCompleteDeletion(input: {
   }
 }
 
+export async function adminCompleteUnlockRequest(input: {
+  idToken: string;
+  requestDocId: string;
+}): Promise<ActionResult> {
+  try {
+    const admin = await verifyIsAdmin(input.idToken);
+    const db = getAdminFirestore();
+
+    await db.collection('applicationUnlockRequests').doc(input.requestDocId).update({
+      status: 'completed',
+      completedAt: FieldValue.serverTimestamp(),
+      completedBy: admin.email,
+    });
+
+    return { success: true, message: 'Unlock request marked complete.' };
+  } catch (err: any) {
+    console.error('adminCompleteUnlockRequest error:', err);
+    return { success: false, message: err.message || 'Failed to update request.' };
+  }
+}
+
 // ── Reset a candidate ID ──────────────────────────────────────────────
 export async function adminResetCandidateId(input: {
   idToken: string;

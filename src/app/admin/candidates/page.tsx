@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -112,15 +112,6 @@ const NEW_PIPELINE_STATUSES = new Set([
   'verified',
   'in_progress',
 ]);
-
-const FLOW_START_BTN: CSSProperties = {
-  background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)',
-  color: 'white',
-  borderRadius: 9999,
-  padding: '6px 14px',
-  fontSize: 12,
-  fontWeight: 700,
-};
 
 const VALID_STAGE_PARAMS = new Set([
   ...PIPELINE_STAGES.map((s) => s.id),
@@ -770,10 +761,10 @@ export default function AdminCandidatesPage() {
                           {c.assignedUid ? (
                             <span className="admin-tooltip">
                               <span className="admin-tooltip-text">
-                                Full portal profile and application data
+                                Application review — profile, legacy data, and submitted form
                               </span>
                               <Link
-                                href={`/admin/applications/${c.assignedUid}`}
+                                href={`/admin/review/${c.assignedUid}`}
                                 className="inline-flex items-center justify-center rounded-full border border-[#E3E3E3] bg-white px-3.5 py-1.5 text-[11px] font-bold text-[#4D148C] transition-all hover:border-[#4D148C]"
                               >
                                 <User className="mr-1 h-3 w-3" />
@@ -788,27 +779,12 @@ export default function AdminCandidatesPage() {
                               No account
                             </span>
                           )}
-                          {(c.flowStatus === 'submitted' || c.flowStatus === 'under_review') &&
-                            c.assignedUid && (
-                              <span className="admin-tooltip">
-                                <span className="admin-tooltip-text">
-                                  Merged application review (submitted)
-                                </span>
-                                <Link
-                                  href={`/admin/review/${c.assignedUid}`}
-                                  className="inline-flex items-center justify-center rounded-full bg-[#FF6200] px-3.5 py-1.5 text-[11px] font-bold text-white transition-all hover:brightness-110"
-                                >
-                                  Review
-                                </Link>
-                              </span>
-                            )}
                           {canStartCandidateFlow(c.flowStatus) ? (
                             <button
                               type="button"
                               disabled={!!flowStarting[c.candidateId]}
                               onClick={() => handleStartCandidateFlow(c)}
-                              className="inline-flex cursor-pointer items-center justify-center border-0 transition-opacity disabled:opacity-50"
-                              style={FLOW_START_BTN}
+                              className="fedex-btn-primary-sm inline-flex !cursor-pointer !rounded-full !px-3.5 !py-1.5 text-[11px] disabled:opacity-50"
                             >
                               {flowStarting[c.candidateId] ? 'Starting…' : 'Start Flow'}
                             </button>

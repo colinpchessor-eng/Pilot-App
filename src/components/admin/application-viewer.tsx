@@ -136,10 +136,7 @@ export function ApplicationViewer({ applicantData }: { applicantData: ApplicantD
       <section className="review-section print:break-inside-avoid bg-white rounded-xl border border-[#E3E3E3] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] print:shadow-none print:border print:rounded-none">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex gap-4 items-start">
-            <div
-              className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-[22px] font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 50%, #FF6200 100%)' }}
-            >
+            <div className="fedex-gradient flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-[22px] font-bold text-white">
               {initials}
             </div>
             <div>

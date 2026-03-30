@@ -7,13 +7,14 @@ import { AdminCharts } from '@/components/admin/admin-charts';
 import { ApplicationsTable } from '@/components/admin/applications-table';
 import { AdminPendingVerificationsPanel } from '@/components/admin/admin-pending-verifications-panel';
 import { AdminDeletionsPanel } from '@/components/admin/admin-deletions-panel';
+import { AdminUnlockRequestsPanel } from '@/components/admin/admin-unlock-requests-panel';
 import { useFirestore, useUser } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { ApplicantData, InterviewBookingDoc } from '@/lib/types';
 import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import { startOfDay } from 'date-fns';
-import { Download, Trash2, FileText, ShieldCheck, Mail } from 'lucide-react';
+import { Download, Trash2, FileText, ShieldCheck, Mail, LockOpen } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { unparse } from 'papaparse';
@@ -45,6 +46,12 @@ export default function AdminDashboardPage() {
     [firestore]
   );
   const { data: pendingDeletions } = useCollection<any>(pendingDeletionsQuery);
+
+  const pendingUnlocksQuery = useMemo(
+    () => query(collection(firestore, 'applicationUnlockRequests'), where('status', '==', 'pending')),
+    [firestore]
+  );
+  const { data: pendingUnlocks } = useCollection<any>(pendingUnlocksQuery);
 
   const confirmedInterviewsQuery = useMemo(
     () => query(collection(firestore, 'interviewBookings'), where('status', '==', 'confirmed')),
@@ -193,12 +200,28 @@ export default function AdminDashboardPage() {
             <span className="ml-2 inline-flex items-center justify-center rounded-full bg-[#DE002E] text-white text-[10px] font-bold px-1.5 min-w-[18px] h-[18px]">{pendingDeletions!.length}</span>
           )}
         </Link>
+        <Link
+          href="/admin#unlock-requests"
+          className="inline-flex items-center bg-white border-[1.5px] border-[#E3E3E3] rounded-lg px-5 py-2.5 text-[14px] font-semibold text-[#333333] shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all hover:border-[#4D148C] hover:text-[#4D148C] hover:shadow-[0_2px_8px_rgba(77,20,140,0.12)]"
+        >
+          <LockOpen className="mr-2 h-4 w-4" />
+          Unlock requests
+          {(pendingUnlocks?.length ?? 0) > 0 && (
+            <span className="ml-2 inline-flex items-center justify-center rounded-full bg-[#F7B118] text-white text-[10px] font-bold px-1.5 min-w-[18px] h-[18px]">
+              {pendingUnlocks!.length}
+            </span>
+          )}
+        </Link>
       </div>
 
       <AdminPendingVerificationsPanel />
 
       <section id="deletion-requests" className="scroll-mt-24">
         <AdminDeletionsPanel embedded />
+      </section>
+
+      <section id="unlock-requests" className="scroll-mt-24">
+        <AdminUnlockRequestsPanel embedded />
       </section>
 
       {/* Submitted Applications + live activity */}

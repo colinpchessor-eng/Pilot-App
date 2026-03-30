@@ -308,16 +308,68 @@
 
 @layer components {
   /* FedEx Gradient Utility */
+  /* Brand gradient — matches primary CTA (to bottom-right) */
   .fedex-gradient {
-    background: linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%);
+    background-image: linear-gradient(to bottom right, #4d148c, #7d22c3, #ff6200);
   }
 
+  /**
+   * Primary CTA — same treatment as Legacy Records “Print” (shadow lift + press).
+   * Use on <Button default> via .btn-3d-primary, or className="fedex-btn-primary".
+   */
   .fedex-btn-primary {
-    @apply fedex-gradient text-white font-bold rounded-lg shadow-[0_4px_15px_rgba(77,20,140,0.3)] transition-all hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0;
+    @apply fedex-gradient inline-flex items-center justify-center gap-2 rounded-xl border-0 px-6 py-3 text-sm font-bold text-white shadow-lg outline-none transition-all duration-200 ease-out;
+    @apply enabled:hover:shadow-xl enabled:active:scale-[0.98];
   }
 
+  .fedex-btn-primary:focus-visible {
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px rgba(77, 20, 140, 0.45),
+      0 12px 28px rgba(77, 20, 140, 0.25);
+  }
+
+  /* Outlined / secondary actions — same motion, neutral chrome */
   .fedex-btn-secondary {
-    @apply bg-white border border-[#4D148C] text-[#4D148C] font-bold rounded-lg hover:bg-[#F2F2F2] transition-colors;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-[#4d148c] bg-white px-6 py-3 text-sm font-bold text-[#4d148c] shadow-sm outline-none transition-all duration-200 ease-out;
+    @apply enabled:hover:bg-[#f4f3f8] enabled:hover:shadow-md enabled:active:scale-[0.98];
+  }
+
+  .fedex-btn-secondary:focus-visible {
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px rgba(77, 20, 140, 0.35);
+  }
+
+  /* Neutral secondary (e.g. “Close reference”) — same press/hover physics */
+  .fedex-btn-muted {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border-0 bg-[#e9e7ed] px-6 py-3 text-sm font-bold text-[#333333] shadow-sm outline-none transition-all duration-200 ease-out;
+    @apply enabled:hover:bg-[#e3e2e7] enabled:hover:shadow-md enabled:active:scale-[0.98];
+  }
+
+  /** Table / dialog actions — same gradient + motion, tighter padding */
+  .fedex-btn-primary-sm {
+    @apply fedex-btn-primary !px-3 !py-1.5 text-[13px] font-semibold;
+  }
+
+  /** Gray outline control (e.g. “Details”) */
+  .fedex-btn-outline-neutral {
+    @apply inline-flex items-center justify-center gap-1 rounded-xl border-[1.5px] border-[#e3e3e3] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#565656] shadow-sm outline-none transition-all duration-200 ease-out;
+    @apply enabled:hover:border-[#4d148c] enabled:hover:text-[#4d148c] enabled:hover:shadow-md enabled:active:scale-[0.98];
+  }
+
+  .fedex-btn-outline-danger {
+    @apply inline-flex items-center justify-center gap-1 rounded-xl border-[1.5px] border-[#e3e3e3] bg-white px-4 py-2 text-[13px] font-semibold text-[#8e8e8e] shadow-sm outline-none transition-all duration-200 ease-out;
+    @apply enabled:hover:border-[#de002e] enabled:hover:text-[#de002e] enabled:hover:shadow-md enabled:active:scale-[0.98];
+  }
+
+  /* shadcn Button — default + outline variants */
+  .btn-3d-primary {
+    @apply fedex-btn-primary;
+  }
+
+  .btn-3d-ghost {
+    @apply fedex-btn-secondary;
   }
 
   /* Login / signup marketing split (hero + glass form column) */
@@ -404,6 +456,35 @@
     border: 1px solid #E3E3E3;
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     border-radius: 12px;
+  }
+
+  /**
+   * Radix portals render under document.body, outside `.light-theme` wrappers.
+   * :root keeps dark tokens for landing/auth; without this, Dialog/AlertDialog
+   * and popovers inherit dark --background and children (e.g. Textarea) stay illegible.
+   */
+  .radix-portal-surface {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 269 75% 31%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 23 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 34%;
+    --accent: 269 75% 31%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 348 100% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
+    --ring: 269 75% 31%;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   .glass-card,

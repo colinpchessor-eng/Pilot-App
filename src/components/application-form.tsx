@@ -19,13 +19,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from './ui/card';
-import {
   Tabs,
   TabsContent,
   TabsList,
@@ -42,8 +35,24 @@ import {
   Trash2,
   Info,
   XCircle,
+  PlaneTakeoff,
+  BadgeCheck,
+  Briefcase,
+  CheckCircle,
+  Gauge,
+  Zap,
+  Shield,
+  User,
+  Layers,
+  GraduationCap,
+  ClipboardCheck,
+  Users,
+  MoreHorizontal,
+  Plane,
+  Moon,
+  type LucideIcon,
 } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from './ui/checkbox';
@@ -63,9 +72,6 @@ import { doc, setDoc, serverTimestamp, updateDoc, Timestamp } from 'firebase/fir
 import { writeCandidateAuditLog } from '@/lib/candidate-audit';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format } from 'date-fns';
-import { Calendar } from './ui/calendar';
 import { Textarea } from './ui/textarea';
 import {
   Accordion,
@@ -73,41 +79,212 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from './ui/accordion';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from './ui/sheet';
 import { LegacyRecordsContent } from './legacy-records-content';
-import { Database, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { encryptField, decryptField, isEncrypted } from '@/lib/encryption';
 import { sendEmail, buildSubmissionEmail } from '@/lib/email';
 
-const TABS = [
-  { value: 'flight-time', label: 'Flight Time' },
-  { value: 'type-ratings', label: 'Aeronautical Ratings and Certificates' },
-  { value: 'employment-history', label: 'Employment' },
-  { value: 'acknowledgment', label: 'Applicant Acknowledgment' },
+const APPLICATION_TABS: {
+  value: string;
+  label: string;
+  shortLabel: string;
+  Icon: LucideIcon;
+  heroTitle: string;
+  heroDescription: string;
+}[] = [
+  {
+    value: 'flight-time',
+    label: 'Flight Time',
+    shortLabel: 'Flight',
+    Icon: PlaneTakeoff,
+    heroTitle: 'Flight time certification',
+    heroDescription:
+      'Provide an accurate record of your logged flight hours. These details are essential for validating your experience and rank requirements.',
+  },
+  {
+    value: 'type-ratings',
+    label: 'Aeronautical Ratings and Certificates',
+    shortLabel: 'Ratings',
+    Icon: BadgeCheck,
+    heroTitle: 'Aeronautical ratings and certificates',
+    heroDescription:
+      'Enter your ATP number, first class medical date, and type ratings. Ensure information matches your FAA records.',
+  },
+  {
+    value: 'employment-history',
+    label: 'Employment',
+    shortLabel: 'Employment',
+    Icon: Briefcase,
+    heroTitle: 'Employment history',
+    heroDescription:
+      'Confirm your employment record is current or add and update employers, aircraft, and duties as needed.',
+  },
+  {
+    value: 'acknowledgment',
+    label: 'Applicant Acknowledgment',
+    shortLabel: 'Finalize',
+    Icon: CheckCircle,
+    heroTitle: 'Applicant acknowledgment',
+    heroDescription:
+      'Review disclosures, answer each question, and certify your application before submission.',
+  },
 ];
 
-const ACKNOWLEDGMENT_QUESTIONS = [
-  { id: 1, group: 'Employment History', name: 'terminations', label: 'Terminations or resignations in lieu of from any FAA covered positions?' },
-  { id: 2, group: 'Employment History', name: 'askedToResign', label: 'Asked to resign from any FAA covered position?' },
-  { id: 3, group: 'Employment History', name: 'formalDiscipline', label: 'Have you ever received formal discipline from your employer?' },
-  { id: 4, group: 'Aviation Record', name: 'accidents', label: 'Aircraft accidents?' },
-  { id: 5, group: 'Aviation Record', name: 'incidents', label: 'Aircraft Incidents?' },
-  { id: 6, group: 'Aviation Record', name: 'flightViolations', label: 'Flight violations?' },
-  { id: 7, group: 'Aviation Record', name: 'certificateAction', label: 'Certificate suspension/revocation?' },
-  { id: 8, group: 'Aviation Record', name: 'pendingFaaAction', label: 'Pending FAA Action/Letters of investigation?' },
-  { id: 9, group: 'Aviation Record', name: 'failedCheckRide', label: 'Have you ever failed a flight check ride, proficiency check, flight eval, or upgrade attempt aircraft or while compensated as a professional pilot (in the last three years)?', isYesNo: true },
-  { id: 10, group: 'General Disclosures', name: 'investigationBoard', label: 'Have you ever been called before a field board of investigation for any reason?' },
-  { id: 11, group: 'General Disclosures', name: 'previousInterview', label: 'Have you previously interviewed for the following positions at Fedex (not counting the one that you were hired under)?', isYesNo: true },
-  { id: 12, group: 'General Disclosures', name: 'trainingCommitmentConflict', label: 'Do you have any commitment that will not allow you to enter and complete uninterrupted a training syllabus of approximately 10 weeks once commenced?', isYesNo: true },
-  { id: 13, group: 'General Disclosures', name: 'otherInfo', label: 'Is there anything else you feel warrants and that you would like to bring up at this time?', isYesNo: true },
+type FlightBentoField = {
+  name:
+    | 'total'
+    | 'turbinePic'
+    | 'military'
+    | 'civilian'
+    | 'multiEngine'
+    | 'instructor'
+    | 'evaluator'
+    | 'sic'
+    | 'other'
+    | 'nightHours'
+    | 'lastAircraftFlown'
+    | 'dateLastFlown';
+  label: string;
+  Icon: LucideIcon;
+  input: 'number' | 'text' | 'date';
+  colSpanLg2?: boolean;
+};
+
+const FLIGHT_BENTO_FIELDS: FlightBentoField[] = [
+  { name: 'total', label: 'Total hours', Icon: Gauge, input: 'number' },
+  { name: 'turbinePic', label: 'Turbine PIC hours', Icon: Zap, input: 'number' },
+  { name: 'military', label: 'Military hours', Icon: Shield, input: 'number' },
+  { name: 'civilian', label: 'Civilian hours', Icon: User, input: 'number' },
+  { name: 'multiEngine', label: 'Multi-engine hours', Icon: Layers, input: 'number' },
+  { name: 'instructor', label: 'Instructor hours', Icon: GraduationCap, input: 'number' },
+  { name: 'evaluator', label: 'Evaluator hours', Icon: ClipboardCheck, input: 'number' },
+  { name: 'sic', label: 'SIC hours', Icon: Users, input: 'number' },
+  { name: 'other', label: 'Other hours', Icon: MoreHorizontal, input: 'number' },
+  { name: 'nightHours', label: 'Night hours', Icon: Moon, input: 'number' },
+  { name: 'lastAircraftFlown', label: 'Last aircraft flown', Icon: Plane, input: 'text', colSpanLg2: true },
+  { name: 'dateLastFlown', label: 'Date last flown', Icon: CalendarIcon, input: 'date' },
 ];
+
+function employmentDateToInputValue(d: Date | null | undefined): string {
+  if (!d || !(d instanceof Date) || Number.isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** Parse HTML date value (YYYY-MM-DD) as a local calendar date (avoids UTC shifts). */
+function parseEmploymentDateInput(ymd: string): Date | null {
+  const trimmed = ymd.trim();
+  if (!trimmed) return null;
+  const parts = trimmed.split('-').map((p) => parseInt(p, 10));
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+  const [y, mo, day] = parts;
+  const d = new Date(y, mo - 1, day);
+  if (d.getFullYear() !== y || d.getMonth() !== mo - 1 || d.getDate() !== day) return null;
+  return d;
+}
+
+const ACKNOWLEDGMENT_QUESTIONS = [
+  {
+    id: 1,
+    group: 'Employment History',
+    name: 'terminations',
+    headline: 'Terminations or resignations',
+    label: 'Terminations or resignations in lieu of from any FAA covered positions?',
+  },
+  {
+    id: 2,
+    group: 'Employment History',
+    name: 'askedToResign',
+    headline: 'Asked to resign',
+    label: 'Asked to resign from any FAA covered position?',
+  },
+  {
+    id: 3,
+    group: 'Employment History',
+    name: 'formalDiscipline',
+    headline: 'Formal discipline',
+    label: 'Have you ever received formal discipline from your employer?',
+  },
+  {
+    id: 4,
+    group: 'Aviation Record',
+    name: 'accidents',
+    headline: 'Aircraft accidents',
+    label: 'Aircraft accidents?',
+  },
+  {
+    id: 5,
+    group: 'Aviation Record',
+    name: 'incidents',
+    headline: 'Aircraft incidents',
+    label: 'Aircraft Incidents?',
+  },
+  {
+    id: 6,
+    group: 'Aviation Record',
+    name: 'flightViolations',
+    headline: 'Flight violations',
+    label: 'Flight violations?',
+  },
+  {
+    id: 7,
+    group: 'Aviation Record',
+    name: 'certificateAction',
+    headline: 'Certificate suspension or revocation',
+    label: 'Certificate suspension/revocation?',
+  },
+  {
+    id: 8,
+    group: 'Aviation Record',
+    name: 'pendingFaaAction',
+    headline: 'Pending FAA action',
+    label: 'Pending FAA Action/Letters of investigation?',
+  },
+  {
+    id: 9,
+    group: 'Aviation Record',
+    name: 'failedCheckRide',
+    headline: 'Failed check ride or evaluation',
+    label:
+      'Have you ever failed a flight check ride, proficiency check, flight eval, or upgrade attempt aircraft or while compensated as a professional pilot (in the last three years)?',
+    isYesNo: true,
+  },
+  {
+    id: 10,
+    group: 'General Disclosures',
+    name: 'investigationBoard',
+    headline: 'Field board of investigation',
+    label: 'Have you ever been called before a field board of investigation for any reason?',
+  },
+  {
+    id: 11,
+    group: 'General Disclosures',
+    name: 'previousInterview',
+    headline: 'Prior FedEx interviews',
+    label:
+      'Have you previously interviewed for the following positions at Fedex (not counting the one that you were hired under)?',
+    isYesNo: true,
+  },
+  {
+    id: 12,
+    group: 'General Disclosures',
+    name: 'trainingCommitmentConflict',
+    headline: 'Training commitment conflict',
+    label:
+      'Do you have any commitment that will not allow you to enter and complete uninterrupted a training syllabus of approximately 10 weeks once commenced?',
+    isYesNo: true,
+  },
+  {
+    id: 13,
+    group: 'General Disclosures',
+    name: 'otherInfo',
+    headline: 'Additional information',
+    label: 'Is there anything else you feel warrants and that you would like to bring up at this time?',
+    isYesNo: true,
+  },
+] as const;
 
 type IncompleteItem = {
   tabValue: string;
@@ -123,38 +300,12 @@ export function ApplicationForm({
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
-  const [activeTab, setActiveTab] = React.useState(TABS[0].value);
+  const [activeTab, setActiveTab] = React.useState(APPLICATION_TABS[0].value);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = React.useState(false);
-  const [isStuck, setIsStuck] = useState(false);
   const [incompleteItems, setIncompleteItems] = useState<IncompleteItem[]>([]);
-  const [legacyPanelOpen, setLegacyPanelOpen] = useState(false);
-  const [legacySheetOpen, setLegacySheetOpen] = useState(false);
   const { toast } = useToast();
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const activeTabRef = useRef<HTMLButtonElement>(null);
-
-  // Sticky Detection
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsStuck(!entry.isIntersecting),
-      { threshold: [1] }
-    );
-    if (sentinelRef.current) observer.observe(sentinelRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // Auto-scroll active tab into view on mobile
-  useEffect(() => {
-    if (activeTabRef.current) {
-      activeTabRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      });
-    }
-  }, [activeTab]);
 
   const getDefaultValues = (data: ApplicantData): ApplicationFormValues => {
     const safetyQuestionsDefault: ApplicationFormValues['safetyQuestions'] = {
@@ -256,6 +407,22 @@ export function ApplicationForm({
     !applicantData.employmentHistory || applicantData.employmentHistory.length === 0
   );
 
+  const safetyQuestionsWatch = form.watch('safetyQuestions');
+  const ackProgress = useMemo(() => {
+    let answered = 0;
+    for (const q of ACKNOWLEDGMENT_QUESTIONS) {
+      const a =
+        safetyQuestionsWatch?.[q.name as keyof typeof safetyQuestionsWatch]?.answer;
+      if (a === 'yes' || a === 'no') answered++;
+    }
+    const total = ACKNOWLEDGMENT_QUESTIONS.length;
+    return {
+      answered,
+      total,
+      pct: total ? Math.round((answered / total) * 100) : 0,
+    };
+  }, [safetyQuestionsWatch]);
+
   // Firestore: owner write keys must stay within firestore.rules → userSelfUpdateAffectedKeysAllowlist
   const saveDataToFirestore = async () => {
     if (!user || !firestore) return false;
@@ -281,18 +448,26 @@ export function ApplicationForm({
     }
   };
 
+  const handleAckSaveDraft = async () => {
+    const ok = await saveDataToFirestore();
+    if (ok) {
+      toast({ title: 'Draft saved', description: 'Your responses have been saved.' });
+    }
+  };
+
   const handleTabChange = async (direction: 'next' | 'prev') => {
-    const currentTabIndex = TABS.findIndex((tab) => tab.value === activeTab);
-    
+    const currentTabIndex = APPLICATION_TABS.findIndex((tab) => tab.value === activeTab);
+
     if (direction === 'next') {
       const saved = await saveDataToFirestore();
       if (saved) {
         const nextTabIndex = currentTabIndex + 1;
-        if (nextTabIndex < TABS.length) setActiveTab(TABS[nextTabIndex].value);
+        if (nextTabIndex < APPLICATION_TABS.length)
+          setActiveTab(APPLICATION_TABS[nextTabIndex].value);
       }
     } else {
       const nextTabIndex = currentTabIndex - 1;
-      if (nextTabIndex >= 0) setActiveTab(TABS[nextTabIndex].value);
+      if (nextTabIndex >= 0) setActiveTab(APPLICATION_TABS[nextTabIndex].value);
     }
   };
 
@@ -387,7 +562,18 @@ export function ApplicationForm({
     const errors: IncompleteItem[] = [];
 
     // Flight Time Checks
-    const flightFields = ['total', 'turbinePic', 'military', 'civilian', 'multiEngine', 'instructor', 'evaluator', 'sic', 'other'];
+    const flightFields = [
+      'total',
+      'turbinePic',
+      'military',
+      'civilian',
+      'multiEngine',
+      'instructor',
+      'evaluator',
+      'sic',
+      'other',
+      'nightHours',
+    ];
     let flightHasValue = false;
     flightFields.forEach((f) => {
       const val = data.flightTime[f as keyof typeof data.flightTime];
@@ -451,9 +637,21 @@ export function ApplicationForm({
 
   // Shared styles
   const inputStyle = "h-[42px] border-[1.5px] border-[#D0D0D0] rounded-[8px] bg-white text-[#333333] px-[14px] text-[15px] focus-visible:border-[#4D148C] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(77,20,140,0.12)] w-full";
-  const flightTimeMetaInputStyle =
-    'h-12 min-h-[48px] border-[1.5px] border-[#D0D0D0] rounded-[8px] bg-white text-[#333333] px-4 text-[15px] focus-visible:border-[#4D148C] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(77,20,140,0.12)] w-full max-w-[400px]';
+  /** Flight bento: white card shell (reference: border-white + shadow). */
+  const bentoCardClass =
+    'flex flex-col gap-4 rounded-xl border border-white bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.08)] ring-1 ring-[#000000]/[0.05]';
+  /** Employment date pickers (accordion) — soft fill, same family as before. */
+  const bentoInputClass =
+    'w-full rounded-lg border-0 bg-[#ece8f4] p-4 text-lg font-medium text-[#333333] placeholder:text-[#8E8E8E] shadow-[inset_0_1px_3px_rgba(77,20,140,0.09)] focus-visible:ring-2 focus-visible:ring-[#4D148C]/20 focus-visible:ring-offset-0 h-auto min-h-[56px] outline-none';
+  /** Flight bento hours: visible resting border + light gray fill; purple ring on focus. */
+  const bentoFlightHourInputClass =
+    'w-full rounded-lg border border-[#D1D5DB] bg-[#F9FAFA] p-4 text-lg font-medium text-[#333333] placeholder:text-[#8E8E8E] focus-visible:border-[#4D148C] focus-visible:ring-2 focus-visible:ring-[#4D148C]/25 focus-visible:ring-offset-0 h-auto min-h-[56px] outline-none transition-[border-color,box-shadow]';
+  const bentoFieldLabelClass =
+    'mb-0 text-sm font-semibold uppercase tracking-wider text-[#565656]';
   const labelStyle = "text-[13px] font-semibold text-[#565656] mb-[6px] block";
+
+  const activeTabMeta =
+    APPLICATION_TABS.find((t) => t.value === activeTab) ?? APPLICATION_TABS[0];
 
   const getTabErrorIndicator = (tabValue: string) => {
     return incompleteItems.some(item => item.tabValue === tabValue) ? (
@@ -468,6 +666,7 @@ export function ApplicationForm({
       firstName={applicantData.firstName}
       lastName={applicantData.lastName}
       showNoteBanner
+      showPrintHeader
     />
   );
 
@@ -475,139 +674,144 @@ export function ApplicationForm({
     <Form {...form}>
       <form onSubmit={(e) => e.preventDefault()}>
         <fieldset disabled={isSubmitted}>
-          {/* Mobile: View Legacy Records button */}
-          <div className="md:hidden mb-4">
-            <Sheet open={legacySheetOpen} onOpenChange={setLegacySheetOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-[#007AB7] text-[#007AB7] font-semibold hover:bg-[#007AB7] hover:text-white"
-                >
-                  <Database className="h-4 w-4 mr-2" />
-                  View Legacy Records
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[85vh] overflow-y-auto bg-white border-t border-[#E3E3E3] rounded-t-2xl">
-                <SheetHeader>
-                  <SheetTitle className="text-[#333333] font-bold">Legacy Records</SheetTitle>
-                  <p className="text-xs text-[#8E8E8E] text-left">Your data on file — for reference only</p>
-                </SheetHeader>
-                <div className="mt-4">{legacyContent}</div>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-[#333333]">Pilot Application</h1>
               <p className="text-[#8E8E8E] mt-1">Please review and provide updates from the last 3 years.</p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-[#8E8E8E] bg-[#F2F2F2] px-4 py-2 rounded-full border border-[#E3E3E3]">
+            <div className="flex items-center gap-2 text-sm text-[#8E8E8E] bg-[#F2F2F2] px-4 py-2 rounded-full border border-[#E3E3E3] shrink-0">
               {isSaving ? <><Loader2 className="h-4 w-4 animate-spin" /><span>Saving...</span></> : <><Check className="h-4 w-4 text-[#008A00]" /><span>{isSubmitted ? 'Submitted' : 'Ready'}</span></>}
             </div>
           </div>
 
-          <div ref={sentinelRef} className="h-px w-full" />
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className={cn(
-              "sticky top-[88px] z-40 flex items-center h-[44px] gap-1 px-6 w-auto max-w-fit mx-6 mb-4 rounded-[16px] overflow-hidden",
-              "bg-[rgba(45,42,58,0.96)] backdrop-blur-[16px] saturate-[160%]",
-              "border-t border-white/10 border-b border-black/20",
-              "transition-all duration-300",
-              isStuck && "shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
-            )}>
-              <TabsList className="flex overflow-x-auto scrollbar-none h-auto p-0 bg-transparent gap-1 w-full items-center">
-                {TABS.map((tab) => {
-                  const isActive = activeTab === tab.value;
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-8 md:pb-12">
+            {/* Apple-style glass tab rail — FedEx gradient active state (brand: purple #4D148C → blend #7D22C3 → orange #FF6200) */}
+            <div className="mb-8 md:mb-10 rounded-2xl border border-[#E3E3E3] bg-[rgba(250,250,250,0.78)] p-1.5 shadow-[0_4px_24px_rgba(77,20,140,0.07),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-[20px] backdrop-saturate-[180%] supports-[backdrop-filter]:bg-[rgba(250,250,250,0.55)]">
+              <TabsList className="flex h-auto w-full min-h-0 items-stretch gap-1 bg-transparent p-0">
+                {APPLICATION_TABS.map((tab) => {
+                  const TabIcon = tab.Icon;
                   return (
-                    <TabsTrigger 
-                      key={tab.value} 
+                    <TabsTrigger
+                      key={tab.value}
                       value={tab.value}
-                      ref={isActive ? activeTabRef : null}
+                      title={tab.label}
+                      aria-label={tab.label}
                       className={cn(
-                        "px-[18px] py-[6px] rounded-full text-[14px] font-medium transition-all duration-200 whitespace-nowrap border-none shadow-none h-auto leading-[1.4] flex items-center justify-center",
-                        isActive 
-                          ? "bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white font-semibold shadow-[0_2px_10px_rgba(77,20,140,0.4)] data-[state=active]:bg-none data-[state=active]:text-white" 
-                          : "text-[#a0a0a0] hover:bg-white/10 hover:text-white bg-transparent"
+                        'group flex min-w-0 flex-1 flex-row items-center justify-center gap-2 rounded-xl border-0 px-2 py-2.5 text-center shadow-none transition-all duration-200 sm:gap-2.5 sm:px-3 sm:py-3',
+                        'text-[#565656] hover:bg-[rgba(242,242,242,0.92)] hover:text-[#333333]',
+                        'data-[state=inactive]:bg-transparent',
+                        'data-[state=active]:bg-gradient-to-b data-[state=active]:from-[#4D148C] data-[state=active]:via-[#7D22C3] data-[state=active]:to-[#FF6200]',
+                        'data-[state=active]:text-white data-[state=active]:shadow-[0_2px_14px_rgba(77,20,140,0.38)]',
+                        'data-[state=active]:[&_svg]:text-white'
                       )}
                     >
-                      {tab.label}
-                      {getTabErrorIndicator(tab.value)}
+                      <TabIcon className="h-5 w-5 shrink-0 opacity-90" strokeWidth={2} />
+                      <span className="flex min-w-0 flex-col items-center gap-0.5">
+                        <span className="flex items-center justify-center gap-1 text-[13px] font-bold leading-tight sm:text-sm">
+                          {tab.shortLabel}
+                          {getTabErrorIndicator(tab.value)}
+                        </span>
+                        <span className="hidden w-full max-w-full text-[11px] font-medium leading-snug opacity-80 sm:block sm:line-clamp-2 sm:text-[#333333] group-data-[state=active]:sm:text-white/90">
+                          {tab.label}
+                        </span>
+                      </span>
                     </TabsTrigger>
                   );
                 })}
               </TabsList>
             </div>
 
-            <Card className="mt-4 border-[#E3E3E3] shadow-[0_2px_12px_rgba(0,0,0,0.06)] bg-white rounded-xl overflow-hidden">
-              <TabsContent value="flight-time" className="p-6 pt-2 bg-transparent">
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-                    {['total', 'turbinePic', 'military', 'civilian', 'multiEngine', 'instructor', 'evaluator', 'sic', 'other'].map(f => (
-                       <FormField key={f} control={form.control} name={`flightTime.${f}` as any} render={({field}) => (
-                         <FormItem>
-                           <FormLabel className={labelStyle}>{f.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} Hours</FormLabel>
-                           <FormControl>
-                             <Input 
-                               type="number" 
-                               min="0"
-                               className={inputStyle} 
-                               placeholder="0"
-                               {...field} 
-                             />
-                           </FormControl>
-                         </FormItem>
-                       )} />
-                    ))}
-                 </div>
-                 <div className="mt-8 space-y-6 max-w-[400px]">
-                    <FormField
-                      control={form.control}
-                      name="flightTime.lastAircraftFlown"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={labelStyle}>Last Aircraft Flown</FormLabel>
-                          <FormControl>
+            {activeTab !== 'acknowledgment' && (
+              <section className="mb-8 md:mb-10" aria-live="polite">
+                <h2 className="mb-2 text-[26px] font-bold tracking-tight text-[#333333] md:text-[28px]">
+                  {activeTabMeta.heroTitle}
+                </h2>
+                <p className="max-w-2xl text-[15px] leading-relaxed text-[#565656]">
+                  {activeTabMeta.heroDescription}
+                </p>
+              </section>
+            )}
+
+            <TabsContent value="flight-time" className="mt-0 bg-transparent p-0 focus-visible:outline-none">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {FLIGHT_BENTO_FIELDS.map(({ name, label, Icon, input, colSpanLg2 }) => (
+                  <FormField
+                    key={name}
+                    control={form.control}
+                    name={`flightTime.${name}` as any}
+                    render={({ field }) => (
+                      <FormItem
+                        className={cn(bentoCardClass, colSpanLg2 && 'lg:col-span-2')}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className="h-6 w-6 shrink-0 text-[#4D148C]" aria-hidden />
+                          <FormLabel className={bentoFieldLabelClass}>{label}</FormLabel>
+                        </div>
+                        <FormControl>
+                          {input === 'number' ? (
                             <Input
-                              type="text"
-                              className={flightTimeMetaInputStyle}
-                              placeholder="e.g. C-17, B737-800"
-                              {...field}
-                              value={field.value ?? ''}
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              className={bentoFlightHourInputClass}
+                              placeholder=""
+                              name={field.name}
+                              ref={field.ref}
+                              onBlur={field.onBlur}
+                              value={
+                                field.value === undefined ||
+                                field.value === null ||
+                                field.value === '' ||
+                                field.value === 0
+                                  ? ''
+                                  : field.value
+                              }
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                if (raw === '') {
+                                  field.onChange(0);
+                                  return;
+                                }
+                                const n = Number(raw);
+                                field.onChange(Number.isNaN(n) ? 0 : n);
+                              }}
                             />
-                          </FormControl>
-                          <p className="text-[12px] text-[#8E8E8E] mt-1">
-                            Most recent aircraft you have flown
-                          </p>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="flightTime.dateLastFlown"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={labelStyle}>Date Last Flown</FormLabel>
-                          <FormControl>
+                          ) : input === 'date' ? (
                             <Input
                               type="date"
-                              className={cn(flightTimeMetaInputStyle, 'max-w-[280px]')}
+                              className={bentoFlightHourInputClass}
                               {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value)}
                             />
-                          </FormControl>
-                          <p className="text-[12px] text-[#8E8E8E] mt-1">
-                            Date of your most recent flight
-                          </p>
-                        </FormItem>
-                      )}
-                    />
-                 </div>
-              </TabsContent>
+                          ) : (
+                            <Input
+                              type="text"
+                              className={bentoFlightHourInputClass}
+                              placeholder="e.g. Boeing 777-200"
+                              {...field}
+                              value={field.value ?? ''}
+                            />
+                          )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
 
-              <TabsContent value="type-ratings" className="p-6 pt-2 space-y-6 bg-transparent">
+              <div className="mt-8">{legacyContent}</div>
+
+              <p className="mt-6 text-center text-sm text-[#8E8E8E] opacity-80">
+                All information is encrypted and stored securely.
+              </p>
+            </TabsContent>
+
+              <TabsContent
+                value="type-ratings"
+                className="mt-0 rounded-xl border border-[#E3E3E3] bg-white p-6 pt-2 shadow-[0_2px_12px_rgba(0,0,0,0.08)] focus-visible:outline-none md:p-8"
+              >
                   <div className="max-w-2xl space-y-6 pt-4">
                     <FormField control={form.control} name="atpNumber" render={({field}) => (
                       <FormItem>
@@ -652,8 +856,11 @@ export function ApplicationForm({
                   </div>
               </TabsContent>
 
-              <TabsContent value="employment-history" className="p-6 pt-2 space-y-6 bg-transparent">
-                 <div className="p-5 rounded-xl border border-[#E3E3E3] bg-[#FAFAFA] flex items-start gap-3 mt-4">
+              <TabsContent
+                value="employment-history"
+                className="mt-0 space-y-6 rounded-xl border border-[#E3E3E3] bg-white p-6 pt-2 shadow-[0_2px_12px_rgba(0,0,0,0.08)] focus-visible:outline-none md:p-8"
+              >
+                 <div className="mt-2 flex items-start gap-3 rounded-xl border border-[#E3E3E3] bg-[#FAFAFA] p-5">
                     <div 
                       onClick={() => setEmploymentConfirmed(!employmentConfirmed)}
                       className={cn(
@@ -691,6 +898,9 @@ export function ApplicationForm({
                           );
                           const isCurrent = form.watch(
                             `employmentHistory.${index}.isCurrent`
+                          );
+                          const employmentStartDate = form.watch(
+                            `employmentHistory.${index}.startDate`
                           );
 
                           return (
@@ -753,43 +963,26 @@ export function ApplicationForm({
                                       render={({ field }) => (
                                         <FormItem className="flex flex-col">
                                           <FormLabel className={labelStyle}>Start Date</FormLabel>
-                                          <Popover>
-                                            <PopoverTrigger asChild>
-                                              <FormControl>
-                                                <Button
-                                                  variant={'outline'}
-                                                  className={cn(
-                                                    'w-full pl-3 text-left font-normal border-[#D0D0D0] rounded-lg h-[42px]',
-                                                    !field.value &&
-                                                      'text-[#8E8E8E]'
-                                                  )}
-                                                >
-                                                  {field.value ? (
-                                                    format(field.value, 'PPP')
-                                                  ) : (
-                                                    <span>Pick a date</span>
-                                                  )}
-                                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                              </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent
-                                              className="w-auto p-0"
-                                              align="start"
-                                            >
-                                              <Calendar
-                                                mode="single"
-                                                selected={field.value ?? undefined}
-                                                onSelect={field.onChange}
-                                                disabled={(date) =>
-                                                  date > new Date() ||
-                                                  date <
-                                                    new Date('1950-01-01')
-                                                }
-                                                initialFocus
-                                              />
-                                            </PopoverContent>
-                                          </Popover>
+                                          <FormControl>
+                                            <Input
+                                              type="date"
+                                              className={bentoInputClass}
+                                              min="1950-01-01"
+                                              max={employmentDateToInputValue(new Date())}
+                                              name={field.name}
+                                              ref={field.ref}
+                                              onBlur={field.onBlur}
+                                              value={employmentDateToInputValue(field.value)}
+                                              onChange={(e) => {
+                                                const parsed = parseEmploymentDateInput(
+                                                  e.target.value
+                                                );
+                                                if (parsed) field.onChange(parsed);
+                                                else if (!e.target.value)
+                                                  field.onChange(undefined as unknown as Date);
+                                              }}
+                                            />
+                                          </FormControl>
                                         </FormItem>
                                       )}
                                     />
@@ -829,45 +1022,28 @@ export function ApplicationForm({
                                       render={({ field }) => (
                                         <FormItem className="flex flex-col">
                                           <FormLabel className={labelStyle}>End Date</FormLabel>
-                                          <Popover>
-                                            <PopoverTrigger asChild>
-                                              <FormControl>
-                                                <Button
-                                                  variant={'outline'}
-                                                  className={cn(
-                                                    'w-full pl-3 text-left font-normal border-[#D0D0D0] rounded-lg h-[42px]',
-                                                    !field.value &&
-                                                      'text-[#8E8E8E]'
-                                                  )}
-                                                >
-                                                  {field.value ? (
-                                                    format(field.value, 'PPP')
-                                                  ) : (
-                                                    <span>Pick a date</span>
-                                                  )}
-                                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                              </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent
-                                              className="w-auto p-0"
-                                              align="start"
-                                            >
-                                              <Calendar
-                                                mode="single"
-                                                selected={field.value ?? undefined}
-                                                onSelect={field.onChange}
-                                                disabled={(date) =>
-                                                  date > new Date() ||
-                                                  date <
-                                                    form.getValues(
-                                                      `employmentHistory.${index}.startDate`
-                                                    )
-                                                }
-                                                initialFocus
-                                              />
-                                            </PopoverContent>
-                                          </Popover>
+                                          <FormControl>
+                                            <Input
+                                              type="date"
+                                              className={bentoInputClass}
+                                              min={
+                                                employmentDateToInputValue(
+                                                  employmentStartDate
+                                                ) || '1950-01-01'
+                                              }
+                                              max={employmentDateToInputValue(new Date())}
+                                              name={field.name}
+                                              ref={field.ref}
+                                              onBlur={field.onBlur}
+                                              value={employmentDateToInputValue(field.value)}
+                                              onChange={(e) => {
+                                                const v = e.target.value;
+                                                field.onChange(
+                                                  v ? parseEmploymentDateInput(v) : null
+                                                );
+                                              }}
+                                            />
+                                          </FormControl>
                                         </FormItem>
                                       )}
                                     />
@@ -973,61 +1149,138 @@ export function ApplicationForm({
                   )}
               </TabsContent>
 
-              <TabsContent value="acknowledgment" className="m-0 bg-transparent">
-                <div className="p-8">
-                  <h2 className="text-[20px] font-bold text-[#333333] mb-4">Applicant Acknowledgment</h2>
-                  <div className="text-[14px] color-[#565656] leading-[1.6] max-w-[640px] mb-8 p-4 bg-[#f5f0ff] border-l-4 border-[#4D148C] rounded-r-lg">
-                    Please update the information you provided on your application for employment. Indicate whether there have been any changes or updates to your responses. Explain each "yes" response below.
+              <TabsContent
+                value="acknowledgment"
+                className="mt-0 border-0 bg-transparent p-0 shadow-none focus-visible:outline-none"
+              >
+                <div className="pb-2 md:pb-4">
+                  <h2 className="mb-4 text-[20px] font-bold text-[#333333]">Applicant acknowledgment</h2>
+                  <div className="mb-8 max-w-[640px] rounded-r-lg border-l-4 border-[#4D148C] bg-[#f5f0ff] p-4 text-[14px] leading-[1.6] text-[#565656]">
+                    Please update the information you provided on your application for employment. Indicate
+                    whether there have been any changes or updates to your responses. Explain each &quot;yes&quot;
+                    response below.
                   </div>
 
-                  {['Employment History', 'Aviation Record', 'General Disclosures'].map(groupName => (
-                    <div key={groupName} className="mb-8">
-                      <h3 className="text-[11px] font-bold tracking-[0.08em] uppercase text-[#8E8E8E] mb-4 pb-2 border-b border-[#E3E3E3]">{groupName}</h3>
-                      <div className="space-y-3">
-                        {ACKNOWLEDGMENT_QUESTIONS.filter(q => q.group === groupName).map((q) => {
-                          const answer = form.watch(`safetyQuestions.${q.name as keyof ApplicationFormValues['safetyQuestions']}.answer`);
-                          const isYes = answer === 'yes';
-                          return (
-                            <div key={q.id} className={cn(
-                              "p-5 md:p-6 rounded-xl border transition-all duration-200",
-                              isYes ? "border-[#4D148C] bg-[#fdfcff] shadow-[0_0_0_3px_rgba(77,20,140,0.08)]" : 
-                              (answer === 'no' ? "border-[#E3E3E3] bg-[#FAFAFA]" : "border-[#E3E3E3] bg-white")
-                            )}>
-                              <div className="flex items-start gap-1 mb-4">
-                                <span className="bg-[#F2F2F2] text-[#8E8E8E] text-[11px] font-bold px-2 py-0.5 rounded-full mt-1 shrink-0">{q.id}</span>
-                                <p className="text-[14px] font-semibold text-[#333333] leading-[1.5]">{q.label}</p>
-                              </div>
-                              
-                              <div className="flex flex-wrap gap-3">
-                                <button type="button" onClick={() => form.setValue(`safetyQuestions.${q.name as any}.answer`, 'yes')} className={cn(
-                                  "inline-flex items-center gap-2 px-5 py-2 rounded-full border-[1.5px] text-[14px] font-medium transition-all",
-                                  isYes ? "bg-[#4D148C] border-[#4D148C] text-white shadow-[0_2px_8px_rgba(77,20,140,0.3)]" : "border-[#E3E3E3] text-[#565656] hover:border-[#4D148C] hover:text-[#4D148C]"
-                                )}>Yes</button>
-                                <button type="button" onClick={() => form.setValue(`safetyQuestions.${q.name as any}.answer`, 'no')} className={cn(
-                                  "inline-flex items-center gap-2 px-5 py-2 rounded-full border-[1.5px] text-[14px] font-medium transition-all",
-                                  answer === 'no' ? "bg-[#F2F2F2] border-[#8E8E8E] text-[#333333]" : "border-[#E3E3E3] text-[#565656] hover:border-[#4D148C] hover:text-[#4D148C]"
-                                )}>No</button>
-                              </div>
+                  <div className="space-y-10">
+                    {(['Employment History', 'Aviation Record', 'General Disclosures'] as const).map(
+                      (groupName) => (
+                        <div key={groupName} className="space-y-6">
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-[#565656]">
+                            {groupName}
+                          </h3>
+                          <div className="space-y-6">
+                            {ACKNOWLEDGMENT_QUESTIONS.filter((q) => q.group === groupName).map((q) => {
+                              const answer =
+                                form.watch(
+                                  `safetyQuestions.${q.name as keyof ApplicationFormValues['safetyQuestions']}.answer`
+                                ) ?? null;
+                              const isYes = answer === 'yes';
+                              const isNo = answer === 'no';
+                              const num = String(q.id).padStart(2, '0');
+                              return (
+                                <div
+                                  key={q.id}
+                                  className="rounded-xl border border-[#E3E3E3]/70 bg-white/85 p-8 shadow-sm backdrop-blur-sm transition-all hover:shadow-[0_8px_32px_rgba(75,0,130,0.06)]"
+                                >
+                                  <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
+                                    <div className="flex items-start gap-6">
+                                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eedcff]">
+                                        <span className="text-xs font-bold text-[#4D148C]">{num}</span>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <h4 className="text-lg font-semibold text-[#333333]">{q.headline}</h4>
+                                        <p className="leading-relaxed text-[#565656]">{q.label}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex w-fit self-end rounded-full bg-[#f4f3f8] p-1.5 md:self-center">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          form.setValue(`safetyQuestions.${q.name as any}.answer`, 'no')
+                                        }
+                                        className={cn(
+                                          'rounded-full px-6 py-2 text-sm font-bold transition-all duration-200 enabled:active:scale-[0.98]',
+                                          isNo
+                                            ? 'scale-[1.02] bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white shadow-lg enabled:hover:shadow-xl'
+                                            : 'bg-transparent text-[#565656] hover:text-[#333333] enabled:hover:shadow-sm'
+                                        )}
+                                      >
+                                        No
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          form.setValue(`safetyQuestions.${q.name as any}.answer`, 'yes')
+                                        }
+                                        className={cn(
+                                          'rounded-full px-6 py-2 text-sm font-bold transition-all',
+                                          isYes
+                                            ? 'scale-[1.05] bg-[#4D148C] text-white shadow-lg'
+                                            : 'bg-transparent text-[#565656] hover:text-[#333333]'
+                                        )}
+                                      >
+                                        Yes
+                                      </button>
+                                    </div>
+                                  </div>
 
-                              <div className={cn(
-                                "overflow-hidden transition-all duration-300",
-                                isYes ? "max-h-[200px] opacity-100 mt-4" : "max-h-0 opacity-0"
-                              )}>
-                                <label className="text-[13px] font-bold text-[#565656] mb-1.5 block">Please explain:</label>
-                                <Textarea 
-                                  {...form.register(`safetyQuestions.${q.name as any}.explanation`)}
-                                  className={cn(inputStyle, "min-h-[80px] resize-y py-3")}
-                                  placeholder="Required details..."
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
+                                  <div
+                                    className={cn(
+                                      'overflow-hidden transition-all duration-300',
+                                      isYes ? 'mt-6 max-h-[280px] opacity-100' : 'max-h-0 opacity-0'
+                                    )}
+                                  >
+                                    <label className="mb-1.5 block text-[13px] font-bold text-[#565656]">
+                                      Please explain:
+                                    </label>
+                                    <Textarea
+                                      {...form.register(`safetyQuestions.${q.name as any}.explanation`)}
+                                      className={cn(inputStyle, 'min-h-[80px] resize-y py-3')}
+                                      placeholder="Required details..."
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+
+                  <div className="mt-16 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-col">
+                      <span className="mb-2 text-xs font-bold uppercase tracking-widest text-[#565656]">
+                        Completion progress
+                      </span>
+                      <div className="h-1 w-48 overflow-hidden rounded-full bg-[#e3e2e7]">
+                        <div
+                          className="h-full rounded-full bg-[#FF6200] transition-[width] duration-300"
+                          style={{ width: `${ackProgress.pct}%` }}
+                        />
                       </div>
+                      <span className="mt-1.5 text-[11px] font-medium text-[#8E8E8E]">
+                        {ackProgress.answered} of {ackProgress.total} answered
+                      </span>
                     </div>
-                  ))}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAckSaveDraft}
+                        disabled={isSaving || isSubmitted}
+                        className="px-8"
+                      >
+                        {isSaving ? 'Saving…' : 'Save draft'}
+                      </Button>
+                      <Button type="button" onClick={() => setActiveTab(APPLICATION_TABS[0].value)} className="px-8">
+                        Review details
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
 
-                  <div className="mt-12 p-6 rounded-xl border-[1.5px] border-[#4D148C] bg-gradient-to-br from-[#4D148C]/[0.04] to-[#FF6200]/[0.04]">
+                  <div className="mt-12 rounded-xl border-[1.5px] border-[#4D148C] bg-gradient-to-br from-[#4D148C]/[0.04] to-[#FF6200]/[0.04] p-6">
                     <div className="flex items-start gap-3">
                       <div 
                         onClick={() => form.setValue('isCertified', !form.watch('isCertified'))}
@@ -1082,24 +1335,44 @@ export function ApplicationForm({
                   </div>
                 </div>
               </TabsContent>
-            </Card>
-          </Tabs>
 
-          <div className="mt-10 flex justify-between items-center pb-20">
-            <Button type="button" variant="outline" onClick={() => handleTabChange('prev')} disabled={activeTab === TABS[0].value} className="fedex-btn-secondary py-6 px-10">
-              <ArrowLeft className="mr-2 h-5 w-5" /> Previous
-            </Button>
-            {activeTab !== TABS[TABS.length - 1].value ? (
-              <Button type="button" onClick={() => handleTabChange('next')} className="fedex-btn-primary py-6 px-12" disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save & Continue"} <ArrowRight className="ml-2 h-5 w-5" />
+            <div className="mt-10 flex flex-col gap-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleTabChange('prev')}
+                disabled={activeTab === APPLICATION_TABS[0].value}
+                className="fedex-btn-secondary w-full py-6 px-10 sm:w-auto"
+              >
+                <ArrowLeft className="mr-2 h-5 w-5" /> Previous
               </Button>
-            ) : (
-              <Button type="button" className="fedex-btn-primary py-6 px-12" disabled={isSubmitting || isSubmitted || isSaving} onClick={handleFinalSubmitClick}>
-                {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
-                {isSubmitted ? 'Application Submitted' : 'Submit Application'}
-              </Button>
-            )}
-          </div>
+              {activeTab !== APPLICATION_TABS[APPLICATION_TABS.length - 1].value ? (
+                <Button
+                  type="button"
+                  onClick={() => handleTabChange('next')}
+                  className="w-full py-5 px-12 text-lg sm:w-auto"
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : 'Save & Continue'}{' '}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  className="w-full py-5 px-12 text-lg sm:w-auto"
+                  disabled={isSubmitting || isSubmitted || isSaving}
+                  onClick={handleFinalSubmitClick}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-5 w-5" />
+                  )}
+                  {isSubmitted ? 'Application Submitted' : 'Submit Application'}
+                </Button>
+              )}
+            </div>
+          </Tabs>
         </fieldset>
       </form>
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
@@ -1109,66 +1382,17 @@ export function ApplicationForm({
             <AlertDialogDescription className="text-[#565656] text-base">This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
-            <AlertDialogCancel className="rounded-lg border-[#E3E3E3] font-bold">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={form.handleSubmit(onSubmit)} className={cn('fedex-btn-primary px-8', isSubmitting && 'opacity-50')} disabled={isSubmitting}>
+            <AlertDialogCancel className="fedex-btn-secondary mt-2 px-6 sm:mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={form.handleSubmit(onSubmit)}
+              className={cn('px-8', isSubmitting && 'opacity-50')}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? 'Submitting...' : 'Yes, Submit My Application'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Desktop: Legacy Data side panel */}
-      <div className="hidden md:block">
-        {/* Collapsed tab */}
-        <button
-          type="button"
-          onClick={() => setLegacyPanelOpen(true)}
-          className="fixed z-30 right-0 top-1/2 -translate-y-1/2 w-8 h-[120px] rounded-l-lg flex items-center justify-center cursor-pointer transition-colors hover:opacity-90"
-          style={{
-            background: '#007AB7',
-            writingMode: 'vertical-rl',
-            textOrientation: 'mixed',
-            color: 'white',
-            fontSize: 12,
-            fontWeight: 600,
-          }}
-        >
-          Legacy Data
-        </button>
-        {/* Expanded panel */}
-        <div
-          className={cn(
-            'fixed z-30 right-0 top-0 h-full w-[320px] bg-white border-l overflow-y-auto transition-transform duration-300 ease-out',
-            legacyPanelOpen ? 'translate-x-0' : 'translate-x-full'
-          )}
-          style={{
-            borderLeftColor: '#E3E3E3',
-            boxShadow: legacyPanelOpen ? '-4px 0 20px rgba(0,0,0,0.1)' : 'none',
-          }}
-        >
-          <div className="p-6">
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="text-lg font-bold text-[#333333]">Legacy Records</h3>
-              <button
-                type="button"
-                onClick={() => setLegacyPanelOpen(false)}
-                className="text-[#8E8E8E] hover:text-[#333333] p-1"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-xs text-[#8E8E8E] mb-4">Your data on file — for reference only</p>
-            {legacyContent}
-          </div>
-        </div>
-        {legacyPanelOpen && (
-          <div
-            className="fixed inset-0 z-20 bg-black/20"
-            onClick={() => setLegacyPanelOpen(false)}
-            aria-hidden
-          />
-        )}
-      </div>
     </Form>
   );
 }

@@ -296,11 +296,7 @@ function ScheduleInterviewPageInner() {
             )}
           </div>
           <div className="flex flex-col gap-3">
-            <Button
-              type="button"
-              onClick={downloadCalendar}
-              className="w-full bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white font-bold h-11"
-            >
+            <Button type="button" onClick={downloadCalendar} className="w-full min-h-11">
               Add to Calendar
             </Button>
             <Link href="/dashboard">
@@ -378,10 +374,7 @@ function ScheduleInterviewPageInner() {
                             setConfirmOpen(true);
                             setBookError('');
                           }}
-                          className="mt-4 w-full rounded-lg py-3 text-[14px] font-bold text-white transition-all hover:brightness-110"
-                          style={{
-                            background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)',
-                          }}
+                          className="fedex-btn-primary mt-4 w-full !py-3 text-[14px]"
                         >
                           Select This Time
                         </button>
@@ -414,11 +407,7 @@ function ScheduleInterviewPageInner() {
             <Button variant="outline" className="border-[#E3E3E3]" onClick={() => setConfirmOpen(false)} disabled={bookingBusy}>
               Go Back
             </Button>
-            <Button
-              className="bg-[#4D148C] text-white"
-              disabled={bookingBusy}
-              onClick={() => void confirmBook()}
-            >
+            <Button disabled={bookingBusy} onClick={() => void confirmBook()}>
               {bookingBusy ? 'Confirming…' : 'Confirm'}
             </Button>
           </DialogFooter>

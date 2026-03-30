@@ -231,11 +231,12 @@ function buildUpdatedTotals(updatedFlight: ApplicantData['flightTime'] | undefin
 
   const ft = updatedFlight;
   const turbinePic = numField(ft.turbinePic);
-  const military = numField(ft.military);
   const instructor = numField(ft.instructor);
   return {
     total: numField(ft.total),
-    totalPIC: turbinePic + military + instructor,
+    // Mirror what the applicant entered (not legacy-derived math).
+    // Applicant `flightTime` does not provide explicit totalPIC, so we treat turbine PIC as PIC for comparison.
+    totalPIC: turbinePic,
     totalSIC: numField(ft.sic),
     totalInstructor: instructor,
     turbinePIC: turbinePic,
@@ -250,16 +251,9 @@ function formatHoursDisplay(n: number): string {
   return round1(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
 }
 
-function deltaBadge(legacy: number, updated: number): { text: string; tone: 'pos' | 'neg' } | null {
-  const d = round1(updated - legacy);
-  if (d === 0) return null;
-  const text = d > 0 ? `+${formatHoursDisplay(d)}` : formatHoursDisplay(d);
-  return { text, tone: d > 0 ? 'pos' : 'neg' };
-}
-
 function isHighlightDelta(legacy: number, updated: number): boolean {
-  const d = updated - legacy;
-  return d > 100 || d < -100;
+  // Keep subtle visual highlighting when values differ, but no +/- badge.
+  return round1(legacy) !== round1(updated);
 }
 
 function normalizeAircraftRow(row: LegacyAircraftRow) {
@@ -763,10 +757,7 @@ FedEx Express Pilot Recruiting`;
       <section className="review-section print:break-inside-avoid bg-white rounded-xl border border-[#E3E3E3] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] print:shadow-none print:border print:rounded-none">
         <div className="flex flex-col lg:flex-row lg:justify-between gap-8">
           <div className="flex gap-4 items-start">
-            <div
-              className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-[22px] font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 50%, #FF6200 100%)' }}
-            >
+            <div className="fedex-gradient flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-[22px] font-bold text-white">
               {initials}
             </div>
             <div>
@@ -953,7 +944,7 @@ FedEx Express Pilot Recruiting`;
             >
               <p style={{ fontSize: 13, fontWeight: 700, color: '#008A00', margin: 0 }}>Combined Total</p>
               <p style={{ fontSize: 11, color: '#8E8E8E', margin: '4px 0 0' }}>
-                Legacy + Updated snapshot
+                Legacy hours + updated application hours
               </p>
             </div>
           </div>
@@ -962,7 +953,6 @@ FedEx Express Pilot Recruiting`;
             const leg = legacyTotals[row.key] as number;
             const upd = updatedTotals[row.key] as number;
             const combined = combineHours(leg, upd);
-            const badge = deltaBadge(leg, upd);
             const highlight = isHighlightDelta(leg, upd);
             const zebra = idx % 2 === 0 ? '#FFFFFF' : '#FAFAFA';
             const rowBg = highlight ? 'rgba(247,177,24,0.06)' : zebra;
@@ -1009,22 +999,6 @@ FedEx Express Pilot Recruiting`;
                     >
                       {formatHoursDisplay(upd)}
                     </span>
-                    {badge ? (
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          borderRadius: 99,
-                          padding: '2px 8px',
-                          marginLeft: 8,
-                          background:
-                            badge.tone === 'pos' ? 'rgba(0,138,0,0.1)' : 'rgba(222,0,46,0.08)',
-                          color: badge.tone === 'pos' ? '#008A00' : '#DE002E',
-                        }}
-                      >
-                        {badge.text}
-                      </span>
-                    ) : null}
                   </div>
                 </div>
                 <div

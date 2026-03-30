@@ -193,7 +193,7 @@ export function LoginForm() {
         <div className="pt-2">
           <Button
             type="submit"
-            className="group flex h-14 w-full items-center justify-center gap-2 rounded-2xl fedex-gradient text-base font-bold text-white shadow-[0_12px_40px_-10px_rgba(77,20,140,0.45)] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
+            className="group fedex-btn-primary h-14 w-full text-base font-bold"
             disabled={loading}
           >
             {loading ? (

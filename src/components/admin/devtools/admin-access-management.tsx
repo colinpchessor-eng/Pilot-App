@@ -405,12 +405,7 @@ export function AdminAccessManagement() {
               </Select>
             </div>
           </div>
-          <Button
-            type="button"
-            className="fedex-gradient h-11 rounded-xl px-6 text-base font-bold text-white shadow-[0_12px_40px_-10px_rgba(77,20,140,0.45)] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
-            disabled={addBusy}
-            onClick={() => void addAdmin()}
-          >
+          <Button type="button" className="h-11 px-6 text-base" disabled={addBusy} onClick={() => void addAdmin()}>
             {addBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Add Admin
           </Button>

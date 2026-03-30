@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo, useEffect, type CSSProperties } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Upload, CheckCircle, AlertTriangle, XCircle, Pencil, Trash2, Download, ArrowRight } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { addDoc, collection, doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
@@ -262,15 +262,6 @@ function parseParadoxHTML(htmlString: string): ParsedCandidate {
 }
 
 // ─── Page Component ─────────────────────────────────────────────────
-const flowStartBtnStyle: CSSProperties = {
-  background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)',
-  color: 'white',
-  borderRadius: 8,
-  padding: '8px 16px',
-  fontSize: 13,
-  fontWeight: 600,
-};
-
 export default function AdminImportPage() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -560,8 +551,7 @@ export default function AdminImportPage() {
                     type="button"
                     disabled={startAllBusy}
                     onClick={() => setStartAllOpen(true)}
-                    className="inline-flex items-center justify-center border-0 cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={flowStartBtnStyle}
+                    className="fedex-btn-primary-sm inline-flex cursor-pointer border-0 !px-4 !py-2 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {startAllBusy ? 'Starting…' : 'Start All Flows'}
                   </button>
@@ -609,8 +599,7 @@ export default function AdminImportPage() {
                               type="button"
                               disabled={busy}
                               onClick={() => startCandidateFlow(r.candidateId, r.name || '', r.email || '')}
-                              className="shrink-0 border-0 cursor-pointer transition-opacity disabled:opacity-50"
-                              style={flowStartBtnStyle}
+                              className="fedex-btn-primary-sm shrink-0 cursor-pointer border-0 !px-4 !py-2 text-[13px] font-semibold disabled:opacity-50"
                             >
                               {busy ? 'Starting…' : 'Start Candidate Flow'}
                             </button>
@@ -624,15 +613,14 @@ export default function AdminImportPage() {
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   onClick={downloadReport}
-                  className="inline-flex items-center bg-white border-[1.5px] border-[#E3E3E3] rounded-lg px-5 py-2.5 text-[14px] font-semibold text-[#333333] shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all hover:border-[#4D148C] hover:text-[#4D148C]"
+                  className="fedex-btn-outline-neutral !px-5 !py-2.5 text-[14px] font-semibold text-[#333333] shadow-[0_1px_4px_rgba(0,0,0,0.06)] enabled:hover:text-[#4d148c]"
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download Report CSV
                 </button>
                 <Link
                   href="/admin/candidates"
-                  className="inline-flex items-center rounded-lg px-5 py-2.5 text-[14px] font-semibold text-white transition-all hover:brightness-110"
-                  style={{ background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)' }}
+                  className="fedex-btn-primary inline-flex !px-5 !py-2.5 text-[14px] font-semibold"
                 >
                   Go to Candidates
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -848,8 +836,7 @@ export default function AdminImportPage() {
           <button
             onClick={() => setConfirmOpen(true)}
             disabled={importableCount === 0}
-            className="w-full h-[52px] rounded-lg text-[16px] font-bold text-white transition-all disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)' }}
+            className="fedex-btn-primary w-full !h-[52px] !rounded-xl text-[16px] disabled:opacity-40"
           >
             Import All Candidates
           </button>
@@ -876,8 +863,7 @@ export default function AdminImportPage() {
             </Button>
             <button
               onClick={runImport}
-              className="inline-flex items-center rounded-lg px-5 py-2.5 text-[14px] font-semibold text-white transition-all"
-              style={{ background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)' }}
+              className="fedex-btn-primary inline-flex !px-5 !py-2.5 text-[14px] font-semibold"
             >
               Continue
             </button>
@@ -903,8 +889,7 @@ export default function AdminImportPage() {
                 void runStartAllFlows();
               }}
               disabled={startAllBusy}
-              className="text-white border-0"
-              style={{ background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)' }}
+              className="border-0"
             >
               {startAllBusy ? 'Starting…' : 'Start all'}
             </AlertDialogAction>

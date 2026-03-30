@@ -304,6 +304,12 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ── applicationUnlockRequests (writes via Admin SDK only) ───────────
+    match /applicationUnlockRequests/{docId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
     // ── bridge_requests ────────────────────────────────────────────────
     match /bridge_requests/{requestId} {
       allow create: if isSignedIn()

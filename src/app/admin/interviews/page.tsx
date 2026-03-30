@@ -233,10 +233,7 @@ export default function AdminInterviewsPage() {
           <p className="text-[14px] text-[#8E8E8E] mt-1">Create slots and manage scheduled interviews</p>
         </div>
         {tab === 'slots' && (
-          <Button
-            onClick={() => setAddOpen(true)}
-            className="bg-gradient-to-br from-[#4D148C] to-[#FF6200] text-white font-semibold shrink-0"
-          >
+          <Button onClick={() => setAddOpen(true)} className="shrink-0 font-semibold">
             Add Slot
           </Button>
         )}
@@ -506,11 +503,7 @@ export default function AdminInterviewsPage() {
             <Button variant="outline" onClick={() => setAddOpen(false)} className="border-[#E3E3E3]">
               Close
             </Button>
-            <Button
-              disabled={savingSlot || !slotDate}
-              onClick={() => void handleAddSlot()}
-              className="bg-gradient-to-br from-[#4D148C] to-[#FF6200] text-white"
-            >
+            <Button disabled={savingSlot || !slotDate} onClick={() => void handleAddSlot()}>
               {savingSlot ? 'Saving…' : 'Save slot'}
             </Button>
           </DialogFooter>

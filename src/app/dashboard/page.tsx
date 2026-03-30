@@ -19,7 +19,6 @@ import {
   User as UserIcon,
   X,
   Info,
-  Database,
   FileDown,
   Lock,
   Clock,
@@ -32,7 +31,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { InteriorNavbar } from '@/components/layout/InteriorNavbar';
 import { useRouter } from 'next/navigation';
-import { Printer } from 'lucide-react';
+import { LegacyRecordsContent } from '@/components/legacy-records-content';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -87,6 +86,19 @@ export default function DashboardPage() {
       }
     })();
   }, [user, applicantData]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.hash !== '#legacy-records') return;
+    const status = applicantData?.status || 'pending';
+    if (status !== 'verified') return;
+    const el = document.getElementById('legacy-records');
+    if (!el) return;
+    const t = window.setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+    return () => clearTimeout(t);
+  }, [applicantData?.status, applicantData]);
 
   const handleVerifyCandidateId = async () => {
     if (!user || !candidateIdInput.trim()) return;
@@ -163,11 +175,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  const legacyData = applicantData?.legacyData || null;
-  const flightTime = legacyData?.flightTime || null;
-  const lastEmployer = legacyData?.lastEmployer || null;
-  const lastResidence = legacyData?.lastResidence || null;
 
   const isSubmitted = !!applicantData.submittedAt;
   const status = applicantData.status || 'pending';
@@ -266,160 +273,100 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          
-          {/* Application Status Tile */}
-          <div className="md:col-span-2 lg:col-span-2 p-6 rounded-xl border border-[#E3E3E3] border-top-3 border-t-[#4D148C] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] flex flex-col justify-between">
-            <div className="border-t-[3px] border-t-[#4D148C] pt-4 -mt-6 rounded-t-xl">
-              <div className="flex justify-between items-start mt-2">
-                <h3 className="text-xl font-bold text-[#333333]">Application Status</h3>
-                {statusInfo.icon}
-              </div>
-              <Badge className={cn("mt-2 text-sm px-3 py-1 rounded-full font-bold", statusInfo.badgeStyle)}>
-                {statusInfo.badgeText}
-              </Badge>
-              <p className="mt-4 text-[#565656]">
-                {statusInfo.description}
-              </p>
-
-              {/* Application ID Verification Section */}
-              {!isVerified && (
-                <div className="mt-6 p-4 rounded-lg bg-[#FAFAFA] border border-[#E3E3E3] space-y-3">
-                  <label className="text-xs font-bold text-[#565656] uppercase tracking-wider flex items-center gap-2">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#4D148C]" />
-                    Candidate ID Verification
-                  </label>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Enter Candidate ID (e.g. 12345678)" 
-                      className="bg-white border-[#E3E3E3] h-10"
-                      value={candidateIdInput}
-                      onChange={(e) => setCandidateIdInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleVerifyCandidateId()
-                      }}
-                    />
-                    <Button 
-                      onClick={handleVerifyCandidateId} 
-                      disabled={isVerifying || !candidateIdInput.trim()}
-                      className="bg-[#4D148C] hover:bg-[#7D22C3] text-white font-bold h-10 px-6 shrink-0"
-                    >
-                      {isVerifying ? 'Verifying...' : 'Verify'}
-                    </Button>
-                  </div>
-                  {verifyError && (
-                    <p
-                      className="text-xs font-bold mt-2"
-                      style={{ color: '#DE002E' }}
-                    >
-                      {verifyError}
-                    </p>
-                  )}
-                  <p className="text-[11px] text-[#8E8E8E]">
-                    New pilots must verify their Application ID to continue.
-                  </p>
+        {/* Top row: equal application + records cards */}
+        <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 md:gap-6">
+          {/* Application (Start / Continue CTA) */}
+          <div className="flex h-full min-h-0 flex-col rounded-xl border border-[#E3E3E3] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] overflow-hidden">
+            <div
+              className="h-[3px] w-full shrink-0 bg-[#4D148C]"
+              aria-hidden
+            />
+            <div className="flex min-h-0 flex-1 flex-col justify-between p-6">
+              <div>
+                <div className="flex items-start justify-between">
+                  <h3 className="text-xl font-bold text-[#333333]">Application</h3>
+                  {statusInfo.icon}
                 </div>
-              )}
+                <Badge className={cn("mt-2 text-sm px-3 py-1 rounded-full font-bold", statusInfo.badgeStyle)}>
+                  {statusInfo.badgeText}
+                </Badge>
+                <p className="mt-4 text-[#565656]">
+                  {statusInfo.description}
+                </p>
+
+                {/* Application ID Verification Section */}
+                {!isVerified && (
+                  <div className="mt-6 p-4 rounded-lg bg-[#FAFAFA] border border-[#E3E3E3] space-y-3">
+                    <label className="text-xs font-bold text-[#565656] uppercase tracking-wider flex items-center gap-2">
+                      <ShieldCheck className="h-3.5 w-3.5 text-[#4D148C]" />
+                      Candidate ID Verification
+                    </label>
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="Enter Candidate ID (e.g. 12345678)" 
+                        className="bg-white border-[#E3E3E3] h-10"
+                        value={candidateIdInput}
+                        onChange={(e) => setCandidateIdInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleVerifyCandidateId()
+                        }}
+                      />
+                      <Button 
+                        onClick={handleVerifyCandidateId} 
+                        disabled={isVerifying || !candidateIdInput.trim()}
+                        className="bg-[#4D148C] hover:bg-[#7D22C3] text-white font-bold h-10 px-6 shrink-0"
+                      >
+                        {isVerifying ? 'Verifying...' : 'Verify'}
+                      </Button>
+                    </div>
+                    {verifyError && (
+                      <p
+                        className="text-xs font-bold mt-2"
+                        style={{ color: '#DE002E' }}
+                      >
+                        {verifyError}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-[#8E8E8E]">
+                      New pilots must verify their Application ID to continue.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                asChild={isVerified}
+                size="lg"
+                disabled={!isVerified}
+                className={cn(
+                  "w-full mt-8 h-12 font-bold",
+                  !isVerified ? "bg-[#E3E3E3] text-[#8E8E8E] cursor-not-allowed" : (isSubmitted ? "bg-[#565656] hover:bg-[#333333] text-white" : "fedex-btn-primary")
+                )}
+              >
+                {isVerified ? (
+                  <Link href="/dashboard/application">
+                    {isSubmitted ? 'View Submitted Application' : (hasStarted ? 'Continue Your Application' : 'Start Application')}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span>
+                     {buttonText}
+                     <Lock className="ml-2 h-4 w-4 inline" />
+                  </span>
+                )}
+              </Button>
             </div>
-            
-            <Button
-              asChild={isVerified}
-              size="lg"
-              disabled={!isVerified}
-              className={cn(
-                "w-full mt-8 h-12 font-bold",
-                !isVerified ? "bg-[#E3E3E3] text-[#8E8E8E] cursor-not-allowed" : (isSubmitted ? "bg-[#565656] hover:bg-[#333333] text-white" : "fedex-btn-primary")
-              )}
-            >
-              {isVerified ? (
-                <Link href="/dashboard/application">
-                  {isSubmitted ? 'View Submitted Application' : (hasStarted ? 'Continue Your Application' : 'Start Application')}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              ) : (
-                <span>
-                   {buttonText}
-                   <Lock className="ml-2 h-4 w-4 inline" />
-                </span>
-              )}
-            </Button>
           </div>
 
-          {/* Legacy Records Card - ONLY SHOWS FOR VERIFIED USERS */}
-          {isVerified && (
-            <div className="legacy-print-area p-6 rounded-xl border border-[#E3E3E3] bg-white shadow-[0_4px_20px_rgba(0,122,183,0.15)] animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ borderTop: '3px solid #007AB7' }}>
-              <div className="hidden print:block mb-6">
-                <h1 className="text-xl font-bold text-[#333333] mb-2">FedEx Pilot Application — Legacy Records</h1>
-                {applicantData.candidateId && <p className="text-sm text-[#565656]">Candidate ID: {applicantData.candidateId}</p>}
-                <p className="text-sm text-[#565656]">Name: {[applicantData.firstName, applicantData.lastName].filter(Boolean).join(' ')}</p>
-                <p className="text-sm text-[#565656]">Printed: {new Date().toLocaleDateString()}</p>
-              </div>
-              <div className="pt-4 -mt-6 rounded-t-xl">
-                <div className="flex justify-between items-start mt-2">
-                  <h3 className="text-xl font-bold text-[#333333]">Your Legacy Records</h3>
-                  <Database className="h-6 w-6 shrink-0" style={{ color: '#007AB7' }} />
-                </div>
-                <p className="text-xs text-[#8E8E8E] mt-1">
-                  Data imported from your previous application on file
-                </p>
-                <div className="mt-4">
-                  {!legacyData ? (
-                    <p className="text-[13px]" style={{ color: '#8E8E8E' }}>No legacy records found.</p>
-                  ) : (
-                    <>
-                      <div className="mb-5">
-                        <h4 className="text-xs font-bold text-[#8E8E8E] uppercase tracking-wider mb-3">FLIGHT TIME SUMMARY</h4>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                          <div className="flex justify-between"><span className="text-[#565656]">Total Hours:</span><span className="font-semibold text-[#333333]">{flightTime?.total ?? '—'}</span></div>
-                          <div className="flex justify-between"><span className="text-[#565656]">Turbine PIC:</span><span className="font-semibold text-[#333333]">{flightTime?.turbinePIC ?? '—'}</span></div>
-                          <div className="flex justify-between"><span className="text-[#565656]">Military:</span><span className="font-semibold text-[#333333]">{flightTime?.military ?? '—'}</span></div>
-                          <div className="flex justify-between"><span className="text-[#565656]">Multi-Engine:</span><span className="font-semibold text-[#333333]">{flightTime?.multiEngine ?? '—'}</span></div>
-                          <div className="flex justify-between"><span className="text-[#565656]">Instructor:</span><span className="font-semibold text-[#333333]">{flightTime?.instructor ?? '—'}</span></div>
-                          <div className="flex justify-between"><span className="text-[#565656]">SIC Hours:</span><span className="font-semibold text-[#333333]">{flightTime?.sic ?? '—'}</span></div>
-                        </div>
-                      </div>
-                      <div className="mb-5 p-3 rounded" style={{ background: 'rgba(0,122,183,0.06)', borderLeft: '3px solid #007AB7' }}>
-                        <div className="text-xs font-bold text-[#8E8E8E] uppercase tracking-wider mb-1">Date Last Flown</div>
-                        <div className="text-[#333333] font-semibold">{flightTime?.dateLastFlown ?? '—'}</div>
-                        {(flightTime?.lastAircraftFlown) && <div className="text-xs text-[#8E8E8E] mt-1">{flightTime.lastAircraftFlown}</div>}
-                      </div>
-                      <div className="mb-5">
-                        <h4 className="text-xs font-bold text-[#8E8E8E] uppercase tracking-wider mb-2">LAST EMPLOYER ON FILE</h4>
-                        <div className="space-y-1">
-                          <div className="font-bold text-[#333333]" style={{ fontSize: 15 }}>{lastEmployer?.company ?? '—'}</div>
-                          <div className="text-[#565656]" style={{ fontSize: 13 }}>{lastEmployer?.title ?? '—'}</div>
-                          <div className="text-[#8E8E8E]" style={{ fontSize: 12 }}>{[lastEmployer?.city, lastEmployer?.state].filter(Boolean).join(', ') || '—'}</div>
-                          <div className="text-[#8E8E8E]" style={{ fontSize: 12 }}>{(lastEmployer?.from ?? '—')} → {(lastEmployer?.to ?? '—')}</div>
-                        </div>
-                      </div>
-                      <div className="mb-5">
-                        <h4 className="text-xs font-bold text-[#8E8E8E] uppercase tracking-wider mb-2">LAST RESIDENCE ON FILE</h4>
-                        <div className="space-y-1">
-                          <div className="font-bold text-[#333333]">{lastResidence?.street ?? '—'}</div>
-                          <div className="text-[#565656]">{[lastResidence?.city, lastResidence?.state, lastResidence?.zip].filter(Boolean).join(' ') || '—'}</div>
-                          <div className="text-[#8E8E8E]" style={{ fontSize: 12 }}>{(lastResidence?.from ?? '—')} → {(lastResidence?.to ?? '—')}</div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => window.print()}
-                        className="print-hide w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold transition-colors hover:!bg-[#007AB7] hover:!text-white"
-                        style={{ background: 'white', border: '1.5px solid #007AB7', color: '#007AB7' }}
-                      >
-                        <Printer className="h-4 w-4" /> Print Legacy Records
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Profile Tile */}
-          <div className="p-6 rounded-xl border border-[#E3E3E3] border-top-3 border-t-[#FF6200] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-             <div className="border-t-[3px] border-t-[#FF6200] pt-4 -mt-6 rounded-t-xl">
-              <div className="flex justify-between items-start mt-2">
-                <h3 className="text-xl font-bold text-[#333333]">Your Profile</h3>
+          {/* Your Records (profile on file) */}
+          <div className="flex h-full min-h-0 flex-col rounded-xl border border-[#E3E3E3] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] overflow-hidden">
+            <div
+              className="h-[3px] w-full shrink-0 bg-[#FF6200]"
+              aria-hidden
+            />
+            <div className="flex min-h-0 flex-1 flex-col p-6">
+              <div className="flex items-start justify-between">
+                <h3 className="text-xl font-bold text-[#333333]">Your Records</h3>
                 <div className="h-10 w-10 rounded-full fedex-gradient flex items-center justify-center text-white font-bold text-sm">
                   {fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase() : (user?.email?.[0].toUpperCase() || 'U')}
                 </div>
@@ -446,18 +393,32 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-
-          {/* Thank you Tile */}
-          {isSubmitted && (
-            <div className="md:col-span-3 lg:col-span-1 p-6 rounded-xl border border-none fedex-gradient text-white flex flex-col items-center justify-center text-center shadow-[0_4px_20px_rgba(77,20,140,0.2)]">
-              <h3 className="text-2xl font-bold">Thank You!</h3>
-              <p className="mt-2 opacity-90 font-medium">
-                Your application has been successfully submitted. We will be in
-                touch soon regarding next steps.
-              </p>
-            </div>
-          )}
         </div>
+
+        {isSubmitted && (
+          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-none bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] p-6 text-center text-white shadow-[0_4px_20px_rgba(77,20,140,0.2)]">
+            <h3 className="text-2xl font-bold">Thank You!</h3>
+            <p className="mt-2 font-medium opacity-90">
+              Your application has been successfully submitted. We will be in touch soon
+              regarding next steps.
+            </p>
+          </div>
+        )}
+
+        {/* Legacy records — same component + treatment as Flight Time tab on application */}
+        {isVerified && (
+          <div className="mt-8 scroll-mt-24" id="legacy-records">
+            <LegacyRecordsContent
+              legacyData={applicantData.legacyData}
+              candidateId={applicantData.candidateId}
+              firstName={applicantData.firstName}
+              lastName={applicantData.lastName}
+              showNoteBanner
+              showPrintHeader
+              className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+            />
+          </div>
+        )}
       </div>
       
       <footer className="mt-auto py-8 text-center text-[#8E8E8E] text-sm interior-bg">

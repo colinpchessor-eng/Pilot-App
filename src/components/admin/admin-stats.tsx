@@ -61,35 +61,41 @@ export function AdminStats({
         const isDel = card.title === 'Deletion Requests' && deletionsHref;
         const href = isVerif ? verificationsHref : isDel ? deletionsHref : '';
         const isLinked = Boolean(isVerif || isDel);
+        const bodyShell = 'relative rounded-xl p-5 pt-6 min-h-[124px]';
         const inner = (
           <>
-            <div className="absolute top-5 right-5 relative">
-              <span style={{ color: card.color, width: 22, height: 22, display: 'block' }}>
+            <div className="pointer-events-none absolute top-5 right-5 z-10">
+              <span
+                className="flex h-[22px] w-[22px] items-center justify-center [&>svg]:h-[22px] [&>svg]:w-[22px]"
+                style={{ color: card.color }}
+              >
                 {card.icon}
               </span>
               {card.pulse && (
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#DE002E] animate-pulse" />
               )}
             </div>
-            <div className="text-[36px] font-bold text-[#333333] leading-none">{card.value}</div>
-            <div className="text-[13px] text-[#8E8E8E] mt-1">{card.title}</div>
+            <div className="flex min-h-[72px] flex-col items-center justify-center px-4 text-center">
+              <div className="text-[36px] font-bold leading-none text-[#333333]">{card.value}</div>
+              <div className="mt-1.5 max-w-[220px] text-[13px] leading-snug text-[#8E8E8E]">{card.title}</div>
+            </div>
           </>
         );
         return (
           <div
             key={card.title}
             className="relative bg-white rounded-xl border border-[#E3E3E3] shadow-[0_2px_12px_rgba(0,0,0,0.08)]"
-            style={{ borderTop: `3px solid ${card.color}`, padding: '20px 24px' }}
+            style={{ borderTop: `3px solid ${card.color}` }}
           >
             {isLinked ? (
               <Link
                 href={href}
-                className="-m-5 block rounded-xl p-5 transition-colors hover:bg-[#FAFAFA] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4D148C]"
+                className={`${bodyShell} block transition-colors hover:bg-[#FAFAFA] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4D148C]`}
               >
                 {inner}
               </Link>
             ) : (
-              inner
+              <div className={bodyShell}>{inner}</div>
             )}
           </div>
         );

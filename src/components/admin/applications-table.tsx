@@ -102,10 +102,10 @@ export function ApplicationsTable({
                 <td className={cn(candidateRowsTableTdClass, 'text-right')}>
                   <span className="admin-tooltip">
                     <span className="admin-tooltip-text">
-                      View and print full application details
+                      Open merged application review (profile, legacy vs. submitted)
                     </span>
                     <Button asChild variant="outline" size="sm" className="rounded-full border-[#E3E3E3] text-[11px] font-bold">
-                      <Link href={`/admin/applications/${app.uid}`}>
+                      <Link href={`/admin/review/${app.uid}`}>
                         <ExternalLink className="mr-2 h-4 w-4" />
                         Open
                       </Link>

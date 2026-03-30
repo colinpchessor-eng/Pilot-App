@@ -482,8 +482,8 @@ export function SignupForm() {
           onClick={bothConsented ? undefined : () => setConsentError(true)}
           className={
             bothConsented
-              ? 'group !mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl fedex-gradient text-base font-bold text-white shadow-[0_12px_40px_-10px_rgba(77,20,140,0.45)] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]'
-              : '!mt-6 h-14 w-full cursor-not-allowed rounded-2xl !bg-[#E3E3E3] text-base font-bold !text-[#8E8E8E] !shadow-none transition-all'
+              ? 'group fedex-btn-primary !mt-6 h-14 w-full text-base font-bold'
+              : '!mt-6 h-14 w-full cursor-not-allowed rounded-xl !bg-[#E3E3E3] text-base font-bold !text-[#8E8E8E] !shadow-none transition-all'
           }
           disabled={loading}
         >

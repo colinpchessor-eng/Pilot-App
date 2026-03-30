@@ -134,11 +134,7 @@ export function AdminDeletionsPanel({ embedded = false }: { embedded?: boolean }
                     <td className="px-4 py-3.5 text-right space-x-1">
                       <span className="admin-tooltip">
                         <span className="admin-tooltip-text">View deletion request details and add notes</span>
-                        <button
-                          type="button"
-                          onClick={() => setDetailTarget(r)}
-                          className="inline-flex items-center bg-white border-[1.5px] border-[#E3E3E3] rounded-lg px-3 py-1.5 text-[13px] font-semibold text-[#565656] transition-all hover:border-[#4D148C] hover:text-[#4D148C]"
-                        >
+                        <button type="button" onClick={() => setDetailTarget(r)} className="fedex-btn-outline-neutral">
                           <Eye className="h-3 w-3 mr-1" /> Details
                         </button>
                       </span>
@@ -148,8 +144,7 @@ export function AdminDeletionsPanel({ embedded = false }: { embedded?: boolean }
                           <button
                             type="button"
                             onClick={() => { setConfirmTarget(r); setChecks([false, false, false, false]); }}
-                            className="inline-flex items-center rounded-lg px-3 py-1.5 text-[13px] font-semibold text-white transition-all"
-                            style={{ background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)' }}
+                            className="fedex-btn-primary-sm"
                           >
                             Mark Complete
                           </button>
@@ -192,8 +187,7 @@ export function AdminDeletionsPanel({ embedded = false }: { embedded?: boolean }
               type="button"
               onClick={handleComplete}
               disabled={!allChecked || completing}
-              className="inline-flex items-center rounded-lg px-4 py-2 text-[13px] font-semibold text-white transition-all disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #4D148C 0%, #7D22C3 33%, #FF6200 100%)' }}
+              className="fedex-btn-primary-sm !px-4 !py-2 disabled:opacity-40"
             >
               {completing ? 'Completing...' : 'Confirm Deletion Complete'}
             </button>

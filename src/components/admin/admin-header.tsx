@@ -24,10 +24,22 @@ export function AdminHeader({ className }: { className?: string }) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    const auth = getAuth();
-    await signOut(auth);
-    await clearSessionCookie();
-    router.push('/login');
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+    } catch (e) {
+      console.error('signOut failed', e);
+    }
+    try {
+      await clearSessionCookie();
+    } catch (e) {
+      console.error('clearSessionCookie failed', e);
+    }
+    if (typeof window !== 'undefined') {
+      window.location.assign('/login');
+    } else {
+      router.replace('/login');
+    }
   };
 
   return (
@@ -67,7 +79,12 @@ export function AdminHeader({ className }: { className?: string }) {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              void handleSignOut();
+            }}
+          >
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>

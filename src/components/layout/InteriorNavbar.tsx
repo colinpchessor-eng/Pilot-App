@@ -16,7 +16,6 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -32,7 +31,18 @@ import type { ApplicantData } from '@/lib/types';
 import { canAccessDevTools, isAdmin as userIsStaff, isDev as userIsDev } from '@/lib/roles';
 import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
-function displayInitials(user: { displayName?: string | null; email?: string | null } | null): string {
+function displayInitials(
+  user: { displayName?: string | null; email?: string | null } | null,
+  profile?: { firstName?: string | null; lastName?: string | null } | null
+): string {
+  const fn = profile?.firstName?.trim();
+  const ln = profile?.lastName?.trim();
+  if (fn && ln) {
+    return `${fn[0] ?? ''}${ln[0] ?? ''}`.toUpperCase();
+  }
+  if (fn) {
+    return fn.length >= 2 ? fn.slice(0, 2).toUpperCase() : `${(fn[0] ?? 'U').toUpperCase()}U`;
+  }
   if (!user) return 'U';
   const name = user.displayName?.trim();
   if (name) {
@@ -46,6 +56,18 @@ function displayInitials(user: { displayName?: string | null; email?: string | n
   return (email.slice(0, 2) || 'U').toUpperCase();
 }
 
+function displayMenuTitle(
+  user: { email?: string | null } | null,
+  profile?: { firstName?: string | null; lastName?: string | null } | null
+): string {
+  const fn = profile?.firstName?.trim();
+  const ln = profile?.lastName?.trim();
+  if (fn || ln) {
+    return [fn, ln].filter(Boolean).join(' ').trim() || user?.email || 'Account';
+  }
+  return user?.email ?? 'Account';
+}
+
 type NavLinkFields = {
   label: string;
   href: string;
@@ -53,6 +75,8 @@ type NavLinkFields = {
   Icon?: LucideIcon;
   devToolsDanger?: boolean;
   requiresVerified?: boolean;
+  /** Refined active styling when `/dashboard` has hash links (see `navHash` state). */
+  navActiveKey?: 'dashboard-home' | 'legacy';
 };
 
 type AdminDesktopEntry =
@@ -110,6 +134,7 @@ export function InteriorNavbar() {
   const firestore = useFirestore();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navHash, setNavHash] = useState('');
 
   const userDocRef = user ? doc(firestore, 'users', user.uid) : undefined;
   const { data: userData } = useDoc<ApplicantData>(userDocRef);
@@ -124,20 +149,47 @@ export function InteriorNavbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const read = () => setNavHash(typeof window !== 'undefined' ? window.location.hash : '');
+    read();
+    window.addEventListener('hashchange', read);
+    return () => window.removeEventListener('hashchange', read);
+  }, []);
+
+  useEffect(() => {
+    setNavHash(typeof window !== 'undefined' ? window.location.hash : '');
+  }, [pathname]);
+
   const handleSignOut = async () => {
-    const auth = getAuth();
-    await signOut(auth);
-    const { clearSessionCookie } = await import('@/app/auth/actions');
-    await clearSessionCookie();
-    router.push('/login');
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+    } catch (e) {
+      console.error('signOut failed', e);
+    }
+    try {
+      const { clearSessionCookie } = await import('@/app/auth/actions');
+      await clearSessionCookie();
+    } catch (e) {
+      console.error('clearSessionCookie failed', e);
+    }
+    setMobileMenuOpen(false);
+    if (typeof window !== 'undefined') {
+      window.location.assign('/login');
+    } else {
+      router.replace('/login');
+    }
   };
 
   const navItems: NavLinkFields[] = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'My Application', href: '/dashboard/application', requiresVerified: true },
-    { label: 'Purple Runway Program', href: '#' },
-    { label: 'Fleet & Routes', href: '#' },
-    { label: 'Help', href: '#' },
+    { label: 'Dashboard', href: '/dashboard', navActiveKey: 'dashboard-home' },
+    {
+      label: 'My Legacy Records',
+      href: '/dashboard#legacy-records',
+      requiresVerified: true,
+      navActiveKey: 'legacy',
+    },
+    { label: 'Help', href: '/dashboard/help' },
   ];
 
   const adminDesktopEntries = useMemo((): AdminDesktopEntry[] => {
@@ -219,7 +271,8 @@ export function InteriorNavbar() {
       : '/dashboard'
     : '/login';
 
-  const userInitials = displayInitials(user);
+  const userInitials = displayInitials(user, userData ?? undefined);
+  const accountMenuTitle = displayMenuTitle(user, userData ?? undefined);
   const roleLabel = useMemo(() => {
     if (isDevUser) return 'Developer';
     if (isAdmin) return 'HR Admin';
@@ -227,11 +280,35 @@ export function InteriorNavbar() {
     return 'Applicant';
   }, [isAdmin, isDevUser, isVerified]);
 
-  function linkIsActive(href: string): boolean {
-    if (href === '/admin') {
-      return pathname === '/admin' || pathname.startsWith('/admin/applications');
+  function navLinkIsActive(
+    href: string,
+    navActiveKey?: NavLinkFields['navActiveKey']
+  ): boolean {
+    const pathOnly = href.split('#')[0] || href;
+    // Each admin route matches only its own path. The old logic treated every
+    // /admin/* link as active on /admin, so the home dashboard showed a full
+    // row of filled purple pills (looked like dark buttons vs applicant pages).
+    if (pathOnly.startsWith('/admin')) {
+      if (pathOnly === '/admin') {
+        return (
+          pathname === '/admin' ||
+          pathname === '/admin/' ||
+          pathname.startsWith('/admin/applications') ||
+          pathname.startsWith('/admin/review')
+        );
+      }
+      return pathname === pathOnly || pathname.startsWith(`${pathOnly}/`);
     }
-    return pathname === href;
+    if (navActiveKey === 'dashboard-home') {
+      return pathname === '/dashboard' && navHash !== '#legacy-records';
+    }
+    if (navActiveKey === 'legacy') {
+      return pathname === '/dashboard' && navHash === '#legacy-records';
+    }
+    if (pathOnly === '/dashboard' && !href.includes('#')) {
+      return pathname === '/dashboard';
+    }
+    return pathname === pathOnly;
   }
 
   return (
@@ -242,19 +319,20 @@ export function InteriorNavbar() {
       {/* Floating pill: brand + nav + pilot toolbar (notifications, settings, avatar) */}
       <nav
         className={cn(
-          'relative mx-auto mt-0 flex h-[60px] w-[calc(100%-32px)] max-w-[1200px] items-center gap-1 rounded-full border border-white/90 px-3 shadow-[0_4px_24px_rgba(77,20,140,0.10),0_1px_4px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-[20px] transition-all duration-300 sm:w-[calc(100%-48px)] sm:px-5',
+          'relative mx-auto mt-0 flex h-[60px] w-[calc(100%-32px)] max-w-[1200px] items-center gap-2 rounded-full border border-white/90 px-3 text-[#333333] shadow-[0_4px_24px_rgba(77,20,140,0.10),0_1px_4px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-[20px] transition-all duration-300 sm:w-[calc(100%-48px)] sm:gap-3 sm:px-5',
           'bg-white/72 saturate-[180%] pointer-events-auto',
           scrolled &&
             'bg-white/88 shadow-[0_8px_32px_rgba(77,20,140,0.15),0_2px_8px_rgba(0,0,0,0.10)]'
         )}
       >
         {/* Pill Logo */}
-        <Link href={brandHref} className="mr-4 flex shrink-0 items-center">
+        <Link href={brandHref} className="flex shrink-0 items-center">
           <FedExBrandMark height={28} />
         </Link>
 
-        {/* Desktop Nav Items */}
-        <div className="hidden md:flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+        {/* Desktop Nav — centered cluster */}
+        <div className="hidden min-w-0 flex-1 justify-center md:flex">
+          <div className="flex max-w-full items-center gap-0.5 overflow-x-auto scrollbar-none">
           {desktopPieces.map((piece, i) => {
             if (piece.type === 'divider') {
               return (
@@ -295,7 +373,7 @@ export function InteriorNavbar() {
               );
             }
             const item = piece;
-            const isActive = linkIsActive(item.href);
+            const isActive = navLinkIsActive(item.href, item.navActiveKey);
             const dot = item.dot;
             const NavIcon = item.Icon;
             const devToolsDanger = item.devToolsDanger;
@@ -304,7 +382,7 @@ export function InteriorNavbar() {
               return (
                 <span
                   key={item.label + item.href}
-                  title="Verify your Candidate ID to access your application"
+                  title="Verify your Candidate ID to access legacy records"
                   className="px-3.5 py-2.5 rounded-full text-[15px] font-medium text-[#8E8E8E] cursor-not-allowed whitespace-nowrap shrink-0 relative select-none opacity-50"
                 >
                   {item.label}
@@ -337,28 +415,11 @@ export function InteriorNavbar() {
               </Link>
             );
           })}
+          </div>
         </div>
 
-        {/* Right: My Application + notifications + settings + avatar + mobile menu */}
-        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
-          {!isOnAdminPage &&
-            !isAdmin &&
-            (isVerified ? (
-              <Link href="/dashboard/application" className="hidden sm:block">
-                <Button className="mr-1 rounded-full bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] px-5 py-2.5 text-[15px] font-bold text-white shadow-[0_2px_12px_rgba(77,20,140,0.3)] transition-all hover:-translate-y-0.5 hover:brightness-110 lg:mr-2 lg:px-6">
-                  My Application
-                </Button>
-              </Link>
-            ) : (
-              <Button
-                disabled
-                title="Verify your Candidate ID to access your application"
-                className="mr-1 hidden cursor-not-allowed rounded-full bg-[#E3E3E3] px-5 py-2.5 text-[15px] font-bold text-[#8E8E8E] shadow-none sm:flex lg:mr-2 lg:px-6"
-              >
-                My Application
-              </Button>
-            ))}
-
+        {/* Right: notifications + settings + avatar + mobile menu */}
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <button
             type="button"
             className="rounded-full p-2 text-[#4D148C] transition-colors hover:bg-[#4D148C]/10"
@@ -397,7 +458,7 @@ export function InteriorNavbar() {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="truncate text-sm font-medium leading-none text-[#333333]">
-                    {user?.email ?? 'Account'}
+                    {accountMenuTitle}
                   </p>
                   <p className="text-xs leading-none text-[#8E8E8E]">{roleLabel}</p>
                 </div>
@@ -449,7 +510,7 @@ export function InteriorNavbar() {
                   );
                 }
                 const item = row as NavLinkFields;
-                const isActive = linkIsActive(item.href);
+                const isActive = navLinkIsActive(item.href, item.navActiveKey);
                 const dot = item.dot;
                 const MobileNavIcon = item.Icon;
                 const mobileDevDanger = item.devToolsDanger;
@@ -458,6 +519,7 @@ export function InteriorNavbar() {
                   return (
                     <span
                       key={item.label + item.href}
+                      title="Verify your Candidate ID to access legacy records"
                       className="px-4 py-3 rounded-xl text-[15px] font-medium text-[#8E8E8E] cursor-not-allowed opacity-50 select-none"
                     >
                       {item.label}
@@ -493,26 +555,19 @@ export function InteriorNavbar() {
                   </Link>
                 );
               })}
-              {!isOnAdminPage &&
-                !isAdmin &&
-                (isVerified ? (
-                  <Link
-                    href="/dashboard/application"
-                    className="mt-2"
-                    onClick={() => setMobileMenuOpen(false)}
+              {user ? (
+                <>
+                  <div className="my-2 border-t border-[#E3E3E3]" />
+                  <button
+                    type="button"
+                    onClick={() => void handleSignOut()}
+                    className="flex w-full items-center rounded-xl px-4 py-3 text-left text-[15px] font-medium text-[#DE002E] transition-colors hover:bg-red-50"
                   >
-                    <Button className="w-full bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] text-white rounded-xl py-6 text-sm font-bold">
-                      My Application
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button
-                    disabled
-                    className="mt-2 w-full bg-[#E3E3E3] text-[#8E8E8E] rounded-xl py-6 text-sm font-bold cursor-not-allowed shadow-none"
-                  >
-                    My Application
-                  </Button>
-                ))}
+                    <LogOut className="mr-2 h-[18px] w-[18px] shrink-0" />
+                    Log out
+                  </button>
+                </>
+              ) : null}
             </div>
           </div>
         )}
