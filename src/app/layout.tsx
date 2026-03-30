@@ -7,8 +7,13 @@ import { ParallaxRoot } from '@/components/parallax-root';
 import { PageTransition } from '@/components/page-transition';
 
 export const metadata: Metadata = {
-  title: 'FedexFlow',
+  title: 'FedEx Pilot Portal',
   description: 'Pilot application portal for FedEx.',
+  icons: {
+    icon: [{ url: '/assets/favicon.svg', type: 'image/svg+xml' }],
+    shortcut: [{ url: '/assets/favicon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/assets/favicon.svg', type: 'image/svg+xml' }],
+  },
 };
 
 export default function RootLayout({
