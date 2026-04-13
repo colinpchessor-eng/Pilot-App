@@ -4,6 +4,12 @@ import { useUser, useDoc, useFirestore } from '@/firebase';
 import type { ApplicantData } from '@/lib/types';
 import { doc } from 'firebase/firestore';
 import {
+  canBookIndoctrinationSession,
+  canBookTestingSession,
+  hasIndoctrinationBooking,
+  hasTestingBooking,
+} from '@/lib/scheduling-eligibility';
+import {
   completeCandidateIdVerification,
   syncLegacyDataForUser,
 } from '@/app/applicant/verification-actions';
@@ -16,17 +22,13 @@ import {
   CheckCircle2,
   FileClock,
   FileText,
-  User as UserIcon,
-  X,
-  Info,
-  FileDown,
   Lock,
   Clock,
-  Key,
   ShieldCheck,
+  CalendarRange,
+  GraduationCap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { InteriorNavbar } from '@/components/layout/InteriorNavbar';
@@ -37,7 +39,6 @@ export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [candidateIdInput, setCandidateIdInput] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState('');
@@ -48,6 +49,21 @@ export default function DashboardPage() {
     loading: appDataLoading,
     error,
   } = useDoc<ApplicantData>(userDocRef);
+
+  const candidateIdKey = (applicantData?.candidateId || '').trim().toUpperCase();
+  const candidateIdsRef =
+    firestore && candidateIdKey
+      ? doc(firestore, 'candidateIds', candidateIdKey)
+      : undefined;
+  const { data: candidatePipeline, loading: pipelineRowLoading } =
+    useDoc<{
+      flowStatus?: string | null;
+      testingSessionId?: string | null;
+      indoctrinationSessionId?: string | null;
+      testingSessionDate?: { toDate?: () => Date } | null;
+      indoctrinationSessionDate?: { toDate?: () => Date } | null;
+    }>(candidateIdsRef);
+  const pipelineBusy = candidateIdKey ? pipelineRowLoading : false;
 
   const staffShouldUseAdminPortal =
     !!applicantData &&
@@ -63,12 +79,9 @@ export default function DashboardPage() {
   }, [staffShouldUseAdminPortal, router]);
 
   useEffect(() => {
-    const success = sessionStorage.getItem('verificationRequested');
-    if (success === 'true') {
-      setShowSuccessBanner(true);
-      sessionStorage.removeItem('verificationRequested');
-    }
-  }, []);
+    if (userLoading || user) return;
+    router.replace('/login');
+  }, [user, userLoading, router]);
 
   useEffect(() => {
     if (!user || !applicantData) return;
@@ -118,14 +131,25 @@ export default function DashboardPage() {
       }
       setCandidateIdInput('');
     } catch (error) {
-      console.error('Verification error:', error);
+      console.error('Candidate ID link error:', error);
       setVerifyError('Something went wrong. Please try again.');
     } finally {
       setIsVerifying(false);
     }
   };
 
-  const loading = userLoading || appDataLoading;
+  const loading = userLoading || appDataLoading || pipelineBusy;
+
+  if (!userLoading && !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#4D148C] border-t-transparent" />
+          <p className="font-medium text-[#565656]">Signing out…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -180,6 +204,36 @@ export default function DashboardPage() {
   const status = applicantData.status || 'pending';
   const isVerified = status === 'verified';
 
+  const flowForScheduling =
+    candidatePipeline?.flowStatus ?? applicantData.candidateFlowStatus ?? null;
+  const showTestingScheduleLink =
+    isVerified &&
+    !!candidateIdKey &&
+    canBookTestingSession(flowForScheduling) &&
+    !hasTestingBooking(candidatePipeline);
+  const showIndoctrinationScheduleLink =
+    isVerified &&
+    !!candidateIdKey &&
+    canBookIndoctrinationSession(flowForScheduling) &&
+    !hasIndoctrinationBooking(candidatePipeline);
+  const testingBooked = isVerified && !!candidateIdKey && hasTestingBooking(candidatePipeline);
+  const indoctrinationBooked =
+    isVerified && !!candidateIdKey && hasIndoctrinationBooking(candidatePipeline);
+  const schedulingParam = candidateIdKey
+    ? `?candidateId=${encodeURIComponent(candidateIdKey)}`
+    : '';
+  const formatSessionTs = (ts: { toDate?: () => Date } | null | undefined) => {
+    if (!ts || typeof ts.toDate !== 'function') return null;
+    return format(ts.toDate(), 'PPP');
+  };
+  const showSchedulingSection =
+    isVerified &&
+    !!candidateIdKey &&
+    (showTestingScheduleLink ||
+      showIndoctrinationScheduleLink ||
+      testingBooked ||
+      indoctrinationBooked);
+
   // Application Progress Logic
   const hasStarted =
     !isSubmitted &&
@@ -200,9 +254,9 @@ export default function DashboardPage() {
     if (!isVerified) {
       return {
         icon: <Clock className="h-6 w-6 text-[#F7B118]" />,
-        badgeText: 'Unverified',
+        badgeText: 'Candidate ID not linked',
         badgeStyle: 'bg-[#F7B118] text-white',
-        description: 'Verify your Application ID to unlock your portal.'
+        description: 'Enter your Candidate ID below to finish registration and unlock your portal.'
       };
     }
     switch (applicationStatus) {
@@ -248,22 +302,6 @@ export default function DashboardPage() {
       <InteriorNavbar />
       
       <div className="container mx-auto max-w-6xl p-4 md:p-8 space-y-6 pt-4">
-        {showSuccessBanner && (
-          <Alert className="relative border-[#E3E3E3] border-l-4 border-l-[#007AB7] bg-[#F2F2F2] text-[#333333] rounded-md">
-            <Info className="h-4 w-4 text-[#007AB7]" />
-            <AlertTitle className="font-bold text-[#007AB7]">Verification Request Sent</AlertTitle>
-            <AlertDescription className="pr-8">
-              Your request has been received. An admin will review your information.
-            </AlertDescription>
-            <button 
-              onClick={() => setShowSuccessBanner(false)}
-              className="absolute top-4 right-4 text-[#8E8E8E] hover:text-[#333333] transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </Alert>
-        )}
-
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight text-[#333333]">
             Welcome, {fullName || user?.email}!
@@ -294,12 +332,12 @@ export default function DashboardPage() {
                   {statusInfo.description}
                 </p>
 
-                {/* Application ID Verification Section */}
+                {/* Link Candidate ID (registration) */}
                 {!isVerified && (
                   <div className="mt-6 p-4 rounded-lg bg-[#FAFAFA] border border-[#E3E3E3] space-y-3">
                     <label className="text-xs font-bold text-[#565656] uppercase tracking-wider flex items-center gap-2">
                       <ShieldCheck className="h-3.5 w-3.5 text-[#4D148C]" />
-                      Candidate ID Verification
+                      Link your Candidate ID
                     </label>
                     <div className="flex gap-2">
                       <Input 
@@ -316,7 +354,7 @@ export default function DashboardPage() {
                         disabled={isVerifying || !candidateIdInput.trim()}
                         className="bg-[#4D148C] hover:bg-[#7D22C3] text-white font-bold h-10 px-6 shrink-0"
                       >
-                        {isVerifying ? 'Verifying...' : 'Verify'}
+                        {isVerifying ? 'Linking…' : 'Link ID'}
                       </Button>
                     </div>
                     {verifyError && (
@@ -328,7 +366,7 @@ export default function DashboardPage() {
                       </p>
                     )}
                     <p className="text-[11px] text-[#8E8E8E]">
-                      New pilots must verify their Application ID to continue.
+                      Use the Candidate ID from your invitation email to link this account.
                     </p>
                   </div>
                 )}
@@ -402,6 +440,71 @@ export default function DashboardPage() {
               Your application has been successfully submitted. We will be in touch soon
               regarding next steps.
             </p>
+          </div>
+        )}
+
+        {showSchedulingSection && (
+          <div
+            className="mt-6 rounded-xl border border-[#E3E3E3] bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.08)]"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <CalendarRange className="h-6 w-6 text-[#4D148C]" />
+              <h3 className="text-xl font-bold text-[#333333]">Next steps — scheduling</h3>
+            </div>
+            <p className="text-[14px] text-[#565656] mb-4">
+              When HR marks you eligible, you can choose testing and class dates here. Links respect
+              your current pipeline stage.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-lg border border-[#F2F2F2] p-4 space-y-2">
+                <div className="flex items-center gap-2 text-[#333333] font-semibold">
+                  <CalendarRange className="h-4 w-4 text-[#4D148C]" />
+                  Testing (cognitive / remote)
+                </div>
+                {showTestingScheduleLink ? (
+                  <Button asChild className="w-full fedex-btn-primary">
+                    <Link href={`/schedule/testing${schedulingParam}`}>
+                      Choose a testing date
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : testingBooked ? (
+                  <p className="text-[13px] text-[#2E7D32] font-semibold">
+                    Booked
+                    {formatSessionTs(candidatePipeline?.testingSessionDate)
+                      ? ` · ${formatSessionTs(candidatePipeline?.testingSessionDate)}`
+                      : ''}
+                  </p>
+                ) : (
+                  <p className="text-[13px] text-[#8E8E8E]">Not available for your stage yet.</p>
+                )}
+              </div>
+              <div className="rounded-lg border border-[#F2F2F2] p-4 space-y-2">
+                <div className="flex items-center gap-2 text-[#333333] font-semibold">
+                  <GraduationCap className="h-4 w-4 text-[#FF6200]" />
+                  Indoctrination class
+                </div>
+                {showIndoctrinationScheduleLink ? (
+                  <Button asChild className="w-full fedex-btn-primary">
+                    <Link href={`/schedule/indoctrination${schedulingParam}`}>
+                      Choose a class date
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : indoctrinationBooked ? (
+                  <p className="text-[13px] text-[#2E7D32] font-semibold">
+                    Booked
+                    {formatSessionTs(candidatePipeline?.indoctrinationSessionDate)
+                      ? ` · ${formatSessionTs(candidatePipeline?.indoctrinationSessionDate)}`
+                      : ''}
+                  </p>
+                ) : (
+                  <p className="text-[13px] text-[#8E8E8E]">
+                    Opens after your interview is scheduled (or when HR invites you).
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

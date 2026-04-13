@@ -66,7 +66,7 @@ function entryVisual(entry: AuditDoc): Visual {
       return {
         Icon: ShieldCheck,
         color: '#008A00',
-        primary: `${name} verified their Candidate ID`,
+        primary: `${name} linked their Candidate ID`,
       };
     case 'application_started':
       return {

@@ -15,6 +15,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 import { loginSchema, type LoginSchema } from '@/lib/schemas';
 import { useAuth, useFirestore } from '@/firebase';
+import { createSessionCookie } from '@/app/auth/actions';
 import {
   Form,
   FormControl,
@@ -81,6 +82,27 @@ export function LoginForm() {
           userData.role === 'dev' ||
           userData.isAdmin === true ||
           userData.skipCandidateVerification === true);
+
+      // Set HTTP-only session cookie before navigating — middleware requires it for
+      // /dashboard and /admin; without this, the first navigation bounces to /login.
+      const idToken = await user.getIdToken();
+      const sessionResult = await createSessionCookie(idToken);
+      if (!sessionResult.success) {
+        toast({
+          variant: 'destructive',
+          title: 'Session could not start',
+          description: 'You are signed in, but the portal session failed. Please try signing in again.',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Let onAuthStateChanged flush into React (useUser) before navigating; avoids
+      // AuthGate seeing a stale `!user` on the next route. Skip router.refresh() here
+      // — it tended to race with the cookie + client auth state.
+      await new Promise<void>((resolve) => {
+        queueMicrotask(() => resolve());
+      });
 
       if (goAdmin) {
         toast({

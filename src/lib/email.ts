@@ -92,7 +92,7 @@ export function buildFlowStartedEmail(
   <div class="body">
     <p>Dear ${safeName},</p>
     <p>We are reaching out because FedEx Express would like to invite you to update your pilot application through our secure Pilot Application Portal.</p>
-    <p>Your unique Candidate ID is below. You will need this to verify your identity and access your application.</p>
+    <p>Your unique Candidate ID is below. You will need it to register and link your account to your application.</p>
     <div class="id-box">
       <div class="id-label">Your Candidate ID</div>
       <div class="id-value">${candidateId}</div>
@@ -109,7 +109,7 @@ export function buildFlowStartedEmail(
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div>Enter your Candidate ID above to verify your identity</div>
+        <div>Enter your Candidate ID when prompted to link your portal account</div>
       </div>
       <div class="step">
         <div class="step-num">4</div>

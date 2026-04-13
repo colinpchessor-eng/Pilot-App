@@ -313,6 +313,8 @@ type CandidateIdsDoc = {
   applicationStartedAt?: { toDate?: () => Date };
   flowStatusUpdatedAt?: { toDate?: () => Date };
   interviewInvitedAt?: { toDate?: () => Date };
+  testingBookedAt?: { toDate?: () => Date };
+  indoctrinationBookedAt?: { toDate?: () => Date };
 };
 
 function formatTs(ts: { toDate?: () => Date } | undefined): string {
@@ -375,7 +377,7 @@ const TIMELINE_STEPS: TimelineStep[] = [
     label: 'Registered',
     ts: (c, uc) => formatTs(c.registeredAt) || (uc ? format(uc, 'MMM d, yyyy') : ''),
   },
-  { id: 'verified', label: 'Verified', ts: (c) => formatTs(c.verifiedAt) },
+  { id: 'verified', label: 'ID linked', ts: (c) => formatTs(c.verifiedAt) },
   { id: 'submitted', label: 'Submitted', ts: (c) => formatTs(c.submittedAt) },
   {
     id: 'under_review',
@@ -383,9 +385,19 @@ const TIMELINE_STEPS: TimelineStep[] = [
     ts: (c) => (c.flowStatus === 'under_review' ? formatTs(c.flowStatusUpdatedAt) : ''),
   },
   {
+    id: 'testing',
+    label: 'Testing',
+    ts: (c) => formatTs(c.testingBookedAt),
+  },
+  {
     id: 'interview',
     label: 'Interview',
     ts: (c) => formatTs(c.interviewInvitedAt),
+  },
+  {
+    id: 'indoctrination',
+    label: 'Indoctrination',
+    ts: (c) => formatTs(c.indoctrinationBookedAt),
   },
   {
     id: 'decision',
@@ -397,36 +409,34 @@ const TIMELINE_STEPS: TimelineStep[] = [
   },
 ];
 
+const TIMELINE_LAST = 9;
+
 function stepVisual(
   stepIndex: number,
   flowStatus: string | undefined
 ): 'check' | 'hourglass' | 'empty' {
   const f = flowStatus || 'submitted';
   if (f === 'hired' || f === 'not_selected') {
-    return stepIndex <= 7 ? 'check' : 'empty';
+    return stepIndex <= TIMELINE_LAST ? 'check' : 'empty';
   }
-  if (f === 'interview_sent' || f === 'scheduled') {
-    if (stepIndex <= 5) return 'check';
-    if (stepIndex === 6) return 'hourglass';
-    return 'empty';
-  }
-  if (f === 'under_review') {
-    if (stepIndex <= 4) return 'check';
-    if (stepIndex === 5) return 'hourglass';
-    return 'empty';
-  }
-  if (f === 'submitted') {
-    if (stepIndex <= 4) return 'check';
-    if (stepIndex === 5) return 'hourglass';
-    return 'empty';
-  }
-  if (f === 'in_progress') {
-    if (stepIndex <= 4) return 'check';
-    if (stepIndex === 5) return 'hourglass';
-    return 'empty';
-  }
-  if (stepIndex <= 4) return 'check';
-  if (stepIndex === 5) return 'hourglass';
+  const activeStep: Record<string, number> = {
+    imported: 0,
+    invited: 1,
+    registered: 2,
+    verified: 3,
+    in_progress: 5,
+    submitted: 5,
+    under_review: 5,
+    testing_invited: 6,
+    testing_scheduled: 6,
+    interview_sent: 7,
+    scheduled: 7,
+    indoctrination_invited: 8,
+    indoctrination_scheduled: 8,
+  };
+  const cur = activeStep[f] ?? 5;
+  if (stepIndex < cur) return 'check';
+  if (stepIndex === cur) return 'hourglass';
   return 'empty';
 }
 

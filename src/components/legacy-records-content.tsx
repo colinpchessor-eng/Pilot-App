@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import type { LegacyData } from '@/lib/types';
 import {
   AlertTriangle,
@@ -65,6 +66,23 @@ export function LegacyRecordsContent({
   const showResidence = !!(res.street || res.city || res.state || res.zip);
   const showLastFlown = !!(ft.dateLastFlown || ft.lastAircraftFlown);
   const rightColumnHasContent = showEmployer || showLastFlown || showResidence;
+
+  const printLegacyRecords = useCallback(() => {
+    document.body.classList.add('legacy-records-print-active');
+    const cleanup = () => {
+      document.body.classList.remove('legacy-records-print-active');
+    };
+    const onAfterPrint = () => {
+      cleanup();
+      window.removeEventListener('afterprint', onAfterPrint);
+    };
+    window.addEventListener('afterprint', onAfterPrint);
+    window.print();
+    window.setTimeout(() => {
+      window.removeEventListener('afterprint', onAfterPrint);
+      cleanup();
+    }, 3000);
+  }, []);
 
   const extraFlightRows: { label: string; value: number | undefined }[] = [
     { label: 'Military', value: ft.military },
@@ -302,7 +320,7 @@ export function LegacyRecordsContent({
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => printLegacyRecords()}
                 className="print-hide fedex-btn-primary flex flex-1 py-4"
               >
                 <Printer className="h-5 w-5" />

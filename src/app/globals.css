@@ -639,18 +639,18 @@
   opacity: 1;
 }
 
-/* Print styles for Legacy Records */
+/* Print styles for Legacy Records — only while body.legacy-records-print-active (set during print) */
 @media print {
-  body * {
+  body.legacy-records-print-active * {
     visibility: hidden;
   }
 
-  .legacy-print-area,
-  .legacy-print-area * {
+  body.legacy-records-print-active .legacy-print-area,
+  body.legacy-records-print-active .legacy-print-area * {
     visibility: visible;
   }
 
-  .legacy-print-area {
+  body.legacy-records-print-active .legacy-print-area {
     position: absolute;
     left: 0;
     top: 0;
@@ -658,9 +658,9 @@
     padding: 40px;
   }
 
-  nav,
-  .interior-navbar,
-  .print-hide {
+  body.legacy-records-print-active nav,
+  body.legacy-records-print-active .interior-navbar,
+  body.legacy-records-print-active .print-hide {
     display: none !important;
   }
 }
@@ -683,6 +683,12 @@
 
 /* Admin merged application review — print */
 @media print {
+  /* Undo legacy “hide all” if both classes ever stack; ensure report subtree prints */
+  body.admin-review-print-active .admin-review-page,
+  body.admin-review-print-active .admin-review-page * {
+    visibility: visible !important;
+  }
+
   body.admin-review-print-active .interior-navbar {
     display: none !important;
   }
@@ -694,30 +700,52 @@
 
   body.admin-review-print-active main {
     max-width: 100% !important;
-    padding: 16px !important;
+    padding: 8px 12px !important;
+  }
+
+  /* Denser type + vertical rhythm so more fits per page */
+  body.admin-review-print-active .admin-review-page {
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+  }
+
+  body.admin-review-print-active .admin-review-page > * + * {
+    margin-top: 0.4rem !important;
   }
 
   body.admin-review-print-active .admin-review-page .review-section,
   body.admin-review-print-active .admin-review-page section.review-section {
     background: #fff !important;
     box-shadow: none !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    /* Allow sections to split across pages; avoid was forcing huge blank gaps */
+    break-inside: auto !important;
+    page-break-inside: auto !important;
     border: 1px solid #333 !important;
+    padding: 8px 10px !important;
+    margin-bottom: 0.35rem !important;
   }
 
+  /* Do not force a new page before every section (was one block per printed page) */
   body.admin-review-print-active .admin-review-page .review-section + .review-section {
-    break-before: page;
-    page-break-before: always;
-  }
-
-  body.admin-review-print-active .admin-review-page .review-section:first-of-type {
-    break-before: auto;
-    page-break-before: auto;
+    break-before: auto !important;
+    page-break-before: auto !important;
   }
 
   body.admin-review-print-active .admin-review-print-header {
     display: block !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 8px !important;
+    border-bottom-width: 1px !important;
+  }
+
+  body.admin-review-print-active .admin-review-print-header h1 {
+    font-size: 13pt !important;
+    margin-top: 0.25rem !important;
+  }
+
+  body.admin-review-print-active .admin-review-print-header p {
+    margin-top: 0.15rem !important;
+    line-height: 1.3 !important;
   }
 
   body.admin-review-print-active .review-compare-head-legacy,
@@ -729,5 +757,36 @@
   body.admin-review-print-active .review-flight-row-highlight {
     background: #fff !important;
     border-left: 3px solid #333 !important;
+  }
+
+  body.admin-review-print-active .admin-review-page.pb-16 {
+    padding-bottom: 0 !important;
+  }
+
+  /* Flight hours banner + compare: override inline padding for denser print */
+  body.admin-review-print-active .flight-hours-summary-banner {
+    padding: 6px 10px !important;
+    margin-bottom: 6px !important;
+    gap: 8px !important;
+  }
+
+  body.admin-review-print-active .flight-hours-summary-banner .tabular-nums {
+    font-size: 17px !important;
+    line-height: 1.1 !important;
+  }
+
+  body.admin-review-print-active .flight-hours-compare p {
+    margin: 0 !important;
+  }
+
+  /* All grid cells in flight compare (header + data rows) */
+  body.admin-review-print-active .flight-hours-compare > div > div {
+    padding: 5px 8px !important;
+  }
+
+  body.admin-review-print-active .flight-hours-compare .tabular-nums {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
   }
 }

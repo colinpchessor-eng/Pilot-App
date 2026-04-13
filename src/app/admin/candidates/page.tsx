@@ -95,7 +95,7 @@ type LegacyRecord = {
   aeronautical?: { typeRatings?: string };
 };
 
-const FILTERS = ['All', 'Not Contacted', 'Verified', 'Has Legacy Data', 'No Legacy Data'] as const;
+const FILTERS = ['All', 'Not Contacted', 'ID linked', 'Has Legacy Data', 'No Legacy Data'] as const;
 const PAGE_SIZE = 25;
 
 const LIST_TABS = [
@@ -263,7 +263,7 @@ export default function AdminCandidatesPage() {
       );
     }
     if (filter === 'Not Contacted') list = list.filter((c) => c.status === 'unassigned');
-    else if (filter === 'Verified') list = list.filter((c) => c.status === 'claimed');
+    else if (filter === 'ID linked') list = list.filter((c) => c.status === 'claimed');
     else if (filter === 'Has Legacy Data') list = list.filter((c) => legacyMap.has(c.candidateId));
     else if (filter === 'No Legacy Data') list = list.filter((c) => !legacyMap.has(c.candidateId));
     return list;
@@ -280,9 +280,14 @@ export default function AdminCandidatesPage() {
         NEW_PIPELINE_STATUSES.has(effectiveCandidateFlowStatus(c.flowStatus))
       );
     } else if (listTab === 'interviewing') {
-      list = list.filter((c) =>
-        ['interview_sent', 'scheduled'].includes(effectiveCandidateFlowStatus(c.flowStatus))
-      );
+      list = list.filter((c) => {
+        const eff = effectiveCandidateFlowStatus(c.flowStatus);
+        return (
+          ['interview_sent', 'scheduled'].includes(eff) ||
+          ['testing_invited', 'testing_scheduled'].includes(eff) ||
+          ['indoctrination_invited', 'indoctrination_scheduled'].includes(eff)
+        );
+      });
     } else if (listTab === 'hired') {
       list = list.filter((c) => effectiveCandidateFlowStatus(c.flowStatus) === 'hired');
     }
@@ -455,7 +460,7 @@ export default function AdminCandidatesPage() {
         Status: c.status || '',
         FlightHours: legacy?.flightTime?.total ?? '',
         LastEmployer: legacy?.lastEmployer?.company ?? '',
-        VerifiedAt: c.claimedAt?.toDate
+        ClaimedAt: c.claimedAt?.toDate
           ? format(c.claimedAt.toDate(), 'yyyy-MM-dd HH:mm')
           : '',
       };
@@ -753,7 +758,7 @@ export default function AdminCandidatesPage() {
                               : 'bg-[#8E8E8E] text-white'
                           }
                         >
-                          {c.status === 'claimed' ? 'Verified' : 'Not contacted'}
+                          {c.status === 'claimed' ? 'ID linked' : 'Not contacted'}
                         </Badge>
                       </td>
                       <td className={cn(candidateRowsTableTdClass, 'text-right')}>

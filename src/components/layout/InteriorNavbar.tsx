@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import {
   Bell,
   Calendar,
+  CalendarRange,
   ChevronDown,
   LogOut,
   Menu,
@@ -161,6 +162,7 @@ export function InteriorNavbar() {
   }, [pathname]);
 
   const handleSignOut = async () => {
+    setMobileMenuOpen(false);
     try {
       const auth = getAuth();
       await signOut(auth);
@@ -173,9 +175,9 @@ export function InteriorNavbar() {
     } catch (e) {
       console.error('clearSessionCookie failed', e);
     }
-    setMobileMenuOpen(false);
+    // Full navigation avoids a blank intermediate state (stale RSC + client auth mismatch).
     if (typeof window !== 'undefined') {
-      window.location.assign('/login');
+      window.location.href = '/login';
     } else {
       router.replace('/login');
     }
@@ -198,6 +200,7 @@ export function InteriorNavbar() {
       { kind: 'link', label: 'Dashboard', href: '/admin' },
       { kind: 'link', label: 'Candidates', href: '/admin/candidates' },
       { kind: 'link', label: 'Import', href: '/admin/import' },
+      { kind: 'link', label: 'Scheduling', href: '/admin/scheduling', Icon: CalendarRange },
       { kind: 'link', label: 'Interviews', href: '/admin/interviews', Icon: Calendar },
       { kind: 'link', label: 'Activity', href: '/admin/activity' },
     ];
@@ -224,6 +227,7 @@ export function InteriorNavbar() {
       { kind: 'link', label: 'Dashboard', href: '/admin' },
       { kind: 'link', label: 'Candidates', href: '/admin/candidates' },
       { kind: 'link', label: 'Import', href: '/admin/import' },
+      { kind: 'link', label: 'Scheduling', href: '/admin/scheduling', Icon: CalendarRange },
       { kind: 'link', label: 'Interviews', href: '/admin/interviews', Icon: Calendar },
       { kind: 'link', label: 'Activity', href: '/admin/activity' },
     ];
@@ -276,7 +280,7 @@ export function InteriorNavbar() {
   const roleLabel = useMemo(() => {
     if (isDevUser) return 'Developer';
     if (isAdmin) return 'HR Admin';
-    if (isVerified) return 'Verified pilot';
+    if (isVerified) return 'Portal active';
     return 'Applicant';
   }, [isAdmin, isDevUser, isVerified]);
 
@@ -382,7 +386,7 @@ export function InteriorNavbar() {
               return (
                 <span
                   key={item.label + item.href}
-                  title="Verify your Candidate ID to access legacy records"
+                  title="Link your Candidate ID to unlock legacy records"
                   className="px-3.5 py-2.5 rounded-full text-[15px] font-medium text-[#8E8E8E] cursor-not-allowed whitespace-nowrap shrink-0 relative select-none opacity-50"
                 >
                   {item.label}
@@ -519,7 +523,7 @@ export function InteriorNavbar() {
                   return (
                     <span
                       key={item.label + item.href}
-                      title="Verify your Candidate ID to access legacy records"
+                      title="Link your Candidate ID to unlock legacy records"
                       className="px-4 py-3 rounded-xl text-[15px] font-medium text-[#8E8E8E] cursor-not-allowed opacity-50 select-none"
                     >
                       {item.label}

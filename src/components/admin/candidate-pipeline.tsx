@@ -90,12 +90,20 @@ export function CandidatePipeline({ candidates, upcomingInterviews = [] }: Props
               </li>
             ))}
           </ul>
-          <Link
-            href="/admin/interviews"
-            className="inline-block mt-3 text-[12px] font-semibold text-[#4D148C] hover:underline"
-          >
-            Manage in Interview Management →
-          </Link>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+            <Link
+              href="/admin/scheduling"
+              className="text-[12px] font-semibold text-[#4D148C] hover:underline"
+            >
+              Testing &amp; indoctrination scheduling →
+            </Link>
+            <Link
+              href="/admin/interviews"
+              className="text-[12px] font-semibold text-[#4D148C] hover:underline"
+            >
+              Interview slots →
+            </Link>
+          </div>
         </div>
       )}
       {notSel > 0 && (

@@ -74,10 +74,64 @@ export type CandidateFlowStatus =
   | 'in_progress'
   | 'submitted'
   | 'under_review'
+  | 'testing_invited'
+  | 'testing_scheduled'
   | 'interview_sent'
   | 'scheduled'
+  | 'indoctrination_invited'
+  | 'indoctrination_scheduled'
   | 'hired'
   | 'not_selected';
+
+/** Cognitive vs remote capacity-based testing session (see `testingSessions`). */
+export type TestingSessionKind = 'cognitive' | 'remote';
+
+export type CapacitySessionBookingStatus = 'confirmed' | 'cancelled';
+
+export type TestingSessionDoc = {
+  date: Timestamp;
+  kind: TestingSessionKind;
+  capacity: number;
+  bookedCount: number;
+  active: boolean;
+  notes: string;
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp | null;
+};
+
+export type TestingBookingDoc = {
+  sessionId: string;
+  candidateUid: string;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail: string;
+  scheduledFor: Timestamp;
+  status: CapacitySessionBookingStatus;
+  createdAt: Timestamp;
+};
+
+export type IndoctrinationSessionDoc = {
+  date: Timestamp;
+  capacity: number;
+  bookedCount: number;
+  active: boolean;
+  notes: string;
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp | null;
+};
+
+export type IndoctrinationBookingDoc = {
+  sessionId: string;
+  candidateUid: string;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail: string;
+  scheduledFor: Timestamp;
+  status: CapacitySessionBookingStatus;
+  createdAt: Timestamp;
+};
 
 export type EmploymentHistory = {
   employerName: string;

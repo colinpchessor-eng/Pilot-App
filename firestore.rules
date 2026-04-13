@@ -73,7 +73,9 @@ service cloud.firestore {
         .hasOnly([
           'flowStatus', 'flowStatusUpdatedAt', 'verifiedAt', 'registeredAt',
           'applicationStartedAt', 'submittedAt', 'interviewInvitedAt',
-          'interviewScheduledAt', 'interviewDate', 'invitedAt'
+          'interviewScheduledAt', 'interviewDate', 'invitedAt',
+          'testingSessionId', 'testingBookedAt', 'testingSessionDate',
+          'indoctrinationSessionId', 'indoctrinationBookedAt', 'indoctrinationSessionDate'
         ]);
     }
 
@@ -433,6 +435,81 @@ service cloud.firestore {
         && request.resource.data.scheduledFor is timestamp
         && request.resource.data.createdAt is timestamp;
 
+      allow update, delete: if isAdmin();
+    }
+
+    // ── testingSessions (capacity-based; candidates increment bookedCount in a transaction) ──
+    // Create/update/delete: same as interviewSlots — trust staff (isAdmin includes role dev).
+    // Avoid strict `createdAt is timestamp` on create: serverTimestamp() is not always `is timestamp` during rules eval.
+    match /testingSessions/{sessionId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.active == true);
+      allow create, delete: if isAdmin();
+
+      allow update: if isAdmin();
+
+      allow update: if isSignedIn()
+        && resource.data.active == true
+        && resource.data.capacity is int
+        && resource.data.bookedCount is int
+        && resource.data.bookedCount < resource.data.capacity
+        && request.resource.data.bookedCount == resource.data.bookedCount + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bookedCount', 'updatedAt'])
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp);
+    }
+
+    match /testingBookings/{bookingId} {
+      allow read: if isSignedIn()
+        && (resource.data.candidateUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && request.resource.data.candidateUid == request.auth.uid
+        && request.resource.data.status == 'confirmed'
+        && request.resource.data.keys().hasOnly([
+          'sessionId', 'candidateUid', 'candidateId', 'candidateName',
+          'candidateEmail', 'scheduledFor', 'status', 'createdAt'
+        ])
+        && request.resource.data.sessionId is string
+        && request.resource.data.candidateUid is string
+        && request.resource.data.candidateId is string
+        && request.resource.data.candidateName is string
+        && request.resource.data.candidateEmail is string
+        && request.resource.data.scheduledFor is timestamp
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if isAdmin();
+    }
+
+    // ── indoctrinationSessions ──
+    match /indoctrinationSessions/{sessionId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.active == true);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin();
+
+      allow update: if isSignedIn()
+        && resource.data.active == true
+        && resource.data.capacity is int
+        && resource.data.bookedCount is int
+        && resource.data.bookedCount < resource.data.capacity
+        && request.resource.data.bookedCount == resource.data.bookedCount + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bookedCount', 'updatedAt'])
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp);
+    }
+
+    match /indoctrinationBookings/{bookingId} {
+      allow read: if isSignedIn()
+        && (resource.data.candidateUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && request.resource.data.candidateUid == request.auth.uid
+        && request.resource.data.status == 'confirmed'
+        && request.resource.data.keys().hasOnly([
+          'sessionId', 'candidateUid', 'candidateId', 'candidateName',
+          'candidateEmail', 'scheduledFor', 'status', 'createdAt'
+        ])
+        && request.resource.data.sessionId is string
+        && request.resource.data.candidateUid is string
+        && request.resource.data.candidateId is string
+        && request.resource.data.candidateName is string
+        && request.resource.data.candidateEmail is string
+        && request.resource.data.scheduledFor is timestamp
+        && request.resource.data.createdAt == request.time;
       allow update, delete: if isAdmin();
     }
 

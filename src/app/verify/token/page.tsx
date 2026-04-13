@@ -41,7 +41,7 @@ export default function VerifyTokenPage() {
       }
       router.replace('/dashboard');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to verify token.');
+      setError(e instanceof Error ? e.message : 'Could not confirm your token.');
     } finally {
       setLoading(false);
     }
@@ -99,9 +99,9 @@ export default function VerifyTokenPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => router.push('/verify/request')}
+            onClick={() => router.push('/dashboard')}
           >
-            Request a new token
+            Back to dashboard
           </Button>
         </CardContent>
       </Card>

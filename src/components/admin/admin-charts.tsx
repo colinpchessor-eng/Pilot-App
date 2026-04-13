@@ -48,7 +48,7 @@ export function AdminCharts({
       { name: 'Not Started', value: notStarted },
       { name: 'In Progress', value: inProgress },
       { name: 'Submitted', value: submitted },
-      { name: 'Verified (not started)', value: verifiedNotStarted },
+      { name: 'ID linked (not started)', value: verifiedNotStarted },
     ].filter((d) => d.value > 0);
   }, [allUsers]);
 

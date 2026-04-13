@@ -52,9 +52,14 @@ export function AuthGate() {
   useEffect(() => {
     if (authLoading) return;
 
+    // Only clear the session cookie when bouncing off a protected route. Clearing on
+    // every `!user` (e.g. /login) raced with post-sign-in: cookie was set, then a
+    // brief `!user` frame wiped it before the first navigation to /admin.
     if (!user) {
-      clearSessionCookie();
-      if (shouldProtect) router.replace('/login');
+      if (shouldProtect) {
+        void clearSessionCookie();
+        router.replace('/login');
+      }
       return;
     }
 

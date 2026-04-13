@@ -128,11 +128,11 @@ export default function ApplicationPage() {
         <div className="container mx-auto max-w-5xl py-8">
           <Card className="border-[#E3E3E3] bg-white">
             <CardHeader>
-              <CardTitle className="text-[#333333]">Verification required</CardTitle>
+              <CardTitle className="text-[#333333]">Link your Candidate ID</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-[#565656]">
-                Complete candidate verification on your dashboard before opening the
+                On your dashboard, enter your Candidate ID to finish registration and open your
                 application.
               </p>
               <Button asChild className="fedex-btn-primary">

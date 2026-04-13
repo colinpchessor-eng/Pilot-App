@@ -24,30 +24,6 @@ function getResendClient() {
   };
 }
 
-export async function triggerAdminVerificationRequestEmail(input: {
-  uid: string;
-  email: string;
-  displayName: string | null;
-}) {
-  const adminEmail = process.env.VERIFICATION_ADMIN_EMAIL;
-  const client = getResendClient();
-  if (!client || !adminEmail) return { success: false, message: 'Email not configured.' };
-
-  await client.resend.emails.send({
-    from: client.from,
-    to: adminEmail,
-    subject: 'Pilot Portal: Verification request',
-    text:
-      `A user requested identity verification.\n\n` +
-      `Name: ${input.displayName ?? 'N/A'}\n` +
-      `Email: ${input.email}\n` +
-      `UID: ${input.uid}\n\n` +
-      `Open the admin dashboard (Identity Verifications): /admin#identity-verifications`,
-  });
-
-  return { success: true, message: 'Admin notified.' };
-}
-
 function getPortalAdminInbox(): string | null {
   return process.env.PORTAL_REQUESTS_ADMIN_EMAIL || process.env.VERIFICATION_ADMIN_EMAIL || null;
 }
@@ -139,10 +115,10 @@ export async function triggerApplicantRejectionEmail(input: {
   await client.resend.emails.send({
     from: client.from,
     to: input.email,
-    subject: 'FedEx Pilot Portal: Verification update',
+    subject: 'FedEx Pilot Portal: Access update',
     text:
       `Hi ${input.displayName ?? 'there'},\n\n` +
-      `We could not verify your identity for this portal request.\n` +
+      `We could not complete your portal access request.\n` +
       `If you believe this is a mistake, please contact support.\n`,
   });
 

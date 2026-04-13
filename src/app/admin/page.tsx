@@ -5,7 +5,6 @@ import { CandidatePipeline } from '@/components/admin/candidate-pipeline';
 import { ActivityFeed } from '@/components/admin/activity-feed';
 import { AdminCharts } from '@/components/admin/admin-charts';
 import { ApplicationsTable } from '@/components/admin/applications-table';
-import { AdminPendingVerificationsPanel } from '@/components/admin/admin-pending-verifications-panel';
 import { AdminDeletionsPanel } from '@/components/admin/admin-deletions-panel';
 import { AdminUnlockRequestsPanel } from '@/components/admin/admin-unlock-requests-panel';
 import { useFirestore, useUser } from '@/firebase';
@@ -34,12 +33,6 @@ export default function AdminDashboardPage() {
 
   const candidatesQuery = useMemo(() => query(collection(firestore, 'candidateIds')), [firestore]);
   const { data: allCandidates } = useCollection<any>(candidatesQuery);
-
-  const pendingVerifQuery = useMemo(
-    () => query(collection(firestore, 'pendingVerifications'), where('status', '==', 'pending')),
-    [firestore]
-  );
-  const { data: pendingVerifs } = useCollection<any>(pendingVerifQuery);
 
   const pendingDeletionsQuery = useMemo(
     () => query(collection(firestore, 'deletionRequests'), where('status', '==', 'pending')),
@@ -113,7 +106,7 @@ export default function AdminDashboardPage() {
       Email: c.email || '',
       LegacyAppID: c.legacyApplicationId || '',
       Status: c.status || '',
-      VerifiedAt: c.claimedAt?.toDate ? format(c.claimedAt.toDate(), 'yyyy-MM-dd HH:mm') : '',
+      ClaimedAt: c.claimedAt?.toDate ? format(c.claimedAt.toDate(), 'yyyy-MM-dd HH:mm') : '',
     }));
     const csv = unparse(rows);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -152,14 +145,12 @@ export default function AdminDashboardPage() {
 
       <AdminStats
         totalCandidates={allCandidates?.length ?? 0}
-        verifiedCandidates={verifiedCandidates}
+        claimedCandidates={verifiedCandidates}
         inProgress={inProgressCount}
         totalSubmissions={submittedApplications.length}
-        pendingVerifications={pendingVerifs?.length ?? 0}
         pendingDeletions={pendingDeletions?.length ?? 0}
         interviewsScheduled={interviewsScheduledCount}
         emailsSentToday={mailTodayRows?.length ?? 0}
-        verificationsHref="/admin#identity-verifications"
         deletionsHref="/admin#deletion-requests"
       />
 
@@ -213,8 +204,6 @@ export default function AdminDashboardPage() {
           )}
         </Link>
       </div>
-
-      <AdminPendingVerificationsPanel />
 
       <section id="deletion-requests" className="scroll-mt-24">
         <AdminDeletionsPanel embedded />

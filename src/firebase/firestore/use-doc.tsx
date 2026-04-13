@@ -20,8 +20,11 @@ export function useDoc<T extends DocumentData>(
 
   useEffect(() => {
     if (!ref) {
-      // If there's no ref, we are still waiting for it, so loading is not finished.
-      // We keep loading as true and wait for a valid ref.
+      // No document to load (e.g. signed out — user doc ref cleared). Reset so callers
+      // don't keep stale data / spinners from the previous ref.
+      setData(null);
+      setError(null);
+      setLoading(false);
       return;
     }
 

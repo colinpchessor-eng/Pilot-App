@@ -39,6 +39,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PrivacyPolicyArticle } from '@/components/legal/privacy-policy-article';
 import { triggerWelcomeEmail } from '@/app/actions';
+import { createSessionCookie } from '@/app/auth/actions';
 import type { ApplicantData } from '@/lib/types';
 import { writeCandidateAuditLog } from '@/lib/candidate-audit';
 import { isBootstrapAdminEmail } from '@/lib/admin-bootstrap';
@@ -261,6 +262,22 @@ export function SignupForm() {
       if (!staffRole) {
         await triggerWelcomeEmail(user.email!, fullName);
       }
+
+      const idToken = await user.getIdToken();
+      const sessionResult = await createSessionCookie(idToken);
+      if (!sessionResult.success) {
+        toast({
+          variant: 'destructive',
+          title: 'Session could not start',
+          description: 'Your account was created, but the portal session failed. Please sign in from the login page.',
+        });
+        setLoading(false);
+        return;
+      }
+
+      await new Promise<void>((resolve) => {
+        queueMicrotask(() => resolve());
+      });
 
       toast({
         title: 'Account Created!',

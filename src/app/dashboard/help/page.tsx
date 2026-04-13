@@ -285,7 +285,7 @@ export default function DashboardHelpPage() {
           <RequestCard
             icon={Phone}
             title="Contact us"
-            description="Reach the pilot portal administrators directly for account issues, verification problems, or if your request is urgent."
+            description="Reach the pilot portal administrators directly for account issues, Candidate ID or login problems, or if your request is urgent."
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <a
