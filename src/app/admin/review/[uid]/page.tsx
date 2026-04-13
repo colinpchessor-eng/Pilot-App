@@ -38,7 +38,8 @@ import type {
   LegacyData,
   SafetyQuestion,
 } from '@/lib/types';
-import { decryptField, isEncrypted } from '@/lib/encryption';
+import { isEncrypted } from '@/lib/encryption';
+import { adminDecryptReviewDisplayFields } from '@/app/applicant/sensitive-field-actions';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
@@ -337,22 +338,18 @@ function sortEmploymentRecentFirst(entries: EmploymentHistory[]): EmploymentHist
   });
 }
 
-function decryptAtp(raw: string | null): string {
+/** Shown while server decrypt runs; encrypted blobs never decrypted on the client. */
+function plaintextAtpPreview(applicant: ApplicantData): string {
+  const raw = applicant.atpNumber;
   if (raw == null || raw === '') return '—';
   const s = String(raw);
-  return isEncrypted(s) ? decryptField(s) : s;
+  return isEncrypted(s) ? '…' : s;
 }
 
-function decryptMedicalDisplay(raw: ApplicantData['firstClassMedicalDate']): string {
+function plaintextMedPreview(applicant: ApplicantData): string {
+  const raw = applicant.firstClassMedicalDate;
   if (!raw) return '—';
-  if (typeof raw === 'string' && isEncrypted(raw)) {
-    const d = decryptField(raw);
-    try {
-      return format(new Date(d), 'PP');
-    } catch {
-      return d;
-    }
-  }
+  if (typeof raw === 'string' && isEncrypted(raw)) return '…';
   if (typeof raw === 'object' && raw !== null && 'toDate' in raw) {
     try {
       return format((raw as { toDate: () => Date }).toDate(), 'PP');
@@ -466,6 +463,10 @@ export default function AdminReviewPage() {
   const [markingInterview, setMarkingInterview] = useState(false);
   const [markingReview, setMarkingReview] = useState(false);
   const [aircraftBreakdownOpen, setAircraftBreakdownOpen] = useState(false);
+  const [sensitiveDisplay, setSensitiveDisplay] = useState<{
+    atpLabel: string;
+    medDisplay: string;
+  } | null>(null);
 
   const firstName = applicant?.firstName?.trim() || '';
   const fullName = [applicant?.firstName, applicant?.lastName].filter(Boolean).join(' ').trim() || applicant?.email || 'Candidate';
@@ -502,6 +503,31 @@ FedEx Express Pilot Recruiting`;
     if (!candidateId || !candidate || notesDirty) return;
     setNotes(String(candidate.notes ?? ''));
   }, [candidateId, candidate, notesDirty]);
+
+  useEffect(() => {
+    if (!applicant || !adminUser) {
+      setSensitiveDisplay(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await adminUser.getIdToken();
+        const d = await adminDecryptReviewDisplayFields(
+          token,
+          applicant.atpNumber,
+          applicant.firstClassMedicalDate as ApplicantData['firstClassMedicalDate']
+        );
+        if (!cancelled) setSensitiveDisplay(d);
+      } catch (e) {
+        console.error('adminDecryptReviewDisplayFields:', e);
+        if (!cancelled) setSensitiveDisplay(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [applicant, adminUser]);
 
   useEffect(() => {
     if (!candidateId || !notesDirty) return;
@@ -696,6 +722,9 @@ FedEx Express Pilot Recruiting`;
     .toUpperCase() || (applicant.email?.[0]?.toUpperCase() ?? '?');
 
   const employmentSorted = sortEmploymentRecentFirst(applicant.employmentHistory || []);
+
+  const atpDisplay = sensitiveDisplay?.atpLabel ?? plaintextAtpPreview(applicant);
+  const medDisplay = sensitiveDisplay?.medDisplay ?? plaintextMedPreview(applicant);
 
   return (
     <div className="admin-review-page space-y-8 pb-16">
@@ -1308,7 +1337,7 @@ FedEx Express Pilot Recruiting`;
           <div className="p-4 space-y-3 text-[14px]">
             <div>
               <p className="text-[11px] font-bold text-[#8E8E8E] uppercase">ATP Number</p>
-              <p className="text-[#FF6200] mt-1">{decryptAtp(applicant.atpNumber)}</p>
+              <p className="text-[#FF6200] mt-1">{atpDisplay}</p>
             </div>
             <div>
               <p className="text-[11px] font-bold text-[#8E8E8E] uppercase">Type Ratings</p>
@@ -1316,7 +1345,7 @@ FedEx Express Pilot Recruiting`;
             </div>
             <div>
               <p className="text-[11px] font-bold text-[#8E8E8E] uppercase">First Class Medical</p>
-              <p className="text-[#FF6200] mt-1">{decryptMedicalDisplay(applicant.firstClassMedicalDate)}</p>
+              <p className="text-[#FF6200] mt-1">{medDisplay}</p>
             </div>
           </div>
         </div>

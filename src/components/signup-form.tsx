@@ -42,7 +42,6 @@ import { triggerWelcomeEmail } from '@/app/actions';
 import { createSessionCookie } from '@/app/auth/actions';
 import type { ApplicantData } from '@/lib/types';
 import { writeCandidateAuditLog } from '@/lib/candidate-audit';
-import { isBootstrapAdminEmail } from '@/lib/admin-bootstrap';
 
 export function SignupForm() {
   const router = useRouter();
@@ -118,9 +117,8 @@ export function SignupForm() {
       (adminSnap.data()?.role === 'admin' || adminSnap.data()?.role === 'dev')
         ? (adminSnap.data()?.role as 'admin' | 'dev')
         : null;
-    const legacyBootstrap = isBootstrapAdminEmail(values.email);
-    const skipCandidateVerify = authorizedRole !== null || legacyBootstrap;
-    const staffRole = authorizedRole ?? (legacyBootstrap ? ('admin' as const) : null);
+    const skipCandidateVerify = authorizedRole !== null;
+    const staffRole = authorizedRole;
 
     if (!skipCandidateVerify && values.candidateId.trim().length < 6) {
       form.setError('candidateId', {

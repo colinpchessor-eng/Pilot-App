@@ -1,5 +1,5 @@
 import type { ApplicantData, SafetyQuestion } from '@/lib/types';
-import { decryptField, isEncrypted } from '@/lib/encryption';
+import { decryptFieldServer, isEncryptedValue } from '@/lib/encryption-server';
 import { format } from 'date-fns';
 import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
@@ -49,13 +49,13 @@ function formatHoursDisplay(n: number): string {
 function decryptAtp(raw: string | null): string {
   if (raw == null || raw === '') return '—';
   const s = String(raw);
-  return isEncrypted(s) ? decryptField(s) : s;
+  return isEncryptedValue(s) ? decryptFieldServer(s) : s;
 }
 
 function decryptMedicalDisplay(raw: ApplicantData['firstClassMedicalDate']): string {
   if (!raw) return '—';
-  if (typeof raw === 'string' && isEncrypted(raw)) {
-    const d = decryptField(raw);
+  if (typeof raw === 'string' && isEncryptedValue(raw)) {
+    const d = decryptFieldServer(raw);
     try {
       return format(new Date(d), 'PP');
     } catch {

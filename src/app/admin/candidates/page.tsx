@@ -90,9 +90,20 @@ type CandidateRecord = {
 
 type LegacyRecord = {
   flightTime?: Record<string, unknown> & { total?: unknown; lastAircraftFlown?: string };
-  lastEmployer?: { company?: string; title?: string };
+  lastEmployer?: {
+    company?: string;
+    title?: string;
+    city?: string;
+    state?: string;
+    from?: string;
+    to?: string;
+  };
   lastResidence?: unknown;
-  aeronautical?: { typeRatings?: string };
+  aeronautical?: {
+    typeRatings?: string;
+    atpNumber?: string;
+    firstClassMedicalDate?: string;
+  };
 };
 
 const FILTERS = ['All', 'Not Contacted', 'ID linked', 'Has Legacy Data', 'No Legacy Data'] as const;

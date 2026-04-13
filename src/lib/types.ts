@@ -27,6 +27,8 @@ export type LegacyData = {
   flightTime?: {
     total?: number;
     turbinePIC?: number;
+    /** Alternate casing from some imports / Firestore mirrors. */
+    turbinePic?: number;
     /** Corrected rollup from import script (preferred over legacy totals). */
     totalPIC?: number;
     totalSIC?: number;
@@ -162,7 +164,8 @@ export type ApplicantData = {
   status?: VerificationStatus;
   requestedAt?: Timestamp | null;
   verifiedAt?: Timestamp | null;
-  firstClassMedicalDate: Timestamp | null;
+  /** Plain dates use Timestamp; encrypted-at-rest values are AES strings (see encryption-server). */
+  firstClassMedicalDate: Timestamp | string | null;
   atpNumber: string | null;
   flightTime: {
     total: number;
@@ -204,6 +207,10 @@ export type ApplicantData = {
   candidateFlowStatus?: CandidateFlowStatus | string | null;
   /** Pre-authorized HR/dev accounts: skip Candidate ID gate on dashboard. */
   skipCandidateVerification?: boolean;
+  consentGiven?: boolean;
+  consentTimestamp?: Timestamp | null;
+  consentVersion?: string;
+  privacyPolicyVersion?: string;
 };
 
 export type InterviewSlotStatus = 'available' | 'booked' | 'cancelled';

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm, type Path } from 'react-hook-form';
 import {
   applicationFormSchema,
   type ApplicationFormValues,
@@ -81,7 +81,11 @@ import {
 } from './ui/accordion';
 import { LegacyRecordsContent } from './legacy-records-content';
 import { useRouter } from 'next/navigation';
-import { encryptField, decryptField, isEncrypted } from '@/lib/encryption';
+import { isEncrypted } from '@/lib/encryption';
+import {
+  encryptApplicantSensitiveFields,
+  loadApplicantSensitiveFieldsDecrypted,
+} from '@/app/applicant/sensitive-field-actions';
 import { sendEmail, buildSubmissionEmail } from '@/lib/email';
 
 const APPLICATION_TABS: {
@@ -360,12 +364,9 @@ export function ApplicationForm({
       firstClassMedicalDate: (() => {
         if (!data.firstClassMedicalDate) return null;
         const raw = typeof data.firstClassMedicalDate === 'string' ? data.firstClassMedicalDate : null;
-        if (raw && isEncrypted(raw)) {
-          const decrypted = decryptField(raw);
-          return decrypted ? new Date(decrypted) : null;
-        }
+        if (raw && isEncrypted(raw)) return null;
         if (data.firstClassMedicalDate && typeof data.firstClassMedicalDate === 'object' && 'toDate' in data.firstClassMedicalDate) {
-          return (data.firstClassMedicalDate as any).toDate();
+          return (data.firstClassMedicalDate as { toDate: () => Date }).toDate();
         }
         return raw ? new Date(raw) : null;
       })(),
@@ -373,10 +374,7 @@ export function ApplicationForm({
         const raw = data.atpNumber;
         if (!raw) return 0;
         const str = String(raw);
-        if (isEncrypted(str)) {
-          const decrypted = decryptField(str);
-          return Number(decrypted) || 0;
-        }
+        if (isEncrypted(str)) return 0;
         return Number(raw) || 0;
       })(),
       typeRatings: data.typeRatings ?? '',
@@ -397,6 +395,30 @@ export function ApplicationForm({
     defaultValues: getDefaultValues(applicantData),
     mode: 'onChange',
   });
+
+  React.useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await user.getIdToken();
+        const sensitive = await loadApplicantSensitiveFieldsDecrypted(token);
+        if (cancelled) return;
+        const cur = form.getValues();
+        form.reset({
+          ...cur,
+          atpNumber: sensitive.atpNumber,
+          firstClassMedicalDate: sensitive.firstClassMedicalDate,
+        });
+      } catch (e) {
+        console.error('loadApplicantSensitiveFieldsDecrypted:', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- form.reset stable; avoid reset loops
+  }, [user, applicantData.uid]);
 
   const { fields: employmentFields, append: appendEmployment, remove: removeEmployment } = useFieldArray({
     control: form.control,
@@ -429,12 +451,20 @@ export function ApplicationForm({
     setIsSaving(true);
     try {
       const values = form.getValues();
+      const idToken = await user.getIdToken();
+      const enc = await encryptApplicantSensitiveFields({
+        idToken,
+        atpNumber: String(values.atpNumber || ''),
+        firstClassMedicalDate: values.firstClassMedicalDate
+          ? values.firstClassMedicalDate instanceof Date
+            ? values.firstClassMedicalDate.toISOString()
+            : String(values.firstClassMedicalDate)
+          : null,
+      });
       const encryptedValues = {
         ...values,
-        atpNumber: encryptField(String(values.atpNumber || '')),
-        firstClassMedicalDate: values.firstClassMedicalDate
-          ? encryptField(values.firstClassMedicalDate instanceof Date ? values.firstClassMedicalDate.toISOString() : String(values.firstClassMedicalDate))
-          : null,
+        atpNumber: enc.atpNumber,
+        firstClassMedicalDate: enc.firstClassMedicalDate,
       };
       const docRef = doc(firestore, 'users', user.uid);
       await updateDoc(docRef, encryptedValues as any);
@@ -474,24 +504,33 @@ export function ApplicationForm({
   const onSubmit = (values: ApplicationFormValues) => {
     if (!user || !firestore) return;
     setIsSubmitting(true);
-    const encryptedValues = {
-      ...values,
-      atpNumber: encryptField(String(values.atpNumber || '')),
-      firstClassMedicalDate: values.firstClassMedicalDate
-        ? encryptField(values.firstClassMedicalDate instanceof Date ? values.firstClassMedicalDate.toISOString() : String(values.firstClassMedicalDate))
-        : null,
-    };
-    const docRef = doc(firestore, 'users', user.uid);
-    setDoc(
-      docRef,
-      {
-        ...encryptedValues,
-        submittedAt: serverTimestamp(),
-        candidateFlowStatus: 'submitted',
-      },
-      { merge: true }
-    )
-      .then(async () => {
+    void (async () => {
+      try {
+        const idToken = await user.getIdToken();
+        const enc = await encryptApplicantSensitiveFields({
+          idToken,
+          atpNumber: String(values.atpNumber || ''),
+          firstClassMedicalDate: values.firstClassMedicalDate
+            ? values.firstClassMedicalDate instanceof Date
+              ? values.firstClassMedicalDate.toISOString()
+              : String(values.firstClassMedicalDate)
+            : null,
+        });
+        const encryptedValues = {
+          ...values,
+          atpNumber: enc.atpNumber,
+          firstClassMedicalDate: enc.firstClassMedicalDate,
+        };
+        const docRef = doc(firestore, 'users', user.uid);
+        await setDoc(
+          docRef,
+          {
+            ...encryptedValues,
+            submittedAt: serverTimestamp(),
+            candidateFlowStatus: 'submitted',
+          },
+          { merge: true }
+        );
         const cid = applicantData.candidateId;
         if (cid) {
           try {
@@ -504,25 +543,23 @@ export function ApplicationForm({
             console.error('Candidate flow status (submitted):', err);
           }
         }
-        if (user) {
-          try {
-            const nm = [applicantData.firstName, applicantData.lastName]
-              .filter(Boolean)
-              .join(' ')
-              .trim();
-            await writeCandidateAuditLog(firestore, {
-              uid: user.uid,
-              action: 'application_submitted',
-              candidateName: nm,
-              candidateEmail: user.email,
-              candidateId: applicantData.candidateId ?? '',
-            });
-          } catch (auditErr) {
-            console.error('application_submitted audit:', auditErr);
-          }
+        try {
+          const nm = [applicantData.firstName, applicantData.lastName]
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+          await writeCandidateAuditLog(firestore, {
+            uid: user.uid,
+            action: 'application_submitted',
+            candidateName: nm,
+            candidateEmail: user.email,
+            candidateId: applicantData.candidateId ?? '',
+          });
+        } catch (auditErr) {
+          console.error('application_submitted audit:', auditErr);
         }
         try {
-          if (user?.email && firestore) {
+          if (user.email) {
             const nm = [applicantData.firstName, applicantData.lastName]
               .filter(Boolean)
               .join(' ')
@@ -549,11 +586,19 @@ export function ApplicationForm({
         }
         toast({ title: 'Application Submitted!' });
         router.push('/dashboard');
-      })
-      .finally(() => {
+      } catch (e) {
+        console.error('Submit application:', e);
+        toast({
+          variant: 'destructive',
+          title: 'Submit failed',
+          description:
+            e instanceof Error ? e.message : 'Could not submit. Please try again.',
+        });
+      } finally {
         setIsSubmitting(false);
         setShowSubmitDialog(false);
-      });
+      }
+    })();
   };
 
   const checkValidationAndShowErrors = () => {
@@ -1196,7 +1241,10 @@ export function ApplicationForm({
                                       <button
                                         type="button"
                                         onClick={() =>
-                                          form.setValue(`safetyQuestions.${q.name as any}.answer`, 'no')
+                                          form.setValue(
+                                            `safetyQuestions.${q.name}.answer` as Path<ApplicationFormValues>,
+                                            'no'
+                                          )
                                         }
                                         className={cn(
                                           'rounded-full px-6 py-2 text-sm font-bold transition-all duration-200 enabled:active:scale-[0.98]',
@@ -1210,7 +1258,10 @@ export function ApplicationForm({
                                       <button
                                         type="button"
                                         onClick={() =>
-                                          form.setValue(`safetyQuestions.${q.name as any}.answer`, 'yes')
+                                          form.setValue(
+                                            `safetyQuestions.${q.name}.answer` as Path<ApplicationFormValues>,
+                                            'yes'
+                                          )
                                         }
                                         className={cn(
                                           'rounded-full px-6 py-2 text-sm font-bold transition-all',
@@ -1234,7 +1285,9 @@ export function ApplicationForm({
                                       Please explain:
                                     </label>
                                     <Textarea
-                                      {...form.register(`safetyQuestions.${q.name as any}.explanation`)}
+                                      {...form.register(
+                                        `safetyQuestions.${q.name}.explanation` as Path<ApplicationFormValues>
+                                      )}
                                       className={cn(inputStyle, 'min-h-[80px] resize-y py-3')}
                                       placeholder="Required details..."
                                     />

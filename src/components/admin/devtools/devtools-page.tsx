@@ -1,10 +1,11 @@
 'use client';
 
-// INITIAL SETUP: Manually create these documents in Firestore `authorizedAdmins` (doc ID = lowercased email), or use
-// "Initialize Default Admins" on Developer Tools when the collection is empty:
+// INITIAL SETUP: Manually create `authorizedAdmins` docs (doc ID = lowercased email), or use
+// "Initialize Default Admins" on Developer Tools when the collection is empty.
+// Staff self-signup requires a matching active row (role admin or dev); there is no hard-coded bootstrap email.
 //
-// Document ID: colinpchessor@gmail.com — role: dev, active: true, email, name, addedBy, addedAt
-// Document ID: fedexadmin@fedex.com — role: dev, active: true, email, name, addedBy, addedAt
+// DevTools API routes (`/api/admin/devtools/*`, delete-auth-user, etc.) expect `Authorization: Bearer <Firebase ID token>`
+// for a user whose Firestore `users/{uid}.role` is `dev` (see `verifyDevToolsAccess` in firebase-admin.ts).
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -551,7 +552,10 @@ export function DevToolsPage() {
       const newUid = cred.user.uid;
       await signOut(secondaryAuth);
 
-      const emptySafety = { answer: null as const, explanation: null as const };
+      const emptySafety: { answer: 'yes' | 'no' | null; explanation: string | null } = {
+        answer: null,
+        explanation: null,
+      };
       await setDoc(doc(firestore, 'users', newUid), {
         uid: newUid,
         email,

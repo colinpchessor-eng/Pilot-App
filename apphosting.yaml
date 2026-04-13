@@ -8,3 +8,5 @@ runConfig:
 env:
   - variable: VERIFICATION_ADMIN_EMAIL
     secret: VERIFICATION_ADMIN_EMAIL
+  - variable: ENCRYPTION_KEY
+    secret: ENCRYPTION_KEY

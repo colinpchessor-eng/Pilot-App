@@ -147,15 +147,10 @@ export function AdminAccessManagement() {
         active: true,
         addedAt: serverTimestamp(),
       });
-      await setDoc(doc(firestore, 'authorizedAdmins', 'fedexadmin@fedex.com'), {
-        email: 'fedexadmin@fedex.com',
-        role: 'dev',
-        addedBy: 'system',
-        name: 'FedEx Admin',
-        active: true,
-        addedAt: serverTimestamp(),
+      toast({
+        title: 'Default admin initialized',
+        description: 'Add other staff emails in this table before they can self-sign up as admin.',
       });
-      toast({ title: 'Default admins initialized', description: 'Two developer entries were created.' });
     } catch (e) {
       toast({
         variant: 'destructive',

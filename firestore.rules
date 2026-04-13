@@ -25,7 +25,7 @@ service cloud.firestore {
         ]);
     }
 
-    // Allowed keys on users/{uid} create (bootstrap admin or rare client creates). Verified applicants:
+    // Allowed keys on users/{uid} create (authorized staff or candidate). Verified applicants:
     // server writes identity first; client merge must use userSelfUpdateAffectedKeysAllowlist only.
     function usersCreateKeysValid() {
       return request.resource.data.keys().hasOnly([
@@ -86,19 +86,10 @@ service cloud.firestore {
         ]);
     }
 
-    // Legacy bootstrap (fedexadmin@fedex.com) without authorizedAdmins row.
     function staffSelfSignupCore() {
       return request.resource.data.status == 'verified'
         && request.resource.data.skipCandidateVerification == true
         && (!('candidateId' in request.resource.data) || request.resource.data.candidateId == '');
-    }
-
-    function isBootstrapAdminSignup() {
-      return request.auth != null
-        && request.auth.token.email.lower() == 'fedexadmin@fedex.com'
-        && request.resource.data.isAdmin == true
-        && request.resource.data.role in ['admin', 'dev']
-        && staffSelfSignupCore();
     }
 
     function authorizedAdminUserCreate() {
@@ -142,8 +133,7 @@ service cloud.firestore {
       allow create: if isOwner(userId)
         && usersCreateKeysValid()
         && (
-          isBootstrapAdminSignup()
-          || authorizedAdminUserCreate()
+          authorizedAdminUserCreate()
           || candidateUserCreate()
         );
 

@@ -1,33 +1,10 @@
-import CryptoJS from 'crypto-js';
+/**
+ * Client-safe helpers for encrypted applicant fields (no secret material).
+ * Encrypt/decrypt runs only on the server — see `encryption-server.ts` and
+ * `src/app/applicant/sensitive-field-actions.ts`.
+ */
 
-const ENCRYPTION_KEY =
-  process.env.NEXT_PUBLIC_ENCRYPTION_KEY || '';
-
-export function encryptField(value: string): string {
-  if (!value || !ENCRYPTION_KEY) return value;
-  return CryptoJS.AES.encrypt(
-    value,
-    ENCRYPTION_KEY
-  ).toString();
-}
-
-export function decryptField(
-  encryptedValue: string
-): string {
-  if (!encryptedValue || !ENCRYPTION_KEY)
-    return encryptedValue;
-  try {
-    const bytes = CryptoJS.AES.decrypt(
-      encryptedValue,
-      ENCRYPTION_KEY
-    );
-    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-    return decrypted || encryptedValue;
-  } catch {
-    return encryptedValue;
-  }
-}
-
-export function isEncrypted(value: string): boolean {
-  return value?.startsWith('U2FsdGVk') || false;
+/** Detect CryptoJS/OpenSSL salted ciphertext prefix (base64 of "Salted__"). */
+export function isEncrypted(value: string | null | undefined): boolean {
+  return typeof value === 'string' && value.startsWith('U2FsdGVk');
 }

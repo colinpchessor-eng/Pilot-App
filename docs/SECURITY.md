@@ -40,13 +40,11 @@ This document tracks Firebase and app security posture. Update it when rules, au
 
 Create now uses **`keys().hasOnly([...])`** for the fixed field set (no extra client fields).
 
-### P4 — Bootstrap admin
+### P4 — Staff admin signup
 
-`fedexadmin@fedex.com` may create a user doc with `isAdmin` + `role: admin` on signup.
+There is **no** hard-coded bootstrap email in Firestore rules or the app. HR/dev accounts must exist in **`authorizedAdmins`** (active, role `admin` or `dev`) before self-signup with `skipCandidateVerification` is allowed (`authorizedAdminUserCreate` in `firestore.rules`).
 
-**Risk:** Control of that email controls bootstrap admin.
-
-**Direction:** Lock the account in Firebase Auth; consider one-time bootstrap then remove path; consider custom claims for admin.
+**Developer Tools HTTP APIs** (`/api/admin/devtools/*` and related routes) accept `Authorization: Bearer <Firebase ID token>` and require **`users/{uid}.role == 'dev'`** (`verifyDevToolsAccess`).
 
 ---
 
@@ -55,6 +53,7 @@ Create now uses **`keys().hasOnly([...])`** for the fixed field set (no extra cl
 - [ ] Middleware session cookie (`ff_session`): `HttpOnly`, `Secure`, `SameSite` appropriate for production.
 - [ ] All server actions / Admin SDK entry points verify **admin** (not only client UI).
 - [ ] No secrets in client bundles; `.env.local` not committed (covered by `.env*` in `.gitignore`).
+- [ ] **`ENCRYPTION_KEY`** (server-only) is set wherever server actions run; never `NEXT_PUBLIC_*`. Used for ATP number and first-class medical date at rest (`src/lib/encryption-server.ts`).
 
 ---
 

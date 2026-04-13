@@ -2,7 +2,8 @@
 import { Button } from '@/components/ui/button';
 import type { ApplicantData } from '@/lib/types';
 import { format } from 'date-fns';
-import { decryptField, isEncrypted } from '@/lib/encryption';
+import { useUser } from '@/firebase';
+import { adminDecryptAtpBatchForExport } from '@/app/applicant/sensitive-field-actions';
 import { unparse } from 'papaparse';
 import { Download, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -21,19 +22,30 @@ export function ApplicationsTable({
 }: {
   applications: ApplicantData[];
 }) {
-  const handleExport = () => {
-    if (applications.length === 0) return;
+  const { user } = useUser();
 
-    const dataForCsv = applications.map((app) => ({
+  const handleExport = async () => {
+    if (applications.length === 0 || !user) return;
+    let atpColumn: string[];
+    try {
+      const token = await user.getIdToken();
+      atpColumn = await adminDecryptAtpBatchForExport(
+        token,
+        applications.map((app) => app.atpNumber)
+      );
+    } catch (e) {
+      console.error('Export decrypt ATP:', e);
+      atpColumn = applications.map((app) => String(app.atpNumber ?? ''));
+    }
+
+    const dataForCsv = applications.map((app, i) => ({
       'Submission Date': app.submittedAt
         ? format(app.submittedAt.toDate(), 'yyyy-MM-dd HH:mm')
         : '',
       'First Name': app.firstName || '',
       'Last Name': app.lastName || '',
       Email: app.email || '',
-      'ATP Number': isEncrypted(String(app.atpNumber || ''))
-        ? decryptField(String(app.atpNumber))
-        : (app.atpNumber || ''),
+      'ATP Number': atpColumn[i] ?? '',
       'Total Flight Hours': app.flightTime?.total ?? 0,
       'Turbine PIC Hours': app.flightTime?.turbinePic ?? 0,
       'Multi-Engine Hours': app.flightTime?.multiEngine ?? 0,
@@ -61,7 +73,10 @@ export function ApplicationsTable({
             <span className="admin-tooltip-text">
               Download all submitted applications as a spreadsheet
             </span>
-            <Button onClick={handleExport} disabled={applications.length === 0}>
+            <Button
+              onClick={() => void handleExport()}
+              disabled={applications.length === 0 || !user}
+            >
               <Download className="mr-2 h-4 w-4" />
               Export to CSV
             </Button>
