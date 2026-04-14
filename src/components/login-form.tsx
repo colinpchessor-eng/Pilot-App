@@ -130,7 +130,11 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-6"
+        autoComplete="off"
+      >
         <FormField
           control={form.control}
           name="email"
@@ -142,6 +146,7 @@ export function LoginForm() {
                   <Input
                     type="email"
                     placeholder="name@fedex.com"
+                    autoComplete="off"
                     className="auth-inset-field h-14 rounded-2xl border-0 bg-white pl-6 pr-12 text-[15px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0"
                     {...field}
                   />
@@ -174,6 +179,7 @@ export function LoginForm() {
                   <Input
                     type="password"
                     placeholder="••••••••"
+                    autoComplete="new-password"
                     className="auth-inset-field h-14 rounded-2xl border-0 bg-white pl-6 pr-12 text-[15px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0"
                     {...field}
                   />

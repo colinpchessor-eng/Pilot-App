@@ -46,7 +46,7 @@ type ParsedCandidate = {
     from: string;
     to: string;
   };
-  lastResidence: { street: string; city: string; state: string; zip: string };
+  lastResidence: { street: string; city: string; state: string; zip: string; from: string; to: string };
   aeronautical: { typeRatings: string; firstClassMedicalDate: string };
 };
 
@@ -143,6 +143,17 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function formatMonthDayYear(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+  });
+}
+
 function parseRealFormat(htmlDoc: Document): ParsedCandidate {
   const firstName = getParadoxAnswer(htmlDoc, 'My Information', 'First Name');
   const lastName = getParadoxAnswer(htmlDoc, 'My Information', 'Last Name');
@@ -151,6 +162,8 @@ function parseRealFormat(htmlDoc: Document): ParsedCandidate {
   const city = getParadoxAnswer(htmlDoc, 'Residency History', 'City', '1');
   const state = getParadoxAnswer(htmlDoc, 'Residency History', 'State / Region', '1');
   const zip = getParadoxAnswer(htmlDoc, 'Residency History', 'ZIP/Postal Code', '1');
+  const livedFrom = getParadoxAnswer(htmlDoc, 'Residency History', 'Lived From Date', '1', false);
+  const livedTo = getParadoxAnswer(htmlDoc, 'Residency History', 'Lived To Date', '1', false);
   const company = getParadoxAnswer(htmlDoc, 'Work Experience', 'Employer', '1', true);
   const title = getParadoxAnswer(htmlDoc, 'Work Experience', 'Job Title', '1', true);
   const employerCity = getParadoxAnswer(htmlDoc, 'Work Experience', 'City', '1', true);
@@ -211,7 +224,14 @@ function parseRealFormat(htmlDoc: Document): ParsedCandidate {
       from: formatDate(employerFrom),
       to: formatDate(employerTo),
     },
-    lastResidence: { street, city, state, zip },
+    lastResidence: {
+      street,
+      city,
+      state,
+      zip,
+      from: formatMonthDayYear(livedFrom),
+      to: formatMonthDayYear(livedTo),
+    },
     aeronautical: {
       typeRatings: typeRatings.slice(0, 5).join(', '),
       firstClassMedicalDate: medicalDate,
@@ -246,7 +266,7 @@ function parseTestFormat(htmlDoc: Document): ParsedCandidate {
       lastAircraftFlown: getFieldValue('Last Aircraft Flown'),
     },
     lastEmployer: { company: '', title: '', city: '', state: '', from: '', to: '' },
-    lastResidence: { street: '', city: '', state: '', zip: '' },
+    lastResidence: { street: '', city: '', state: '', zip: '', from: '', to: '' },
     aeronautical: {
       typeRatings: getFieldValue('Type Ratings'),
       firstClassMedicalDate: getFieldValue('First Class Medical Date'),
@@ -466,7 +486,7 @@ export default function AdminImportPage() {
       const html = buildFlowStartedEmail(candidateName || 'Candidate', email, candidateId);
       await sendEmail(firestore, {
         to: email,
-        subject: 'Your FedEx Pilot Application — Action Required',
+        subject: 'Your FedEx Pilot History Update — Action Required',
         html,
         type: 'flow_started',
         candidateId,

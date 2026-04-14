@@ -392,7 +392,7 @@ export default function AdminCandidatesPage() {
       const html = buildFlowStartedEmail(c.name || 'Candidate', email, id);
       await sendEmail(firestore, {
         to: email,
-        subject: 'Your FedEx Pilot Application — Action Required',
+        subject: 'Your FedEx Pilot History Update — Action Required',
         html,
         type: 'flow_started',
         candidateId: id,

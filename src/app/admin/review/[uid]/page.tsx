@@ -28,7 +28,8 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore';
-import { ArrowLeft, Check, Circle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, Circle, Download, Loader2 } from 'lucide-react';
+import { unparse } from 'papaparse';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { useFirestore, useUser } from '@/firebase';
 import type {
@@ -51,6 +52,28 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { sendEmail, buildInterviewEmail, getPublicPortalOrigin } from '@/lib/email';
+
+type ExportRowBase = {
+  recordType: 'employment' | 'residential';
+  uid: string;
+  candidateId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+};
+
+function downloadCsv(filename: string, rows: Record<string, any>[]) {
+  const csv = unparse(rows);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 const SAFETY_LABELS: Record<string, string> = {
   terminations: 'Terminations or resignations in lieu of from any FAA covered positions?',
@@ -726,13 +749,94 @@ FedEx Express Pilot Recruiting`;
   const atpDisplay = sensitiveDisplay?.atpLabel ?? plaintextAtpPreview(applicant);
   const medDisplay = sensitiveDisplay?.medDisplay ?? plaintextMedPreview(applicant);
 
+  const exportUpdateCsv = () => {
+    const base = {
+      uid: uid,
+      candidateId: String(candidateId),
+      email: applicant.email || '',
+      firstName: applicant.firstName || '',
+      lastName: applicant.lastName || '',
+    };
+
+    const rows: Record<string, any>[] = [];
+
+    const employment = employmentSorted.length ? employmentSorted : [];
+    for (let i = 0; i < employment.length; i++) {
+      const job = employment[i] as EmploymentHistory & { street?: string; city?: string; state?: string; zip?: string };
+      rows.push({
+        recordType: 'employment',
+        index: i + 1,
+        ...base,
+        employerName: job.employerName,
+        jobTitle: job.jobTitle,
+        street: job.street || '',
+        city: job.city || '',
+        state: job.state || '',
+        zip: job.zip || '',
+        startDate: job.startDate?.toDate ? format(job.startDate.toDate(), 'yyyy-MM-dd') : '',
+        endDate:
+          job.endDate === null
+            ? ''
+            : job.endDate?.toDate
+              ? format(job.endDate.toDate(), 'yyyy-MM-dd')
+              : '',
+        isCurrent: job.endDate === null,
+        aircraftTypes: job.aircraftTypes,
+        totalHours: job.totalHours,
+        duties: job.duties,
+      });
+    }
+
+    // Residential history: prefer updated entries; if unchanged + no entries, fall back to legacy.
+    const updatedResidences = (applicant as ApplicantData).residentialHistory || [];
+    const unchanged = (applicant as ApplicantData).residentialHistoryUnchangedLast3Years !== false;
+
+    if (updatedResidences.length > 0) {
+      for (let i = 0; i < updatedResidences.length; i++) {
+        const r: any = updatedResidences[i];
+        rows.push({
+          recordType: 'residential',
+          index: i + 1,
+          ...base,
+          street: r.street || '',
+          city: r.city || '',
+          state: r.state || '',
+          zip: r.zip || '',
+          startDate: r.startDate?.toDate ? format(r.startDate.toDate(), 'yyyy-MM-dd') : '',
+          endDate:
+            r.endDate === null
+              ? ''
+              : r.endDate?.toDate
+                ? format(r.endDate.toDate(), 'yyyy-MM-dd')
+                : '',
+          isCurrent: r.endDate === null,
+        });
+      }
+    } else if (unchanged && legacyRaw?.lastResidence) {
+      rows.push({
+        recordType: 'residential',
+        index: 1,
+        ...base,
+        street: legacyRaw.lastResidence.street || '',
+        city: legacyRaw.lastResidence.city || '',
+        state: legacyRaw.lastResidence.state || '',
+        zip: legacyRaw.lastResidence.zip || '',
+        startDate: legacyRaw.lastResidence.from || '',
+        endDate: legacyRaw.lastResidence.to || '',
+        isCurrent: false,
+      });
+    }
+
+    downloadCsv(`candidate-update-${candidateId}.csv`, rows);
+  };
+
   return (
     <div className="admin-review-page space-y-8 pb-16">
       <div className="hidden print:block review-print-header text-center border-b border-[#333] pb-4 mb-6">
         <div className="flex justify-center">
           <FedExBrandMark height={36} />
         </div>
-        <h1 className="text-lg font-bold mt-3 text-[#333333]">Pilot Application Review</h1>
+        <h1 className="text-lg font-bold mt-3 text-[#333333]">Pilot History Update Review</h1>
         <p className="text-sm mt-1 text-[#333333]">
           {fullName} · Candidate ID {candidateId}
         </p>
@@ -755,6 +859,15 @@ FedEx Express Pilot Recruiting`;
             className="rounded-lg px-4 py-2 text-[13px] font-semibold border border-[#E3E3E3] bg-white text-[#333333] hover:border-[#4D148C]"
           >
             Print Full Report
+          </button>
+          <button
+            type="button"
+            onClick={() => exportUpdateCsv()}
+            className="rounded-lg px-4 py-2 text-[13px] font-semibold border border-[#E3E3E3] bg-white text-[#333333] hover:border-[#4D148C]"
+            title="Export updated residential + employment history"
+          >
+            <Download className="mr-2 inline-block h-4 w-4" />
+            Export CSV
           </button>
           {interviewAlreadySent ? (
             <button
@@ -1289,6 +1402,17 @@ FedEx Express Pilot Recruiting`;
                 <div key={i} className="border-b border-[#F2F2F2] last:border-0 pb-3 last:pb-0 text-[14px]">
                   <p className="font-semibold text-[#FF6200]">{job.employerName}</p>
                   <p className="text-[#333333]">{job.jobTitle}</p>
+                  {((job as any).street || (job as any).city || (job as any).state || (job as any).zip) && (
+                    <p className="text-[12px] text-[#565656] mt-1">
+                      {[
+                        (job as any).street,
+                        [(job as any).city, (job as any).state].filter(Boolean).join(', '),
+                        (job as any).zip,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  )}
                   <p className="text-[12px] text-[#8E8E8E] mt-1">
                     {job.startDate?.toDate ? format(job.startDate.toDate(), 'MMM yyyy') : '—'} —{' '}
                     {job.endDate === null

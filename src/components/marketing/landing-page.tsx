@@ -58,7 +58,7 @@ export function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button asChild className="uppercase tracking-wide font-bold" size="lg">
-                  <Link href="/signup">Begin Pilot Application</Link>
+                  <Link href="/signup">Begin History Update</Link>
                 </Button>
                 <Button
                   asChild

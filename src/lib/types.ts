@@ -138,11 +138,25 @@ export type IndoctrinationBookingDoc = {
 export type EmploymentHistory = {
   employerName: string;
   jobTitle: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
   startDate: Timestamp;
   endDate: Timestamp | null;
   aircraftTypes: string;
   totalHours: number;
   duties: string;
+};
+
+export type ResidentialHistoryEntry = {
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  startDate: Timestamp;
+  endDate: Timestamp | null;
+  isCurrent?: boolean;
 };
 
 export type SafetyQuestion = {
@@ -183,6 +197,8 @@ export type ApplicantData = {
   };
   typeRatings: string;
   employmentHistory: EmploymentHistory[];
+  residentialHistoryUnchangedLast3Years?: boolean;
+  residentialHistory?: ResidentialHistoryEntry[];
   safetyQuestions: {
     terminations: SafetyQuestion;
     askedToResign: SafetyQuestion;

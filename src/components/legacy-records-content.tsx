@@ -106,7 +106,7 @@ export function LegacyRecordsContent({
       {showPrintHeader && (
         <div className="mb-0 hidden print:block print:p-10">
           <h1 className="mb-2 text-xl font-bold text-[#333333]">
-            FedEx Pilot Application — Legacy Records
+            Legacy Records (Prior File)
           </h1>
           {candidateId && (
             <p className="text-sm text-[#565656]">Candidate ID: {candidateId}</p>

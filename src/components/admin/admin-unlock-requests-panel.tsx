@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle, Eye, LockOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { adminCompleteUnlockRequest } from '@/app/admin/actions';
+import { adminCompleteUnlockRequest, adminUnlockApplicationFromRequest } from '@/app/admin/actions';
 
 type UnlockRequestRow = {
   id: string;
@@ -35,6 +35,8 @@ export function AdminUnlockRequestsPanel({ embedded = false }: { embedded?: bool
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
+  const [unlockId, setUnlockId] = useState<string | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
   const [detail, setDetail] = useState<UnlockRequestRow | null>(null);
 
   const q = useMemo(
@@ -81,6 +83,28 @@ export function AdminUnlockRequestsPanel({ embedded = false }: { embedded?: bool
       });
     }
     setCompleting(false);
+  };
+
+  const handleUnlock = async () => {
+    if (!unlockId || !user) return;
+    setUnlocking(true);
+    try {
+      const idToken = await getIdToken();
+      const result = await adminUnlockApplicationFromRequest({ idToken, requestDocId: unlockId });
+      if (result.success) {
+        toast({ title: 'Unlocked', description: 'Application reopened for editing.' });
+        setUnlockId(null);
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
+      }
+    } catch (e: unknown) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: e instanceof Error ? e.message : 'Request failed',
+      });
+    }
+    setUnlocking(false);
   };
 
   return (
@@ -174,9 +198,14 @@ export function AdminUnlockRequestsPanel({ embedded = false }: { embedded?: bool
                         <Eye className="h-3 w-3 mr-1" /> Details
                       </button>
                       {r.status === 'pending' && (
-                        <button type="button" onClick={() => setConfirmId(r.id)} className="fedex-btn-primary-sm">
-                          Mark complete
-                        </button>
+                        <>
+                          <button type="button" onClick={() => setUnlockId(r.id)} className="fedex-btn-primary-sm">
+                            Unlock
+                          </button>
+                          <button type="button" onClick={() => setConfirmId(r.id)} className="fedex-btn-outline-neutral">
+                            Mark complete
+                          </button>
+                        </>
                       )}
                     </td>
                   </tr>
@@ -217,6 +246,41 @@ export function AdminUnlockRequestsPanel({ embedded = false }: { embedded?: bool
               className="fedex-btn-primary-sm !px-4 !py-2 disabled:opacity-40"
             >
               {completing ? 'Saving...' : 'Mark complete'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!unlockId}
+        onOpenChange={(open) => {
+          if (!open) setUnlockId(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#333333]">Unlock this application?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-[#8E8E8E]">
+            This will reopen the candidate&apos;s submitted application so they can edit it again. It clears the
+            submitted flag in Firestore.
+          </p>
+          <DialogFooter className="gap-2 sm:gap-0 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setUnlockId(null)}
+              disabled={unlocking}
+              className="border-[#E3E3E3] text-[#565656]"
+            >
+              Cancel
+            </Button>
+            <button
+              type="button"
+              onClick={handleUnlock}
+              disabled={unlocking}
+              className="fedex-btn-primary-sm !px-4 !py-2 disabled:opacity-40"
+            >
+              {unlocking ? 'Unlocking...' : 'Unlock application'}
             </button>
           </DialogFooter>
         </DialogContent>

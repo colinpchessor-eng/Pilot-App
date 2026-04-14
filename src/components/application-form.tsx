@@ -50,6 +50,7 @@ import {
   MoreHorizontal,
   Plane,
   Moon,
+  Home,
   type LucideIcon,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
@@ -115,6 +116,15 @@ const APPLICATION_TABS: {
       'Enter your ATP number, first class medical date, and type ratings. Ensure information matches your FAA records.',
   },
   {
+    value: 'residential-history',
+    label: 'Residential History',
+    shortLabel: 'Residence',
+    Icon: Home,
+    heroTitle: 'Residential history (last 3 years)',
+    heroDescription:
+      'Confirm your address history for the last 3 years. If you have moved, add each address with the dates you lived there.',
+  },
+  {
     value: 'employment-history',
     label: 'Employment',
     shortLabel: 'Employment',
@@ -125,7 +135,7 @@ const APPLICATION_TABS: {
   },
   {
     value: 'acknowledgment',
-    label: 'Applicant Acknowledgment',
+    label: 'Update Acknowledgment',
     shortLabel: 'Finalize',
     Icon: CheckCircle,
     heroTitle: 'Applicant acknowledgment',
@@ -309,6 +319,7 @@ export function ApplicationForm({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = React.useState(false);
   const [incompleteItems, setIncompleteItems] = useState<IncompleteItem[]>([]);
+  const [legacyNudgeDismissed, setLegacyNudgeDismissed] = React.useState(false);
   const { toast } = useToast();
 
   const getDefaultValues = (data: ApplicantData): ApplicationFormValues => {
@@ -378,8 +389,19 @@ export function ApplicationForm({
         return Number(raw) || 0;
       })(),
       typeRatings: data.typeRatings ?? '',
+      residentialHistoryUnchangedLast3Years: data.residentialHistoryUnchangedLast3Years ?? true,
+      residentialHistory: (data.residentialHistory || []).map((rh: any) => ({
+        ...rh,
+        startDate: rh.startDate?.toDate ? rh.startDate.toDate() : rh.startDate,
+        endDate: rh.endDate?.toDate ? rh.endDate.toDate() : rh.endDate,
+        isCurrent: rh.isCurrent ?? !rh.endDate,
+      })),
       employmentHistory: (data.employmentHistory || []).map((eh) => ({
         ...eh,
+        street: (eh as any).street ?? '',
+        city: (eh as any).city ?? '',
+        state: (eh as any).state ?? '',
+        zip: (eh as any).zip ?? '',
         startDate: eh.startDate.toDate(),
         endDate: eh.endDate ? eh.endDate.toDate() : null,
         isCurrent: !eh.endDate,
@@ -423,6 +445,15 @@ export function ApplicationForm({
   const { fields: employmentFields, append: appendEmployment, remove: removeEmployment } = useFieldArray({
     control: form.control,
     name: 'employmentHistory',
+  });
+
+  const {
+    fields: residentialFields,
+    append: appendResidential,
+    remove: removeResidential,
+  } = useFieldArray({
+    control: form.control,
+    name: 'residentialHistory',
   });
 
   const [employmentConfirmed, setEmploymentConfirmed] = React.useState(
@@ -572,7 +603,7 @@ export function ApplicationForm({
             });
             await sendEmail(firestore, {
               to: user.email,
-              subject: 'FedEx Pilot Application Received — Thank You',
+              subject: 'FedEx Pilot History Update Received — Thank You',
               html: buildSubmissionEmail(nm, user.email, submittedAt),
               type: 'application_submitted',
               candidateId: applicantData.candidateId || '',
@@ -715,13 +746,28 @@ export function ApplicationForm({
     />
   );
 
+  const hasLegacyFlightTime = !!applicantData.legacyData;
+  const showLegacyNudge = activeTab === 'flight-time' && hasLegacyFlightTime && !legacyNudgeDismissed;
+
+  const handleLegacyNudgeClick = () => {
+    setLegacyNudgeDismissed(true);
+    queueMicrotask(() => {
+      const el = document.getElementById('legacy-flight-time');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollBy({ top: 700, behavior: 'smooth' });
+      }
+    });
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={(e) => e.preventDefault()}>
         <fieldset disabled={isSubmitted}>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-[#333333]">Pilot Application</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-[#333333]">Pilot History Update Form</h1>
               <p className="text-[#8E8E8E] mt-1">Please review and provide updates from the last 3 years.</p>
             </div>
             <div className="flex items-center gap-2 text-sm text-[#8E8E8E] bg-[#F2F2F2] px-4 py-2 rounded-full border border-[#E3E3E3] shrink-0">
@@ -768,12 +814,34 @@ export function ApplicationForm({
 
             {activeTab !== 'acknowledgment' && (
               <section className="mb-8 md:mb-10" aria-live="polite">
-                <h2 className="mb-2 text-[26px] font-bold tracking-tight text-[#333333] md:text-[28px]">
-                  {activeTabMeta.heroTitle}
-                </h2>
-                <p className="max-w-2xl text-[15px] leading-relaxed text-[#565656]">
-                  {activeTabMeta.heroDescription}
-                </p>
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h2 className="mb-2 text-[26px] font-bold tracking-tight text-[#333333] md:text-[28px]">
+                      {activeTabMeta.heroTitle}
+                    </h2>
+                    <p className="max-w-2xl text-[15px] leading-relaxed text-[#565656]">
+                      {activeTabMeta.heroDescription}
+                    </p>
+                  </div>
+
+                  {(showLegacyNudge || (activeTab === 'flight-time' && hasLegacyFlightTime && legacyNudgeDismissed)) && (
+                    <button
+                      type="button"
+                      onClick={handleLegacyNudgeClick}
+                      disabled={legacyNudgeDismissed}
+                      className={cn(
+                        'self-start rounded-full px-4 py-2 text-[13px] font-extrabold shadow-[0_10px_25px_-12px_rgba(0,0,0,0.25)] transition-colors',
+                        showLegacyNudge
+                          ? 'bg-[#4D148C] text-white hover:bg-[#35105F] animate-bounce'
+                          : 'bg-[#E3E3E3] text-[#8E8E8E] cursor-default'
+                      )}
+                      aria-label="Scroll to legacy flight time below"
+                      title="Scroll to legacy flight time below"
+                    >
+                      Legacy flight time below ↓
+                    </button>
+                  )}
+                </div>
               </section>
             )}
 
@@ -846,7 +914,9 @@ export function ApplicationForm({
                 ))}
               </div>
 
-              <div className="mt-8">{legacyContent}</div>
+              <div className="mt-8" id="legacy-flight-time">
+                {legacyContent}
+              </div>
 
               <p className="mt-6 text-center text-sm text-[#8E8E8E] opacity-80">
                 All information is encrypted and stored securely.
@@ -899,6 +969,277 @@ export function ApplicationForm({
                       </FormItem>
                     )} />
                   </div>
+              </TabsContent>
+
+              <TabsContent
+                value="residential-history"
+                className="mt-0 space-y-6 rounded-xl border border-[#E3E3E3] bg-white p-6 pt-2 shadow-[0_2px_12px_rgba(0,0,0,0.08)] focus-visible:outline-none md:p-8"
+              >
+                <div className="mt-2 flex items-start gap-3 rounded-xl border border-[#E3E3E3] bg-[#FAFAFA] p-5">
+                  <FormField
+                    control={form.control}
+                    name="residentialHistoryUnchangedLast3Years"
+                    render={({ field }) => (
+                      <>
+                        <div
+                          onClick={() => field.onChange(!field.value)}
+                          className={cn(
+                            'w-[18px] h-[18px] border-2 rounded-[4px] shrink-0 mt-0.5 cursor-pointer flex items-center justify-center transition-colors',
+                            field.value ? 'bg-[#4D148C] border-[#4D148C]' : 'border-[#E3E3E3] bg-white'
+                          )}
+                        >
+                          {field.value && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                        </div>
+                        <div className="grid gap-1.5">
+                          <span
+                            className="text-sm font-bold text-[#333333] cursor-pointer"
+                            onClick={() => field.onChange(!field.value)}
+                          >
+                            My residential history has not changed in the last three years.
+                          </span>
+                          <p className="text-[13px] text-[#565656]">
+                            If you have moved, uncheck this and add each address you lived at within the last 3 years.
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  />
+                </div>
+
+                <div className="rounded-xl border border-[#E3E3E3] bg-white p-5">
+                  <p className="text-[12px] font-bold uppercase tracking-wider text-[#8E8E8E] mb-2">
+                    Legacy address on file (reference)
+                  </p>
+                  <p className="text-[14px] font-semibold text-[#333333]">
+                    {applicantData.legacyData?.lastResidence?.street || '—'}
+                  </p>
+                  <p className="text-[13px] text-[#565656]">
+                    {[
+                      applicantData.legacyData?.lastResidence?.city,
+                      applicantData.legacyData?.lastResidence?.state,
+                      applicantData.legacyData?.lastResidence?.zip,
+                    ]
+                      .filter(Boolean)
+                      .join(', ') || '—'}
+                  </p>
+                  {(applicantData.legacyData?.lastResidence?.from ||
+                    applicantData.legacyData?.lastResidence?.to) && (
+                    <p className="text-[12px] text-[#8E8E8E] mt-2">
+                      {applicantData.legacyData?.lastResidence?.from || '—'} →{' '}
+                      {applicantData.legacyData?.lastResidence?.to || '—'}
+                    </p>
+                  )}
+                </div>
+
+                {form.watch('residentialHistoryUnchangedLast3Years') === false && (
+                  <div className="space-y-6 pt-2">
+                    <Accordion
+                      type="multiple"
+                      className="w-full space-y-4"
+                      defaultValue={residentialFields.length > 0 ? [residentialFields[0].id] : []}
+                    >
+                      {residentialFields.map((field, index) => {
+                        const street = form.watch(`residentialHistory.${index}.street`);
+                        const city = form.watch(`residentialHistory.${index}.city`);
+                        const state = form.watch(`residentialHistory.${index}.state`);
+                        const isCurrent = form.watch(`residentialHistory.${index}.isCurrent`);
+                        const startDate = form.watch(`residentialHistory.${index}.startDate`);
+
+                        return (
+                          <AccordionItem
+                            value={field.id}
+                            key={field.id}
+                            className="rounded-xl border border-[#E3E3E3] px-6 bg-white overflow-hidden"
+                          >
+                            <AccordionTrigger className="hover:no-underline py-5">
+                              <div className="flex-1 text-left">
+                                <p className="font-bold text-[#333333] text-lg">
+                                  {street ? street : `Address #${index + 1}`}
+                                </p>
+                                <p className="text-sm text-[#565656] font-medium">
+                                  {[city, state].filter(Boolean).join(', ') || 'City, State'}
+                                </p>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="pt-2 pb-6">
+                              <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <FormField
+                                    control={form.control}
+                                    name={`residentialHistory.${index}.street`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel className={labelStyle}>Street Address</FormLabel>
+                                        <FormControl>
+                                          <Input className={inputStyle} placeholder="123 Main St" {...field} />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name={`residentialHistory.${index}.zip`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel className={labelStyle}>ZIP</FormLabel>
+                                        <FormControl>
+                                          <Input className={inputStyle} placeholder="12345" {...field} />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <FormField
+                                    control={form.control}
+                                    name={`residentialHistory.${index}.city`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel className={labelStyle}>City</FormLabel>
+                                        <FormControl>
+                                          <Input className={inputStyle} placeholder="Memphis" {...field} />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name={`residentialHistory.${index}.state`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel className={labelStyle}>State</FormLabel>
+                                        <FormControl>
+                                          <Input className={inputStyle} placeholder="TN" {...field} />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                                  <FormField
+                                    control={form.control}
+                                    name={`residentialHistory.${index}.startDate`}
+                                    render={({ field }) => (
+                                      <FormItem className="flex flex-col">
+                                        <FormLabel className={labelStyle}>Lived From</FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            type="date"
+                                            className={bentoInputClass}
+                                            min="1950-01-01"
+                                            max={employmentDateToInputValue(new Date())}
+                                            name={field.name}
+                                            ref={field.ref}
+                                            onBlur={field.onBlur}
+                                            value={employmentDateToInputValue(field.value)}
+                                            onChange={(e) => {
+                                              const parsed = parseEmploymentDateInput(e.target.value);
+                                              if (parsed) field.onChange(parsed);
+                                              else if (!e.target.value) field.onChange(undefined as unknown as Date);
+                                            }}
+                                          />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name={`residentialHistory.${index}.isCurrent`}
+                                    render={({ field }) => (
+                                      <FormItem className="flex flex-row items-center space-x-3 pb-3">
+                                        <FormControl>
+                                          <div
+                                            onClick={() => {
+                                              field.onChange(!field.value);
+                                              if (!field.value) {
+                                                form.setValue(`residentialHistory.${index}.endDate`, null);
+                                              }
+                                            }}
+                                            className={cn(
+                                              'w-[18px] h-[18px] border-2 rounded-[4px] shrink-0 mt-0.5 cursor-pointer flex items-center justify-center transition-colors',
+                                              field.value ? 'bg-[#4D148C] border-[#4D148C]' : 'border-[#E3E3E3] bg-white'
+                                            )}
+                                          >
+                                            {field.value && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                                          </div>
+                                        </FormControl>
+                                        <FormLabel className="text-[14px] font-semibold text-[#333333] cursor-pointer">
+                                          I currently live here
+                                        </FormLabel>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+
+                                {!isCurrent && (
+                                  <FormField
+                                    control={form.control}
+                                    name={`residentialHistory.${index}.endDate`}
+                                    render={({ field }) => (
+                                      <FormItem className="flex flex-col">
+                                        <FormLabel className={labelStyle}>Lived To</FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            type="date"
+                                            className={bentoInputClass}
+                                            min={employmentDateToInputValue(startDate) || '1950-01-01'}
+                                            max={employmentDateToInputValue(new Date())}
+                                            name={field.name}
+                                            ref={field.ref}
+                                            onBlur={field.onBlur}
+                                            value={employmentDateToInputValue(field.value)}
+                                            onChange={(e) => {
+                                              const v = e.target.value;
+                                              field.onChange(v ? parseEmploymentDateInput(v) : null);
+                                            }}
+                                          />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                )}
+
+                                <div className="flex justify-end pt-2 border-t border-[#E3E3E3]">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeResidential(index)}
+                                    className="text-[#DE002E] hover:text-[#DE002E] hover:bg-red-50 font-bold"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Remove Address
+                                  </Button>
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        appendResidential({
+                          street: '',
+                          city: '',
+                          state: '',
+                          zip: '',
+                          startDate: new Date(),
+                          endDate: null,
+                          isCurrent: false,
+                        } as any)
+                      }
+                      className="fedex-btn-secondary py-6 px-8 border-dashed border-2"
+                    >
+                      <Plus className="mr-2 h-5 w-5" />
+                      Add Address
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent
@@ -995,6 +1336,59 @@ export function ApplicationForm({
                                               placeholder="e.g. First Officer"
                                               {...field}
                                             />
+                                          </FormControl>
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField
+                                      control={form.control}
+                                      name={`employmentHistory.${index}.street`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className={labelStyle}>Street Address</FormLabel>
+                                          <FormControl>
+                                            <Input className={inputStyle} placeholder="123 Main St" {...field} />
+                                          </FormControl>
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={form.control}
+                                      name={`employmentHistory.${index}.zip`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className={labelStyle}>ZIP</FormLabel>
+                                          <FormControl>
+                                            <Input className={inputStyle} placeholder="12345" {...field} />
+                                          </FormControl>
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField
+                                      control={form.control}
+                                      name={`employmentHistory.${index}.city`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className={labelStyle}>City</FormLabel>
+                                          <FormControl>
+                                            <Input className={inputStyle} placeholder="Memphis" {...field} />
+                                          </FormControl>
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={form.control}
+                                      name={`employmentHistory.${index}.state`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className={labelStyle}>State</FormLabel>
+                                          <FormControl>
+                                            <Input className={inputStyle} placeholder="TN" {...field} />
                                           </FormControl>
                                         </FormItem>
                                       )}
@@ -1177,6 +1571,10 @@ export function ApplicationForm({
                           appendEmployment({
                             employerName: '',
                             jobTitle: '',
+                            street: '',
+                            city: '',
+                            state: '',
+                            zip: '',
                             startDate: new Date(),
                             endDate: null,
                             isCurrent: false,
@@ -1199,7 +1597,7 @@ export function ApplicationForm({
                 className="mt-0 border-0 bg-transparent p-0 shadow-none focus-visible:outline-none"
               >
                 <div className="pb-2 md:pb-4">
-                  <h2 className="mb-4 text-[20px] font-bold text-[#333333]">Applicant acknowledgment</h2>
+                  <h2 className="mb-4 text-[20px] font-bold text-[#333333]">Update acknowledgment</h2>
                   <div className="mb-8 max-w-[640px] rounded-r-lg border-l-4 border-[#4D148C] bg-[#f5f0ff] p-4 text-[14px] leading-[1.6] text-[#565656]">
                     Please update the information you provided on your application for employment. Indicate
                     whether there have been any changes or updates to your responses. Explain each &quot;yes&quot;
@@ -1384,12 +1782,12 @@ export function ApplicationForm({
 
                   <div className={cn("mt-8 p-4 bg-[#F7B118]/[0.08] border border-[#F7B118]/40 rounded-lg flex gap-3 items-start", incompleteItems.length > 0 ? "mt-4" : "")}>
                      <span className="text-[18px] shrink-0">⚠️</span>
-                     <p className="text-[13px] text-[#565656] font-medium leading-[1.5]">By clicking Submit Application, you certify that all information provided is true and complete to the best of your knowledge.</p>
+                     <p className="text-[13px] text-[#565656] font-medium leading-[1.5]">By clicking Certify Updated Information, you certify that the updated residential and employment information provided for the last 3 years is true and complete.</p>
                   </div>
                 </div>
               </TabsContent>
 
-            <div className="mt-10 flex flex-col gap-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="mt-10 flex flex-col gap-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="outline"
@@ -1421,7 +1819,7 @@ export function ApplicationForm({
                   ) : (
                     <Send className="mr-2 h-5 w-5" />
                   )}
-                  {isSubmitted ? 'Application Submitted' : 'Submit Application'}
+                  {isSubmitted ? 'Information Certified' : 'Certify Updated Information'}
                 </Button>
               )}
             </div>
@@ -1441,7 +1839,7 @@ export function ApplicationForm({
               className={cn('px-8', isSubmitting && 'opacity-50')}
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Submitting...' : 'Yes, Submit My Application'}
+              {isSubmitting ? 'Submitting...' : 'Yes, Certify Updated Information'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

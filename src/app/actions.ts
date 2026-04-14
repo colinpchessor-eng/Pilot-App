@@ -95,7 +95,7 @@ export async function triggerApplicantTokenEmail(input: {
   await client.resend.emails.send({
     from: client.from,
     to: input.email,
-    subject: 'Your FedEx Pilot Application Access Token',
+    subject: 'Your FedEx Pilot History Update Access Token',
     text:
       `Hi ${input.displayName ?? 'there'},\n\n` +
       `Your access token is: ${input.token}\n\n` +

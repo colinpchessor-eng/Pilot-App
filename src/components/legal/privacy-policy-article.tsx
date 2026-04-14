@@ -27,7 +27,7 @@ export function PrivacyPolicyArticle({
           </div>
 
           <h1 className="text-3xl font-bold text-[#333333] tracking-tight">Privacy Policy</h1>
-          <p className="text-[14px] text-[#565656] mt-1">FedEx Pilot Application Portal</p>
+          <p className="text-[14px] text-[#565656] mt-1">FedEx Pilot History Update Portal</p>
           <div className="flex gap-4 mt-3 text-[12px] text-[#8E8E8E]">
             <span>Last updated: March 2026</span>
             <span>Effective date: March 2026</span>
@@ -40,7 +40,7 @@ export function PrivacyPolicyArticle({
       )}
 
       <p className={`${bodyStyle} ${showBranding ? 'mt-6' : 'mt-0'}`}>
-        FedEx Express operates the Pilot Application Portal to collect and process pilot candidate
+        FedEx Express operates the Pilot History Update Portal to collect and process pilot candidate
         application data for employment evaluation purposes. This Privacy Policy explains what
         information we collect, how we use it, who has access to it, and your rights regarding your
         personal data.
@@ -154,7 +154,7 @@ export function PrivacyPolicyArticle({
 
       <div className="mt-10 pt-6 border-t border-[#E3E3E3]">
         <p className="text-[12px] text-[#8E8E8E] leading-relaxed">
-          This Privacy Policy applies specifically to the FedEx Pilot Application Portal. For
+          This Privacy Policy applies specifically to the FedEx Pilot History Update Portal. For
           FedEx&apos;s general privacy policy please visit{' '}
           <a
             href="https://www.fedex.com/privacy"

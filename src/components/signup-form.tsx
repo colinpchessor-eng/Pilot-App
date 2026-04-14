@@ -329,7 +329,7 @@ export function SignupForm() {
           <DialogHeader className="shrink-0 space-y-1 border-b border-[#E3E3E3] px-6 pb-4 pt-6 pr-14 text-left">
             <DialogTitle className="text-xl font-bold text-[#333333]">Privacy Policy</DialogTitle>
             <DialogDescription className="text-[13px] text-[#565656]">
-              FedEx Pilot Application Portal — review before you agree.
+              FedEx Pilot History Update Portal — review before you agree.
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="h-[min(58vh,540px)] px-6 py-4">

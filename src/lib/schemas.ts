@@ -31,6 +31,10 @@ export const employmentHistorySchema = z
   .object({
     employerName: z.string().min(1, 'Employer name is required.'),
     jobTitle: z.string().min(1, 'Job title is required.'),
+    street: z.string().min(1, 'Street address is required.'),
+    city: z.string().min(1, 'City is required.'),
+    state: z.string().min(1, 'State is required.'),
+    zip: z.string().min(1, 'ZIP code is required.'),
     startDate: z.date({ required_error: 'Start date is required.' }),
     endDate: z.date().nullable(),
     isCurrent: z.boolean().default(false),
@@ -54,6 +58,33 @@ export const employmentHistorySchema = z
       data.startDate &&
       data.startDate > data.endDate
     ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date must be after start date.',
+        path: ['endDate'],
+      });
+    }
+  });
+
+export const residentialHistoryEntrySchema = z
+  .object({
+    street: z.string().min(1, 'Street address is required.'),
+    city: z.string().min(1, 'City is required.'),
+    state: z.string().min(1, 'State is required.'),
+    zip: z.string().min(1, 'ZIP code is required.'),
+    startDate: z.date({ required_error: 'Start date is required.' }),
+    endDate: z.date().nullable(),
+    isCurrent: z.boolean().default(false),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.isCurrent && !data.endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date is required if this is not a current residence.',
+        path: ['endDate'],
+      });
+    }
+    if (!data.isCurrent && data.endDate && data.startDate && data.startDate > data.endDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'End date must be after start date.',
@@ -98,6 +129,8 @@ export const applicationFormSchema = z
       .nullable(),
     atpNumber: z.coerce.number({ invalid_type_error: 'ATP Number must be a number' }),
     typeRatings: z.string().optional().default(''),
+    residentialHistoryUnchangedLast3Years: z.boolean().optional().default(true),
+    residentialHistory: z.array(residentialHistoryEntrySchema).optional().default([]),
     employmentHistory: z.array(employmentHistorySchema).optional(),
     safetyQuestions: z.object({
       terminations: safetyQuestionItemSchema,
@@ -146,6 +179,17 @@ export const applicationFormSchema = z
           });
         }
       });
+    }
+
+    // Residential history is only required when the candidate indicates a change.
+    if (data.residentialHistoryUnchangedLast3Years === false) {
+      if (!data.residentialHistory || data.residentialHistory.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Please add at least one address for the last 3 years.',
+          path: ['residentialHistory'],
+        });
+      }
     }
   });
 

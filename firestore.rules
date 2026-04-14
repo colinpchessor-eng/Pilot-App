@@ -18,7 +18,9 @@ service cloud.firestore {
     function userSelfUpdateAffectedKeysAllowlist() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly([
-          'flightTime', 'firstClassMedicalDate', 'atpNumber', 'typeRatings', 'employmentHistory',
+          'flightTime', 'firstClassMedicalDate', 'atpNumber', 'typeRatings',
+          'residentialHistoryUnchangedLast3Years', 'residentialHistory',
+          'employmentHistory',
           'safetyQuestions', 'isCertified', 'printedName', 'submittedAt', 'candidateFlowStatus',
           'displayName', 'firstName', 'lastName',
           'consentGiven', 'consentTimestamp', 'consentVersion', 'privacyPolicyVersion'
@@ -33,6 +35,7 @@ service cloud.firestore {
         'consentVersion', 'createdAt', 'displayName', 'email', 'employmentHistory',
         'firstClassMedicalDate', 'firstName', 'flightTime', 'isAdmin', 'isCertified', 'lastName',
         'legacyApplicationId', 'printedName', 'privacyPolicyVersion', 'requestedAt', 'role',
+        'residentialHistoryUnchangedLast3Years', 'residentialHistory',
         'safetyQuestions', 'skipCandidateVerification', 'status', 'submittedAt', 'typeRatings', 'uid',
         'verifiedAt'
       ]);

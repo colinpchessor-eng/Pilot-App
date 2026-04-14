@@ -87,6 +87,43 @@ export async function adminCompleteUnlockRequest(input: {
   }
 }
 
+export async function adminUnlockApplicationFromRequest(input: {
+  idToken: string;
+  requestDocId: string;
+}): Promise<ActionResult> {
+  try {
+    const admin = await verifyIsAdmin(input.idToken);
+    const db = getAdminFirestore();
+
+    const reqRef = db.collection('applicationUnlockRequests').doc(input.requestDocId);
+    const reqSnap = await reqRef.get();
+    if (!reqSnap.exists) {
+      return { success: false, message: 'Unlock request not found.' };
+    }
+    const req = reqSnap.data() as { uid?: unknown; status?: unknown } | undefined;
+    const uid = typeof req?.uid === 'string' ? req.uid : null;
+    if (!uid) {
+      return { success: false, message: 'Unlock request is missing a uid.' };
+    }
+
+    // Option A: unlocking = clearing submittedAt so the form becomes editable again.
+    await db.collection('users').doc(uid).update({
+      submittedAt: null,
+    });
+
+    await reqRef.update({
+      status: 'completed',
+      completedAt: FieldValue.serverTimestamp(),
+      completedBy: admin.email,
+    });
+
+    return { success: true, message: 'Application unlocked and request completed.' };
+  } catch (err: any) {
+    console.error('adminUnlockApplicationFromRequest error:', err);
+    return { success: false, message: err.message || 'Failed to unlock application.' };
+  }
+}
+
 // ── Reset a candidate ID ──────────────────────────────────────────────
 export async function adminResetCandidateId(input: {
   idToken: string;

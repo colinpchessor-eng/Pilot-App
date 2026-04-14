@@ -34,6 +34,8 @@ export function buildDefaultApplicantData(input: {
       dateLastFlown: '',
     },
     typeRatings: '',
+    residentialHistoryUnchangedLast3Years: true,
+    residentialHistory: [],
     employmentHistory: [],
     safetyQuestions: {
       terminations: { answer: null, explanation: null },

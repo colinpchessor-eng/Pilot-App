@@ -91,7 +91,7 @@ export function buildFlowStartedEmail(
   <div class="orange-bar"></div>
   <div class="body">
     <p>Dear ${safeName},</p>
-    <p>We are reaching out because FedEx Express would like to invite you to update your pilot application through our secure Pilot Application Portal.</p>
+    <p>We are reaching out because FedEx Express would like to invite you to update your pilot history through our secure Pilot History Update Portal.</p>
     <p>Your unique Candidate ID is below. You will need it to register and link your account to your application.</p>
     <div class="id-box">
       <div class="id-label">Your Candidate ID</div>
@@ -160,7 +160,7 @@ export function buildSubmissionEmail(
     <p>Dear ${safeName},</p>
     <div class="success-box">
       <div style="font-size:40px;">✓</div>
-      <div style="font-size:18px; font-weight:bold; color:#008A00; margin-top:8px;">Application Received</div>
+      <div style="font-size:18px; font-weight:bold; color:#008A00; margin-top:8px;">Update Received</div>
       <div style="color:#565656; margin-top:4px;">Submitted on ${submittedAt}</div>
     </div>
     <p>Thank you for completing your FedEx pilot application. We have successfully received your submission and it is now under review by our recruiting team.</p>
