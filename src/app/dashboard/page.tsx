@@ -79,11 +79,6 @@ export default function DashboardPage() {
   }, [staffShouldUseAdminPortal, router]);
 
   useEffect(() => {
-    if (userLoading || user) return;
-    router.replace('/login');
-  }, [user, userLoading, router]);
-
-  useEffect(() => {
     if (!user || !applicantData) return;
     const status = applicantData.status || 'pending';
     const candidateId = applicantData.candidateId;

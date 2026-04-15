@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import type { ApplicantData, VerificationStatus } from '@/lib/types';
 import { buildDefaultApplicantData } from '@/lib/default-applicant';
 import { checkAuthorizedAdminRole } from '@/lib/authorized-admins';
 import { canAccessDevTools, isAdmin as userIsStaff } from '@/lib/roles';
 import { writeCandidateAuditLog } from '@/lib/candidate-audit';
-import { createSessionCookie, clearSessionCookie } from '@/app/auth/actions';
+import { createSessionCookie } from '@/app/auth/actions';
 
 function normalizeStatus(value: unknown): VerificationStatus {
   if (value === 'token_sent' || value === 'verified') return value;
@@ -35,9 +35,11 @@ function getRedirectForStatus(pathname: string, status: VerificationStatus) {
 export function AuthGate() {
   const router = useRouter();
   const pathname = usePathname();
+  const auth = useAuth();
   const firestore = useFirestore();
   const { user, loading: authLoading } = useUser();
   const ranRef = useRef(false);
+  const bounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const shouldProtect = useMemo(() => {
     if (pathname === '/login' || pathname === '/signup' || pathname === '/') return false;
@@ -52,15 +54,25 @@ export function AuthGate() {
   useEffect(() => {
     if (authLoading) return;
 
-    // Only clear the session cookie when bouncing off a protected route. Clearing on
-    // every `!user` (e.g. /login) raced with post-sign-in: cookie was set, then a
-    // brief `!user` frame wiped it before the first navigation to /admin.
     if (!user) {
       if (shouldProtect) {
-        void clearSessionCookie();
-        router.replace('/login');
+        // Guard against transient auth flicker (token refresh / network). If `user` stays null,
+        // then redirect. Do NOT clear the session cookie here — middleware protection is cookie-based.
+        if (!bounceTimerRef.current) {
+          bounceTimerRef.current = setTimeout(() => {
+            bounceTimerRef.current = null;
+            if (!auth.currentUser) {
+              router.replace('/login');
+            }
+          }, 1500);
+        }
       }
       return;
+    }
+
+    if (bounceTimerRef.current) {
+      clearTimeout(bounceTimerRef.current);
+      bounceTimerRef.current = null;
     }
 
     if (ranRef.current) return;
@@ -134,7 +146,7 @@ export function AuthGate() {
     })().finally(() => {
       ranRef.current = false;
     });
-  }, [authLoading, firestore, pathname, router, shouldProtect, user]);
+  }, [auth, authLoading, firestore, pathname, router, shouldProtect, user]);
 
   return null;
 }

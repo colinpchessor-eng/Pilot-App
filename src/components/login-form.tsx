@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import {
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
@@ -16,6 +17,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { loginSchema, type LoginSchema } from '@/lib/schemas';
 import { useAuth, useFirestore } from '@/firebase';
 import { createSessionCookie } from '@/app/auth/actions';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -35,6 +37,9 @@ export function LoginForm() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSending, setForgotSending] = useState(false);
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -128,13 +133,59 @@ export function LoginForm() {
     }
   }
 
+  const openForgotPassword = () => {
+    const current = (form.getValues('email') || '').trim();
+    setForgotEmail(current);
+    setForgotOpen(true);
+  };
+
+  const handleSendReset = async () => {
+    if (!auth) {
+      toast({
+        variant: 'destructive',
+        title: 'Password reset failed',
+        description: 'Firebase not initialized. Please try again later.',
+      });
+      return;
+    }
+
+    const email = forgotEmail.trim();
+    if (!email) {
+      toast({
+        variant: 'destructive',
+        title: 'Email required',
+        description: 'Enter the email address you used to sign in.',
+      });
+      return;
+    }
+
+    setForgotSending(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: 'Reset link sent',
+        description: 'If an account exists for that email, a reset link will arrive shortly.',
+      });
+      setForgotOpen(false);
+    } catch {
+      // Keep messaging generic to avoid account enumeration.
+      toast({
+        title: 'Check your email',
+        description: 'If an account exists for that email, a reset link will arrive shortly.',
+      });
+    } finally {
+      setForgotSending(false);
+    }
+  };
+
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6"
-        autoComplete="off"
-      >
+    <>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-6"
+          autoComplete="off"
+        >
         <FormField
           control={form.control}
           name="email"
@@ -169,6 +220,7 @@ export function LoginForm() {
                 <FormLabel className="auth-field-label !mb-0">Password</FormLabel>
                 <button
                   type="button"
+                  onClick={openForgotPassword}
                   className="shrink-0 cursor-pointer text-[11px] font-bold text-[#4D148C] transition-colors hover:text-[#FF6200]"
                 >
                   Forgot password?
@@ -234,7 +286,51 @@ export function LoginForm() {
             )}
           </Button>
         </div>
-      </form>
-    </Form>
+        </form>
+      </Form>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#333333]">Reset your password</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <p className="text-[13px] text-[#8E8E8E]">
+              Enter the email address you use to sign in and we&apos;ll send a reset link.
+            </p>
+            <div className="space-y-1.5">
+              <label className="auth-field-label">Email</label>
+              <Input
+                type="email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="name@fedex.com"
+                className="h-12 rounded-2xl border border-[#E3E3E3] bg-white px-4 text-[15px] font-medium text-[#333333]"
+                autoComplete="email"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setForgotOpen(false)}
+              disabled={forgotSending}
+              className="border-[#E3E3E3] text-[#565656]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendReset}
+              disabled={forgotSending}
+              className="fedex-btn-primary-sm !px-4 !py-2 disabled:opacity-40"
+            >
+              {forgotSending ? 'Sending…' : 'Send reset link'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
