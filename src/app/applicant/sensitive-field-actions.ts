@@ -84,6 +84,38 @@ export async function adminDecryptAtpBatchForExport(
   });
 }
 
+/**
+ * Admin-gated batch decryption of first-class medical dates for CSV export.
+ * Accepts the raw Firestore value (encrypted string, Timestamp, or plain
+ * string) and returns a uniform `yyyy-MM-dd` string for every entry
+ * (or `""` when absent/unparseable). Must be called from a trusted
+ * admin flow; the caller passes the full column and receives a column
+ * back in the same order.
+ */
+export async function adminDecryptMedicalDateBatchForExport(
+  idToken: string,
+  medValues: ApplicantData['firstClassMedicalDate'][]
+): Promise<string[]> {
+  await verifyIsAdmin(idToken);
+  return medValues.map((medRaw) => {
+    if (!medRaw) return '';
+    let iso: string | null = null;
+    try {
+      if (typeof medRaw === 'string') {
+        const plain = isEncryptedValue(medRaw) ? decryptFieldServer(medRaw) : medRaw;
+        if (!plain) return '';
+        const d = new Date(plain);
+        if (!isNaN(d.getTime())) iso = format(d, 'yyyy-MM-dd');
+      } else if (typeof medRaw === 'object' && 'toDate' in medRaw) {
+        iso = format((medRaw as { toDate: () => Date }).toDate(), 'yyyy-MM-dd');
+      }
+    } catch {
+      iso = null;
+    }
+    return iso ?? '';
+  });
+}
+
 export async function adminDecryptReviewDisplayFields(
   idToken: string,
   atpRaw: string | null | undefined,

@@ -226,7 +226,7 @@ export default function AdminCandidatesPage() {
   const stageParam =
     stageParamRaw && VALID_STAGE_PARAMS.has(stageParamRaw) ? stageParamRaw : null;
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
   const [filter, setFilter] = useState<string>('All');
   const [listTab, setListTab] = useState<(typeof LIST_TABS)[number]['id']>('all');
   const [page, setPage] = useState(0);

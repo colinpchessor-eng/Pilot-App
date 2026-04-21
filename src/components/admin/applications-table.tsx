@@ -2,10 +2,15 @@
 import { Button } from '@/components/ui/button';
 import type { ApplicantData } from '@/lib/types';
 import { format } from 'date-fns';
-import { useUser } from '@/firebase';
-import { adminDecryptAtpBatchForExport } from '@/app/applicant/sensitive-field-actions';
+import { useState } from 'react';
+import { useFirestore, useUser } from '@/firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import {
+  adminDecryptAtpBatchForExport,
+  adminDecryptMedicalDateBatchForExport,
+} from '@/app/applicant/sensitive-field-actions';
 import { unparse } from 'papaparse';
-import { Download, ExternalLink } from 'lucide-react';
+import { Download, ExternalLink, FileSpreadsheet } from 'lucide-react';
 import Link from 'next/link';
 import {
   CandidateRowsTableShell,
@@ -16,6 +21,12 @@ import {
   candidateRowsTableTrClass,
 } from '@/components/admin/candidate-rows-table-shell';
 import { cn } from '@/lib/utils';
+import {
+  buildParadoxCsv,
+  downloadParadoxCsv,
+  paradoxExportFilename,
+} from '@/lib/paradox-export';
+import { useToast } from '@/hooks/use-toast';
 
 export function ApplicationsTable({
   applications,
@@ -23,6 +34,9 @@ export function ApplicationsTable({
   applications: ApplicantData[];
 }) {
   const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [paradoxBusy, setParadoxBusy] = useState(false);
 
   const handleExport = async () => {
     if (applications.length === 0 || !user) return;
@@ -65,20 +79,78 @@ export function ApplicationsTable({
     document.body.removeChild(link);
   };
 
+  const handleParadoxExport = async () => {
+    if (applications.length === 0 || !user || !firestore || paradoxBusy) return;
+    setParadoxBusy(true);
+    try {
+      const token = await user.getIdToken();
+      const [atpCol, medCol] = await Promise.all([
+        adminDecryptAtpBatchForExport(
+          token,
+          applications.map((app) => app.atpNumber)
+        ),
+        adminDecryptMedicalDateBatchForExport(
+          token,
+          applications.map((app) => app.firstClassMedicalDate)
+        ),
+      ]);
+      const csv = buildParadoxCsv(applications, atpCol, medCol);
+      downloadParadoxCsv(paradoxExportFilename(), csv);
+
+      // Audit log (fire-and-forget; do not block the download)
+      void addDoc(collection(firestore, 'auditLog'), {
+        action: 'paradox_export',
+        adminUid: user.uid,
+        adminEmail: user.email ?? '',
+        candidateCount: applications.length,
+        timestamp: serverTimestamp(),
+      }).catch((err) => {
+        console.error('Paradox export audit log write failed:', err);
+      });
+
+      toast({
+        title: 'Paradox export ready',
+        description: `Exported ${applications.length} candidate${applications.length === 1 ? '' : 's'} to CSV.`,
+      });
+    } catch (e) {
+      console.error('Paradox export failed:', e);
+      toast({
+        variant: 'destructive',
+        title: 'Paradox export failed',
+        description: e instanceof Error ? e.message : 'Unknown error.',
+      });
+    } finally {
+      setParadoxBusy(false);
+    }
+  };
+
   return (
     <CandidateRowsTableShell
       toolbar={
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <span className="admin-tooltip">
             <span className="admin-tooltip-text">
               Download all submitted applications as a spreadsheet
             </span>
             <Button
+              variant="outline"
               onClick={() => void handleExport()}
               disabled={applications.length === 0 || !user}
             >
               <Download className="mr-2 h-4 w-4" />
               Export to CSV
+            </Button>
+          </span>
+          <span className="admin-tooltip">
+            <span className="admin-tooltip-text">
+              Export the full background-check schema (one row per candidate, ~242 columns) for handoff to Paradox
+            </span>
+            <Button
+              onClick={() => void handleParadoxExport()}
+              disabled={applications.length === 0 || !user || paradoxBusy}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              {paradoxBusy ? 'Preparing…' : 'Export for Paradox (Background Check)'}
             </Button>
           </span>
         </div>

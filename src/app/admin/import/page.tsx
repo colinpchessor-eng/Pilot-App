@@ -1,20 +1,15 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { Upload, CheckCircle, AlertTriangle, XCircle, Pencil, Trash2, Download, ArrowRight } from 'lucide-react';
-import { useFirestore, useUser } from '@/firebase';
-import { addDoc, collection, doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { useState, useRef, useCallback, useMemo } from 'react';
+import { Upload, CheckCircle, AlertTriangle, XCircle, Pencil, Trash2, Download, ArrowRight, User } from 'lucide-react';
+import { useFirestore } from '@/firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import Link from 'next/link';
-import { sendEmail, buildFlowStartedEmail } from '@/lib/email';
 import {
   CandidateRowsTableShell,
   candidateRowsTableBodyClass,
@@ -284,7 +279,6 @@ function parseParadoxHTML(htmlString: string): ParsedCandidate {
 // ─── Page Component ─────────────────────────────────────────────────
 export default function AdminImportPage() {
   const firestore = useFirestore();
-  const { user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
 
@@ -296,14 +290,6 @@ export default function AdminImportPage() {
   const [results, setResults] = useState<ImportResult[]>([]);
   const [logLines, setLogLines] = useState<string[]>([]);
   const [done, setDone] = useState(false);
-  const [flowStarted, setFlowStarted] = useState<Record<string, boolean>>({});
-  const [flowStarting, setFlowStarting] = useState<Record<string, boolean>>({});
-  const [startAllOpen, setStartAllOpen] = useState(false);
-  const [startAllBusy, setStartAllBusy] = useState(false);
-  const flowStartedRef = useRef(flowStarted);
-  useEffect(() => {
-    flowStartedRef.current = flowStarted;
-  }, [flowStarted]);
 
   const readyCount = useMemo(() => files.filter(f => f.status === 'ready').length, [files]);
   const warningCount = useMemo(() => files.filter(f => f.status === 'warning').length, [files]);
@@ -383,9 +369,6 @@ export default function AdminImportPage() {
     setProgress(0);
     setLogLines([]);
     setResults([]);
-    setFlowStarted({});
-    flowStartedRef.current = {};
-    setFlowStarting({});
 
     const importable = files.filter(f => f.candidateId && f.parsed);
     const total = importable.length;
@@ -463,58 +446,6 @@ export default function AdminImportPage() {
     setImporting(false);
   };
 
-  const startCandidateFlow = async (candidateId: string, candidateName: string, candidateEmail: string) => {
-    if (!user?.uid || !candidateId) return;
-    if (flowStartedRef.current[candidateId]) return;
-    const email = (candidateEmail || '').trim();
-    if (!email) return;
-    setFlowStarting((prev) => ({ ...prev, [candidateId]: true }));
-    try {
-      await updateDoc(doc(firestore, 'candidateIds', candidateId), {
-        flowStatus: 'invited',
-        invitedAt: serverTimestamp(),
-        flowStatusUpdatedAt: serverTimestamp(),
-      });
-      await addDoc(collection(firestore, 'auditLog'), {
-        action: 'flow_started',
-        adminUid: user.uid,
-        adminEmail: user.email ?? '',
-        candidateId,
-        candidateName: candidateName || '',
-        timestamp: serverTimestamp(),
-      });
-      const html = buildFlowStartedEmail(candidateName || 'Candidate', email, candidateId);
-      await sendEmail(firestore, {
-        to: email,
-        subject: 'Your FedEx Pilot History Update — Action Required',
-        html,
-        type: 'flow_started',
-        candidateId,
-        candidateName: candidateName || '',
-        sentBy: user.uid,
-        sentByEmail: user.email || '',
-      });
-      flowStartedRef.current = { ...flowStartedRef.current, [candidateId]: true };
-      setFlowStarted((prev) => ({ ...prev, [candidateId]: true }));
-    } finally {
-      setFlowStarting((prev) => ({ ...prev, [candidateId]: false }));
-    }
-  };
-
-  const runStartAllFlows = async () => {
-    const rows = results.filter((r) => r.status === 'imported' && r.candidateId);
-    setStartAllOpen(false);
-    setStartAllBusy(true);
-    try {
-      for (const r of rows) {
-        if (flowStartedRef.current[r.candidateId]) continue;
-        await startCandidateFlow(r.candidateId, r.name || '', r.email || '');
-      }
-    } finally {
-      setStartAllBusy(false);
-    }
-  };
-
   // ── Download CSV report ─────────────────────────────────────────
   const downloadReport = () => {
     const header = 'CandidateID,Name,Email,Status,FlowStatus,Message';
@@ -565,18 +496,6 @@ export default function AdminImportPage() {
             <CheckCircle className="h-8 w-8 text-[#008A00] shrink-0 mt-0.5" />
             <div className="flex-1">
               <h2 className="text-[18px] font-bold text-[#333333]">Import Complete</h2>
-              {importedCount > 0 && user && (
-                <div className="mt-3">
-                  <button
-                    type="button"
-                    disabled={startAllBusy}
-                    onClick={() => setStartAllOpen(true)}
-                    className="fedex-btn-primary-sm inline-flex cursor-pointer border-0 !px-4 !py-2 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {startAllBusy ? 'Starting…' : 'Start All Flows'}
-                  </button>
-                </div>
-              )}
               <div className="mt-2 space-y-1 text-[14px] text-[#333333]">
                 <div>{importedCount} candidate{importedCount !== 1 ? 's' : ''} imported successfully</div>
                 <div>{skippedCount} skipped (already exist)</div>
@@ -589,44 +508,28 @@ export default function AdminImportPage() {
                   </p>
                 )}
               </div>
-              {importedRows.length > 0 && user && (
+              {importedRows.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-[rgba(0,138,0,0.15)] space-y-2">
                   <h3 className="text-[13px] font-bold text-[#565656] uppercase tracking-wide">Imported candidates</h3>
                   <ul className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-                    {importedRows.map((r) => {
-                      const started = flowStarted[r.candidateId];
-                      const busy = flowStarting[r.candidateId];
-                      return (
-                        <li
-                          key={r.candidateId}
-                          className="flex flex-wrap items-center gap-3 justify-between bg-white/70 rounded-lg px-3 py-2 border border-[rgba(0,138,0,0.12)]"
+                    {importedRows.map((r) => (
+                      <li
+                        key={r.candidateId}
+                        className="flex flex-wrap items-center gap-3 justify-between bg-white/70 rounded-lg px-3 py-2 border border-[rgba(0,138,0,0.12)]"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[14px] font-semibold text-[#333333] truncate">{r.name || r.candidateId}</div>
+                          <div className="text-[12px] font-mono text-[#8E8E8E]">{r.candidateId}</div>
+                        </div>
+                        <Link
+                          href={`/admin/candidates?q=${encodeURIComponent(r.candidateId)}`}
+                          className="fedex-btn-primary-sm inline-flex items-center shrink-0 cursor-pointer border-0 !px-4 !py-2 text-[13px] font-semibold"
                         >
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[14px] font-semibold text-[#333333] truncate">{r.name || r.candidateId}</div>
-                            <div className="text-[12px] font-mono text-[#8E8E8E]">{r.candidateId}</div>
-                          </div>
-                          {started ? (
-                            <button
-                              type="button"
-                              disabled
-                              className="shrink-0 border-0 cursor-default rounded-lg px-4 py-2 text-[13px] font-semibold text-white"
-                              style={{ background: '#008A00', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600 }}
-                            >
-                              ✓ Flow Started
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => startCandidateFlow(r.candidateId, r.name || '', r.email || '')}
-                              className="fedex-btn-primary-sm shrink-0 cursor-pointer border-0 !px-4 !py-2 text-[13px] font-semibold disabled:opacity-50"
-                            >
-                              {busy ? 'Starting…' : 'Start Candidate Flow'}
-                            </button>
-                          )}
-                        </li>
-                      );
-                    })}
+                          <User className="mr-1.5 h-3.5 w-3.5" />
+                          View Profile
+                        </Link>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}
@@ -891,31 +794,6 @@ export default function AdminImportPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={startAllOpen} onOpenChange={setStartAllOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#333333]">Start all flows?</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#565656]">
-              Start candidate flow for all {importedCount} imported candidates?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={startAllBusy} className="border-[#E3E3E3] text-[#565656]">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                void runStartAllFlows();
-              }}
-              disabled={startAllBusy}
-              className="border-0"
-            >
-              {startAllBusy ? 'Starting…' : 'Start all'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

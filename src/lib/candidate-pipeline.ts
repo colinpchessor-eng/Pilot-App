@@ -16,9 +16,8 @@ export const PIPELINE_STAGES: readonly {
   statuses?: readonly string[];
 }[] = [
   { id: 'imported', label: 'Imported' },
-  { id: 'invited', label: 'Invited' },
-  { id: 'registered', label: 'Registered' },
-  { id: 'verified', label: 'ID linked' },
+  { id: 'invited', label: 'Flow Started' },
+  { id: 'logged_in', label: 'Logged In', statuses: ['registered', 'verified'] },
   { id: 'in_progress', label: 'In Progress' },
   { id: 'submitted', label: 'Submitted' },
   { id: 'under_review', label: 'Under Review' },
@@ -70,7 +69,7 @@ export type FlowBadgeSpec = { label: string; bg: string; color: string };
 
 const FLOW_BADGES: Record<string, FlowBadgeSpec> = {
   imported: { label: 'Imported', bg: '#E8E8E8', color: '#565656' },
-  invited: { label: 'Invited', bg: '#E3F2FD', color: '#1565C0' },
+  invited: { label: 'Flow Started', bg: '#E3F2FD', color: '#1565C0' },
   registered: { label: 'Registered', bg: '#EDE7F6', color: '#4D148C' },
   verified: { label: 'ID linked', bg: '#E8F5E9', color: '#2E7D32' },
   in_progress: { label: 'In Progress', bg: '#FFF3E0', color: '#E65100' },

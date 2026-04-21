@@ -3,7 +3,6 @@
 import { AdminStats } from '@/components/admin/admin-stats';
 import { CandidatePipeline } from '@/components/admin/candidate-pipeline';
 import { ActivityFeed } from '@/components/admin/activity-feed';
-import { AdminCharts } from '@/components/admin/admin-charts';
 import { ApplicationsTable } from '@/components/admin/applications-table';
 import { AdminDeletionsPanel } from '@/components/admin/admin-deletions-panel';
 import { AdminUnlockRequestsPanel } from '@/components/admin/admin-unlock-requests-panel';
@@ -155,8 +154,6 @@ export default function AdminDashboardPage() {
       />
 
       <CandidatePipeline candidates={allCandidates ?? []} upcomingInterviews={upcomingInterviews} />
-
-      <AdminCharts allUsers={allUsers ?? []} submittedApplications={submittedApplications} />
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-3">
