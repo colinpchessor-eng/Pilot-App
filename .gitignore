@@ -47,3 +47,6 @@ firestore-debug.log
 scripts/service-account.json
 scripts/service_account.json
 scripts/*firebase-adminsdk*.json
+
+# local agent state
+.claude/
