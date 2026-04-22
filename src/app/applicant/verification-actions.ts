@@ -292,7 +292,7 @@ export async function sendSubmissionEmailAction(input: {
     replyTo,
     message: {
       subject: 'FedEx Pilot History Update Received — Thank You',
-      html: buildSubmissionEmail(nm, toEmail, submittedAt, cid),
+      html: buildSubmissionEmail(nm, toEmail, submittedAt),
     },
     type: 'application_submitted',
     candidateId: cid,

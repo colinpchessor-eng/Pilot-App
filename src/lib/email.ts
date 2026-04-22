@@ -208,8 +208,7 @@ export function buildFlowStartedEmail(
 export function buildSubmissionEmail(
   candidateName: string,
   candidateEmail: string,
-  submittedAt: string,
-  candidateId: string
+  submittedAt: string
 ): string {
   const portal = getPublicPortalOrigin();
   const safeName = candidateName || 'Candidate';
@@ -220,16 +219,11 @@ export function buildSubmissionEmail(
       <div style="font-size:18px; font-weight:bold; color:#008A00; margin-top:8px;">Update Received</div>
       <div style="color:#565656; margin-top:4px;">Submitted on ${submittedAt}</div>
     </div>
-    <div class="id-box">
-      <div class="id-label">Your Legacy ID</div>
-      <div class="id-value">${candidateId}</div>
-    </div>
     <p>Thank you for completing your pilot history update. We have successfully received your submission and it is now under review by our recruiting team.</p>
     <p><strong>What happens next:</strong></p>
     <ul style="color:#565656; line-height:2;">
       <li>Our team will review your updated pilot history and flight hours</li>
-      <li>We will send these over to our legacy application system for merging and background check and review</li>
-      <li>Once a review and background check is complete we will reach out via email or phone to schedule your in doc dates</li>
+      <li>We will contact you regarding next steps within 7 business days</li>
     </ul>
     <p>If you need to make any corrections or have questions about your submission, please visit the <a class="link" href="${portal}/help">Help page</a> on flyfdx.com.</p>
     <p>We appreciate your interest in joining the FedEx family.</p>
