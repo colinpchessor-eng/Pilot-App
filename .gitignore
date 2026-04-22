@@ -40,13 +40,38 @@ next-env.d.ts
 .genkit/*
 .env*
 !.env.example
+# Conventional "never sync" bucket (Next.js convention). Covers *.local editor scratch.
+*.local
 
 # firebase
 firebase-debug.log
 firestore-debug.log
+.firebase/
 scripts/service-account.json
 scripts/service_account.json
 scripts/*firebase-adminsdk*.json
+# Any service account JSON anywhere in the tree (defense-in-depth).
+**/*service-account*.json
+**/*service_account*.json
+**/*firebase-adminsdk*.json
+
+# editor / OS cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.pem
+*.key
+*.p12
 
 # local agent state
 .claude/
+.cursor/
+.aider*
+
+# stray local scratch files (accidental duplicates, touch markers, etc.)
+* copy.*
+*.bak
+*.orig
+.modified
