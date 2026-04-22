@@ -7,7 +7,6 @@ import { useUser, useDoc, useFirestore } from '@/firebase';
 import { cn } from '@/lib/utils';
 import {
   Bell,
-  Calendar,
   CalendarRange,
   ChevronDown,
   LogOut,
@@ -201,7 +200,6 @@ export function InteriorNavbar() {
       { kind: 'link', label: 'Candidates', href: '/admin/candidates' },
       { kind: 'link', label: 'Import', href: '/admin/import' },
       { kind: 'link', label: 'Scheduling', href: '/admin/scheduling', Icon: CalendarRange },
-      { kind: 'link', label: 'Interviews', href: '/admin/interviews', Icon: Calendar },
       { kind: 'link', label: 'Activity', href: '/admin/activity' },
     ];
     if (showDev) {
@@ -228,7 +226,6 @@ export function InteriorNavbar() {
       { kind: 'link', label: 'Candidates', href: '/admin/candidates' },
       { kind: 'link', label: 'Import', href: '/admin/import' },
       { kind: 'link', label: 'Scheduling', href: '/admin/scheduling', Icon: CalendarRange },
-      { kind: 'link', label: 'Interviews', href: '/admin/interviews', Icon: Calendar },
       { kind: 'link', label: 'Activity', href: '/admin/activity' },
     ];
     if (showDev) {

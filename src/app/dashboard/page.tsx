@@ -285,11 +285,11 @@ export default function DashboardPage() {
     .filter(Boolean)
     .join(' ');
 
-  let buttonText = 'Start Application';
+  let buttonText = 'Update Pilot History';
   if (applicationStatus === 'In Progress') {
-    buttonText = 'Continue Your Application';
+    buttonText = 'Continue Pilot History Update';
   } else if (applicationStatus === 'Completed') {
-    buttonText = 'View Submitted Application';
+    buttonText = 'View Submitted History';
   }
 
   return (
@@ -302,7 +302,7 @@ export default function DashboardPage() {
             Welcome, {fullName || user?.email}!
           </h1>
           <p className="text-[#565656]">
-            Here is your application dashboard.
+            Here is your dashboard.
           </p>
         </div>
 
@@ -317,7 +317,7 @@ export default function DashboardPage() {
             <div className="flex min-h-0 flex-1 flex-col justify-between p-6">
               <div>
                 <div className="flex items-start justify-between">
-                  <h3 className="text-xl font-bold text-[#333333]">Application</h3>
+                  <h3 className="text-xl font-bold text-[#333333]">Updated Records</h3>
                   {statusInfo.icon}
                 </div>
                 <Badge className={cn("mt-2 text-sm px-3 py-1 rounded-full font-bold", statusInfo.badgeStyle)}>
@@ -378,7 +378,7 @@ export default function DashboardPage() {
               >
                 {isVerified ? (
                   <Link href="/dashboard/application">
-                    {isSubmitted ? 'View Submitted Application' : (hasStarted ? 'Continue Your Application' : 'Start Application')}
+                    {isSubmitted ? 'View Submitted History' : (hasStarted ? 'Continue Pilot History Update' : 'Update Pilot History')}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 ) : (
@@ -432,7 +432,7 @@ export default function DashboardPage() {
           <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-none bg-gradient-to-br from-[#4D148C] via-[#7D22C3] to-[#FF6200] p-6 text-center text-white shadow-[0_4px_20px_rgba(77,20,140,0.2)]">
             <h3 className="text-2xl font-bold">Thank You!</h3>
             <p className="mt-2 font-medium opacity-90">
-              Your application has been successfully submitted. We will be in touch soon
+              Your pilot history update has been successfully submitted. We will be in touch soon
               regarding next steps.
             </p>
           </div>

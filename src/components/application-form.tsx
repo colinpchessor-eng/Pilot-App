@@ -108,7 +108,7 @@ const APPLICATION_TABS: {
   },
   {
     value: 'type-ratings',
-    label: 'Aeronautical Ratings and Certificates',
+    label: 'Rating and Certificates',
     shortLabel: 'Ratings',
     Icon: BadgeCheck,
     heroTitle: 'Aeronautical ratings and certificates',
@@ -459,22 +459,6 @@ export function ApplicationForm({
   const [employmentConfirmed, setEmploymentConfirmed] = React.useState(
     !applicantData.employmentHistory || applicantData.employmentHistory.length === 0
   );
-
-  const safetyQuestionsWatch = form.watch('safetyQuestions');
-  const ackProgress = useMemo(() => {
-    let answered = 0;
-    for (const q of ACKNOWLEDGMENT_QUESTIONS) {
-      const a =
-        safetyQuestionsWatch?.[q.name as keyof typeof safetyQuestionsWatch]?.answer;
-      if (a === 'yes' || a === 'no') answered++;
-    }
-    const total = ACKNOWLEDGMENT_QUESTIONS.length;
-    return {
-      answered,
-      total,
-      pct: total ? Math.round((answered / total) * 100) : 0,
-    };
-  }, [safetyQuestionsWatch]);
 
   // Firestore: owner write keys must stay within firestore.rules → userSelfUpdateAffectedKeysAllowlist
   const saveDataToFirestore = async () => {
@@ -1699,21 +1683,7 @@ export function ApplicationForm({
                     )}
                   </div>
 
-                  <div className="mt-16 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-col">
-                      <span className="mb-2 text-xs font-bold uppercase tracking-widest text-[#565656]">
-                        Completion progress
-                      </span>
-                      <div className="h-1 w-48 overflow-hidden rounded-full bg-[#e3e2e7]">
-                        <div
-                          className="h-full rounded-full bg-[#FF6200] transition-[width] duration-300"
-                          style={{ width: `${ackProgress.pct}%` }}
-                        />
-                      </div>
-                      <span className="mt-1.5 text-[11px] font-medium text-[#8E8E8E]">
-                        {ackProgress.answered} of {ackProgress.total} answered
-                      </span>
-                    </div>
+                  <div className="mt-16 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-end">
                     <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                       <Button
                         type="button"

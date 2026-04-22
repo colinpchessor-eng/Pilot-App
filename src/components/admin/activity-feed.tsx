@@ -87,11 +87,11 @@ function entryVisual(entry: AuditDoc): Visual {
         color: '#4D148C',
         primary: `Flow started for ${name}`,
       };
-    case 'interview_invited':
+    case 'indoctrination_invited':
       return {
         Icon: Mail,
         color: '#007AB7',
-        primary: `Interview invitation marked for ${name}`,
+        primary: `Indoctrination invitation marked for ${name}`,
       };
     case 'viewed_candidate': {
       const admin = (entry.adminEmail || '').trim() || 'Admin';

@@ -97,12 +97,6 @@ export function CandidatePipeline({ candidates, upcomingInterviews = [] }: Props
             >
               Testing &amp; indoctrination scheduling →
             </Link>
-            <Link
-              href="/admin/interviews"
-              className="text-[12px] font-semibold text-[#4D148C] hover:underline"
-            >
-              Interview slots →
-            </Link>
           </div>
         </div>
       )}

@@ -8,6 +8,7 @@ function isPublicPath(pathname: string) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/privacy') ||
+    pathname.startsWith('/help') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/assets') ||

@@ -38,7 +38,6 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PrivacyPolicyArticle } from '@/components/legal/privacy-policy-article';
-import { triggerWelcomeEmail } from '@/app/actions';
 import { createSessionCookie } from '@/app/auth/actions';
 import type { ApplicantData } from '@/lib/types';
 import { writeCandidateAuditLog } from '@/lib/candidate-audit';
@@ -257,10 +256,6 @@ export function SignupForm() {
       } catch (e) {
         console.error('candidate_registered audit:', e);
       }
-      if (!staffRole) {
-        await triggerWelcomeEmail(user.email!, fullName);
-      }
-
       const idToken = await user.getIdToken();
       const sessionResult = await createSessionCookie(idToken);
       if (!sessionResult.success) {

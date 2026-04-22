@@ -58,7 +58,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { sendEmail, buildInterviewEmail, getPublicPortalOrigin } from '@/lib/email';
+import { sendEmail, buildIndoctrinationEmail } from '@/lib/email';
 
 type ExportRowBase = {
   recordType: 'employment' | 'residential';
@@ -330,7 +330,7 @@ type CandidateIdsDoc = {
   submittedAt?: { toDate?: () => Date };
   applicationStartedAt?: { toDate?: () => Date };
   flowStatusUpdatedAt?: { toDate?: () => Date };
-  interviewInvitedAt?: { toDate?: () => Date };
+  indoctrinationInvitedAt?: { toDate?: () => Date };
   testingBookedAt?: { toDate?: () => Date };
   indoctrinationBookedAt?: { toDate?: () => Date };
 };
@@ -404,13 +404,13 @@ const TIMELINE_STEPS: TimelineStep[] = [
     ts: (c) => formatTs(c.testingBookedAt),
   },
   {
-    id: 'interview',
-    label: 'Interview',
-    ts: (c) => formatTs(c.interviewInvitedAt),
+    id: 'indoctrination_invited',
+    label: 'Indoctrination Invited',
+    ts: (c) => formatTs(c.indoctrinationInvitedAt),
   },
   {
     id: 'indoctrination',
-    label: 'Indoctrination',
+    label: 'Indoctrination Booked',
     ts: (c) => formatTs(c.indoctrinationBookedAt),
   },
   {
@@ -477,7 +477,7 @@ export default function AdminReviewPage() {
   const [notesDirty, setNotesDirty] = useState(false);
   const [notesSave, setNotesSave] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [markingInterview, setMarkingInterview] = useState(false);
+  const [markingIndoctrination, setMarkingIndoctrination] = useState(false);
   const [markingReview, setMarkingReview] = useState(false);
   const [aircraftBreakdownOpen, setAircraftBreakdownOpen] = useState(false);
   const [sensitiveDisplay, setSensitiveDisplay] = useState<{
@@ -492,11 +492,11 @@ export default function AdminReviewPage() {
     const fn = firstName || 'Candidate';
     return `Dear ${fn},
 
-Thank you for submitting your FedEx pilot application. We would like to invite you to an in-person interview. Please use the link below to select your preferred interview time from our available slots.
+Congratulations — on behalf of the FedEx Express Pilot Recruiting Team, we are delighted to invite you to our July 2026 Pilot Indoctrination Class.
 
-[CALENDAR LINK - Coming Soon]
+Full class details — dates, times, location, and preparation materials — are available in your Pilot Portal. Sign in and visit the Indoctrination page to view everything and choose your class date.
 
-We look forward to speaking with you.
+We look forward to welcoming you to the FedEx Express family.
 
 FedEx Express Pilot Recruiting`;
   }, [firstName]);
@@ -610,7 +610,7 @@ FedEx Express Pilot Recruiting`;
     }
   }, [candidateId, firestore, uid]);
 
-  const markInterviewSent = useCallback(async () => {
+  const markIndoctrinationSent = useCallback(async () => {
     if (!candidateId || !uid || !adminUser) return;
     const toEmail = applicant?.email?.trim();
     if (!toEmail) {
@@ -621,30 +621,29 @@ FedEx Express Pilot Recruiting`;
       });
       return;
     }
-    setMarkingInterview(true);
+    setMarkingIndoctrination(true);
     try {
-      const scheduleUrl = `${getPublicPortalOrigin()}/schedule?candidateId=${encodeURIComponent(candidateId)}`;
-      const html = buildInterviewEmail(fullName, toEmail, scheduleUrl);
+      const html = buildIndoctrinationEmail(fullName, toEmail);
       await sendEmail(firestore, {
         to: toEmail,
-        subject: 'FedEx Pilot Interview Invitation',
+        subject: 'FedEx Pilot Indoctrination Class Invitation — July 2026',
         html,
-        type: 'interview_invite',
+        type: 'indoctrination_invite',
         candidateId,
         candidateName: fullName,
         sentBy: adminUser.uid,
         sentByEmail: adminUser.email || '',
       });
       await updateDoc(doc(firestore, 'candidateIds', candidateId), {
-        flowStatus: 'interview_sent',
-        interviewInvitedAt: serverTimestamp(),
+        flowStatus: 'indoctrination_invited',
+        indoctrinationInvitedAt: serverTimestamp(),
         flowStatusUpdatedAt: serverTimestamp(),
       });
       await updateDoc(doc(firestore, 'users', uid), {
-        candidateFlowStatus: 'interview_sent',
+        candidateFlowStatus: 'indoctrination_invited',
       });
       await addDoc(collection(firestore, 'auditLog'), {
-        action: 'interview_invited',
+        action: 'indoctrination_invited',
         adminUid: adminUser.uid,
         adminEmail: adminUser.email ?? '',
         candidateId,
@@ -652,8 +651,8 @@ FedEx Express Pilot Recruiting`;
         timestamp: serverTimestamp(),
       });
       toast({
-        title: 'Interview invitation sent',
-        description: `Interview invitation sent to ${toEmail}`,
+        title: 'Indoctrination invitation sent',
+        description: `Indoctrination invitation sent to ${toEmail}`,
       });
       setInviteOpen(false);
     } catch (e) {
@@ -664,7 +663,7 @@ FedEx Express Pilot Recruiting`;
         description: e instanceof Error ? e.message : 'Unknown error',
       });
     } finally {
-      setMarkingInterview(false);
+      setMarkingIndoctrination(false);
     }
   }, [candidateId, firestore, uid, adminUser, fullName, applicant?.email, toast]);
 
@@ -675,12 +674,15 @@ FedEx Express Pilot Recruiting`;
   const userCreated = applicant?.createdAt?.toDate?.() ?? null;
   const flow = String(candidate?.flowStatus || applicant?.candidateFlowStatus || 'submitted');
 
-  const interviewSentAt =
-    candidate?.interviewInvitedAt && typeof candidate.interviewInvitedAt.toDate === 'function'
-      ? candidate.interviewInvitedAt.toDate()
+  const indoctrinationSentAt =
+    candidate?.indoctrinationInvitedAt && typeof candidate.indoctrinationInvitedAt.toDate === 'function'
+      ? candidate.indoctrinationInvitedAt.toDate()
       : null;
-  const interviewAlreadySent =
-    flow === 'interview_sent' || flow === 'scheduled' || interviewSentAt != null;
+  const indoctrinationAlreadySent =
+    flow === 'indoctrination_invited' ||
+    flow === 'indoctrination_scheduled' ||
+    flow === 'hired' ||
+    indoctrinationSentAt != null;
 
   const loading = userLoading || (!!candidateId && (candLoading || legLoading));
 
@@ -813,14 +815,14 @@ FedEx Express Pilot Recruiting`;
             <Download className="mr-2 inline-block h-4 w-4" />
             Export for Paradox
           </button>
-          {interviewAlreadySent ? (
+          {indoctrinationAlreadySent ? (
             <button
               type="button"
               onClick={() => setInviteOpen(true)}
               className="rounded-lg px-4 py-2 text-[13px] font-semibold border border-[#008A00] bg-[#E8F5E9] text-[#1B5E20] hover:bg-[#C8E6C9] transition-colors"
             >
-              Interview invitation sent
-              {interviewSentAt ? ` · ${format(interviewSentAt, 'MMM d, yyyy')}` : ''}
+              Indoctrination invitation sent
+              {indoctrinationSentAt ? ` · ${format(indoctrinationSentAt, 'MMM d, yyyy')}` : ''}
             </button>
           ) : (
             <button
@@ -828,7 +830,7 @@ FedEx Express Pilot Recruiting`;
               onClick={() => setInviteOpen(true)}
               className="rounded-lg px-4 py-2 text-[13px] font-semibold bg-[#4D148C] text-white hover:brightness-110"
             >
-              Invite to Interview
+              Send Indoctrination Invitation
             </button>
           )}
           <button
@@ -1491,15 +1493,15 @@ FedEx Express Pilot Recruiting`;
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {interviewAlreadySent ? 'Interview invitation (sent)' : 'Invite to Interview'}
+              {indoctrinationAlreadySent ? 'Indoctrination invitation (sent)' : 'Send Indoctrination Invitation'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-[14px] text-[#333333]">
-            {interviewAlreadySent ? (
+            {indoctrinationAlreadySent ? (
               <p className="text-[13px] text-[#565656] rounded-lg bg-[#FAFAFA] border border-[#E3E3E3] px-3 py-2">
                 This candidate was already marked as invited
-                {interviewSentAt ? ` on ${format(interviewSentAt, 'PP')}` : ''}. You can edit the message and
-                send again if needed.
+                {indoctrinationSentAt ? ` on ${format(indoctrinationSentAt, 'PP')}` : ''}. You can edit the
+                message and send again if needed.
               </p>
             ) : null}
             <p>
@@ -1508,7 +1510,7 @@ FedEx Express Pilot Recruiting`;
               <span className="text-[#565656]">{applicant.email}</span>
             </p>
             <p className="text-[#565656]">
-              Interview invitation will be sent to:{' '}
+              Indoctrination invitation will be sent to:{' '}
               <span className="font-semibold text-[#333333]">{applicant.email}</span>
             </p>
             <Textarea
@@ -1523,11 +1525,15 @@ FedEx Express Pilot Recruiting`;
             </Button>
             <Button
               type="button"
-              disabled={markingInterview}
-              onClick={() => void markInterviewSent()}
+              disabled={markingIndoctrination}
+              onClick={() => void markIndoctrinationSent()}
               className="bg-[#4D148C] hover:bg-[#7D22C3] text-white"
             >
-              {markingInterview ? 'Saving…' : interviewAlreadySent ? 'Send again' : 'Mark as Invited'}
+              {markingIndoctrination
+                ? 'Saving…'
+                : indoctrinationAlreadySent
+                ? 'Send again'
+                : 'Mark as Invited'}
             </Button>
           </DialogFooter>
         </DialogContent>

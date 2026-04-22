@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Mail, Phone, Trash2, LockOpen, LifeBuoy } from 'lucide-react';
-import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/support-contact';
+import { SUPPORT_EMAIL } from '@/lib/support-contact';
 import { submitLegacyDeletionRequest, submitUnlockApplicationRequest } from '@/app/dashboard/help-actions';
 import { cn } from '@/lib/utils';
 
@@ -253,8 +253,8 @@ export default function DashboardHelpPage() {
 
           <RequestCard
             icon={LockOpen}
-            title="Unlock submitted application"
-            description="After you submit your application, it is normally locked for editing. If you need to correct information, explain what changed below. An administrator will review and may reopen your application when appropriate."
+            title="Unlock submitted records"
+            description="After you submit your updated records, it is normally locked for editing. If you need to correct information, explain what changed below. An administrator will review and may reopen your application when appropriate."
           >
             <div className="space-y-2">
               <Label htmlFor="unlock-reason" className="text-[13px] font-bold text-[#565656]">
@@ -287,17 +287,7 @@ export default function DashboardHelpPage() {
             title="Contact us"
             description="Reach the pilot portal administrators directly for account issues, Candidate ID or login problems, or if your request is urgent."
           >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <a
-                href={`tel:${SUPPORT_PHONE.replace(/[^\d+]/g, '')}`}
-                className="flex items-center gap-3 rounded-xl border border-[#E3E3E3] bg-[#fafafa] p-4 transition-colors hover:border-[#4D148C]/40"
-              >
-                <Phone className="h-5 w-5 shrink-0 text-[#4D148C]" />
-                <div>
-                  <div className="text-[11px] font-bold uppercase tracking-widest text-[#8E8E8E]">Phone</div>
-                  <div className="text-[15px] font-semibold text-[#333333]">{SUPPORT_PHONE}</div>
-                </div>
-              </a>
+            <div className="grid gap-4">
               <a
                 href={`mailto:${SUPPORT_EMAIL}`}
                 className="flex items-center gap-3 rounded-xl border border-[#E3E3E3] bg-[#fafafa] p-4 transition-colors hover:border-[#4D148C]/40"

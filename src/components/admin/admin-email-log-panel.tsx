@@ -54,8 +54,8 @@ function typeBadge(type: string | undefined): { label: string; bg: string } {
       return { label: 'Invitation', bg: '#4D148C' };
     case 'application_submitted':
       return { label: 'Submission Confirm', bg: '#FF6200' };
-    case 'interview_invite':
-      return { label: 'Interview Invite', bg: '#007AB7' };
+    case 'indoctrination_invite':
+      return { label: 'Indoctrination Invite', bg: '#007AB7' };
     default:
       return { label: type || 'Other', bg: '#8E8E8E' };
   }
@@ -204,7 +204,7 @@ export function AdminEmailLogPanel({ embedded = false }: { embedded?: boolean })
           <option value="all">All Types</option>
           <option value="flow_started">Flow Started (Candidate Invitation)</option>
           <option value="application_submitted">Application Submitted</option>
-          <option value="interview_invite">Interview Invite</option>
+          <option value="indoctrination_invite">Indoctrination Invite</option>
         </select>
         <select
           value={range}

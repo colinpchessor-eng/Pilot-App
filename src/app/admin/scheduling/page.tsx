@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { format, startOfDay } from 'date-fns';
 import {
   Timestamp,
@@ -17,12 +16,10 @@ import {
 } from 'firebase/firestore';
 import {
   Calendar as CalendarIcon,
-  CalendarRange,
   Loader2,
   Trash2,
   Video,
   Brain,
-  ExternalLink,
 } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import type {
@@ -264,31 +261,8 @@ export default function AdminSchedulingPage() {
       <div className="mb-2">
         <h1 className="text-[28px] font-bold text-[#333333]">Scheduling</h1>
         <p className="text-[14px] text-[#8E8E8E] mt-1">
-          Capacity-based testing and indoctrination dates. Interview time slots stay on Interview Management.
+          Capacity-based testing and indoctrination dates.
         </p>
-      </div>
-
-      <div
-        className="rounded-xl border border-[#E3E3E3] bg-white p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
-      >
-        <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-[#EDE7F6] p-2">
-            <CalendarRange className="h-6 w-6 text-[#4D148C]" />
-          </div>
-          <div>
-            <p className="text-[15px] font-semibold text-[#333333]">Interview time slots</p>
-            <p className="text-[13px] text-[#8E8E8E] mt-0.5">
-              One-on-one slots with start/end times (in-person or video).
-            </p>
-          </div>
-        </div>
-        <Button asChild variant="outline" className="shrink-0 border-[#4D148C] text-[#4D148C]">
-          <Link href="/admin/interviews">
-            Open Interview Management
-            <ExternalLink className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'testing' | 'indoctrination')}>
