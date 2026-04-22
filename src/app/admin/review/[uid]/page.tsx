@@ -44,10 +44,7 @@ import {
   adminDecryptMedicalDateBatchForExport,
   adminDecryptReviewDisplayFields,
 } from '@/app/applicant/sensitive-field-actions';
-import {
-  buildParadoxCsv,
-  downloadParadoxCsv,
-} from '@/lib/paradox-export';
+
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
@@ -59,6 +56,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { sendEmail, buildIndoctrinationEmail } from '@/lib/email';
+import { generateParadoxExcelBase64 } from '@/app/admin/excel-export-actions';
+import { CandidateSupportTickets } from '@/components/admin/candidate-support-tickets';
 
 type ExportRowBase = {
   recordType: 'employment' | 'residential';
@@ -321,6 +320,7 @@ function combineLastAircraft(leg: string, upd: string): string {
 
 type CandidateIdsDoc = {
   candidateId?: string;
+  contactEmail?: string;
   flowStatus?: string;
   notes?: string;
   createdAt?: { toDate?: () => Date };
@@ -478,7 +478,7 @@ export default function AdminReviewPage() {
   const [notesSave, setNotesSave] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [markingIndoctrination, setMarkingIndoctrination] = useState(false);
-  const [markingReview, setMarkingReview] = useState(false);
+
   const [aircraftBreakdownOpen, setAircraftBreakdownOpen] = useState(false);
   const [sensitiveDisplay, setSensitiveDisplay] = useState<{
     atpLabel: string;
@@ -592,27 +592,11 @@ FedEx Express Pilot Recruiting`;
       { pic: 0, sic: 0, instructor: 0, night: 0 }
     ) ?? null;
 
-  const markUnderReview = useCallback(async () => {
-    if (!candidateId || !uid) return;
-    setMarkingReview(true);
-    try {
-      await updateDoc(doc(firestore, 'candidateIds', candidateId), {
-        flowStatus: 'under_review',
-        flowStatusUpdatedAt: serverTimestamp(),
-      });
-      await updateDoc(doc(firestore, 'users', uid), {
-        candidateFlowStatus: 'under_review',
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setMarkingReview(false);
-    }
-  }, [candidateId, firestore, uid]);
+
 
   const markIndoctrinationSent = useCallback(async () => {
     if (!candidateId || !uid || !adminUser) return;
-    const toEmail = applicant?.email?.trim();
+    const toEmail = candidate?.contactEmail?.trim() || applicant?.email?.trim();
     if (!toEmail) {
       toast({
         variant: 'destructive',
@@ -745,7 +729,9 @@ FedEx Express Pilot Recruiting`;
   const atpDisplay = sensitiveDisplay?.atpLabel ?? plaintextAtpPreview(applicant);
   const medDisplay = sensitiveDisplay?.medDisplay ?? plaintextMedPreview(applicant);
 
-  const exportUpdateCsv = async () => {
+
+
+  const exportExcel = async () => {
     if (!adminUser) {
       toast({
         variant: 'destructive',
@@ -756,21 +742,23 @@ FedEx Express Pilot Recruiting`;
     }
     try {
       const token = await adminUser.getIdToken();
-      const [atpCol, medCol] = await Promise.all([
-        adminDecryptAtpBatchForExport(token, [applicant.atpNumber]),
-        adminDecryptMedicalDateBatchForExport(token, [applicant.firstClassMedicalDate]),
-      ]);
-      const csv = buildParadoxCsv([applicant as ApplicantData], atpCol, medCol);
-      downloadParadoxCsv(`paradox-export-${candidateId}.csv`, csv);
-      toast({
-        title: 'Paradox export ready',
-        description: `Exported candidate ${candidateId}.`,
-      });
+      toast({ title: 'Generating Excel...', description: 'Please wait while the workbook is built.' });
+      const base64 = await generateParadoxExcelBase64(token, uid);
+      const res = await fetch(`data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${base64}`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${applicant.firstName || 'Candidate'}_${applicant.lastName || 'Export'}_Paradox_Export.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
     } catch (e) {
-      console.error('Per-candidate Paradox export failed:', e);
+      console.error('Excel export failed:', e);
       toast({
         variant: 'destructive',
-        title: 'Export failed',
+        title: 'Excel Export failed',
         description: e instanceof Error ? e.message : 'Unknown error.',
       });
     }
@@ -808,9 +796,9 @@ FedEx Express Pilot Recruiting`;
           </button>
           <button
             type="button"
-            onClick={() => void exportUpdateCsv()}
+            onClick={() => void exportExcel()}
             className="rounded-lg px-4 py-2 text-[13px] font-semibold border border-[#E3E3E3] bg-white text-[#333333] hover:border-[#4D148C]"
-            title="Export full Paradox background-check schema for this candidate"
+            title="Export Excel background-check supplement for this candidate"
           >
             <Download className="mr-2 inline-block h-4 w-4" />
             Export for Paradox
@@ -833,14 +821,7 @@ FedEx Express Pilot Recruiting`;
               Send Indoctrination Invitation
             </button>
           )}
-          <button
-            type="button"
-            disabled={markingReview}
-            onClick={() => void markUnderReview()}
-            className="rounded-lg px-4 py-2 text-[13px] font-semibold border border-[#E3E3E3] bg-white text-[#333333] hover:border-[#FF6200] disabled:opacity-50"
-          >
-            {markingReview ? 'Updating…' : 'Mark Under Review'}
-          </button>
+
         </div>
       </div>
 
@@ -905,6 +886,8 @@ FedEx Express Pilot Recruiting`;
           </div>
         </div>
       </section>
+
+      {uid && <CandidateSupportTickets uid={uid} />}
 
       {/* Section 2 — Flight hours */}
       <section className="review-section print:break-inside-avoid w-full max-w-full print:border-0">

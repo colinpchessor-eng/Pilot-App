@@ -20,12 +20,15 @@ export function initializeFirebase(): {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN;
     }
 
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(
-        process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY!
-      ),
-      isTokenAutoRefreshEnabled: true,
-    });
+    const recaptchaKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
+    if (recaptchaKey && recaptchaKey !== "your-recaptcha-enterprise-site-key") {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } else {
+      console.warn("Skipping App Check initialization because NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY is not set.");
+    }
   }
 
   const auth = getAuth(app);

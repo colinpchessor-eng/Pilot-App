@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Mail, Phone, Trash2, LockOpen, LifeBuoy } from 'lucide-react';
 import { SUPPORT_EMAIL } from '@/lib/support-contact';
-import { submitLegacyDeletionRequest, submitUnlockApplicationRequest } from '@/app/dashboard/help-actions';
+import { submitLegacyDeletionRequest, submitUnlockApplicationRequest, submitSupportTicket } from '@/app/dashboard/help-actions';
 import { cn } from '@/lib/utils';
 
 function RequestCard({
@@ -57,6 +57,11 @@ export default function DashboardHelpPage() {
   const [unlockSubmitting, setUnlockSubmitting] = useState(false);
   const [unlockMsg, setUnlockMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportSubmitting, setSupportSubmitting] = useState(false);
+  const [supportMsg, setSupportMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
   const onDeletionSubmit = async () => {
     if (!user) return;
     setDeletionSubmitting(true);
@@ -98,6 +103,26 @@ export default function DashboardHelpPage() {
       setUnlockMsg({ type: 'err', text: 'Something went wrong. Please try again.' });
     }
     setUnlockSubmitting(false);
+  };
+
+  const onSupportSubmit = async () => {
+    if (!user) return;
+    setSupportSubmitting(true);
+    setSupportMsg(null);
+    try {
+      const idToken = await user.getIdToken();
+      const result = await submitSupportTicket({ idToken, subject: supportSubject, message: supportMessage });
+      if (result.success) {
+        setSupportMsg({ type: 'ok', text: result.message });
+        setSupportSubject('');
+        setSupportMessage('');
+      } else {
+        setSupportMsg({ type: 'err', text: result.message });
+      }
+    } catch {
+      setSupportMsg({ type: 'err', text: 'Something went wrong. Please try again.' });
+    }
+    setSupportSubmitting(false);
   };
 
   if (loading || !user) {
@@ -284,21 +309,47 @@ export default function DashboardHelpPage() {
 
           <RequestCard
             icon={Phone}
-            title="Contact us"
-            description="Reach the pilot portal administrators directly for account issues, Candidate ID or login problems, or if your request is urgent."
+            title="Contact support"
+            description="Submit a ticket to the recruiting team for general questions, profile issues, or help with your Legacy ID. Do not include passwords or sensitive info."
           >
-            <div className="grid gap-4">
-              <a
-                href={`mailto:${SUPPORT_EMAIL}`}
-                className="flex items-center gap-3 rounded-xl border border-[#E3E3E3] bg-[#fafafa] p-4 transition-colors hover:border-[#4D148C]/40"
-              >
-                <Mail className="h-5 w-5 shrink-0 text-[#4D148C]" />
-                <div className="min-w-0">
-                  <div className="text-[11px] font-bold uppercase tracking-widest text-[#8E8E8E]">Email</div>
-                  <div className="truncate text-[15px] font-semibold text-[#333333]">{SUPPORT_EMAIL}</div>
-                </div>
-              </a>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="support-subject" className="text-[13px] font-bold text-[#565656]">
+                  Subject
+                </Label>
+                <input
+                  id="support-subject"
+                  type="text"
+                  value={supportSubject}
+                  onChange={(e) => setSupportSubject(e.target.value)}
+                  placeholder="Briefly describe the issue…"
+                  className="w-full rounded-md border-[1.5px] border-[#D0D0D0] px-3 py-2 text-[15px] focus-visible:border-[#4D148C] focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(77,20,140,0.12)]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="support-message" className="text-[13px] font-bold text-[#565656]">
+                  Message
+                </Label>
+                <Textarea
+                  id="support-message"
+                  value={supportMessage}
+                  onChange={(e) => setSupportMessage(e.target.value)}
+                  placeholder="Provide more details so we can assist you better…"
+                  className="min-h-[120px] border-[1.5px] border-[#D0D0D0] text-[15px] focus-visible:border-[#4D148C] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(77,20,140,0.12)]"
+                />
+              </div>
             </div>
+            {supportMsg && (
+              <p
+                className={cn('mt-4 text-[13px] font-medium', supportMsg.type === 'ok' ? 'text-[#008A00]' : 'text-[#DE002E]')}
+                role="status"
+              >
+                {supportMsg.text}
+              </p>
+            )}
+            <Button type="button" onClick={onSupportSubmit} disabled={supportSubmitting || !supportSubject.trim() || !supportMessage.trim()} className="mt-5 px-8">
+              {supportSubmitting ? 'Sending…' : 'Submit ticket'}
+            </Button>
           </RequestCard>
         </div>
 

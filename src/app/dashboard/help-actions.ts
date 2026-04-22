@@ -142,3 +142,61 @@ export async function submitUnlockApplicationRequest(input: {
     return { success: false, message: 'Could not submit your request. Please try again or contact support.' };
   }
 }
+
+export async function submitSupportTicket(input: {
+  idToken: string;
+  subject: string;
+  message: string;
+}): Promise<ActionResult> {
+  const subject = input.subject.trim();
+  const message = input.message.trim();
+
+  if (subject.length < 5 || subject.length > 150) {
+    return { success: false, message: 'Subject must be between 5 and 150 characters.' };
+  }
+  if (message.length < 10 || message.length > 3000) {
+    return { success: false, message: 'Message must be between 10 and 3000 characters.' };
+  }
+
+  try {
+    const decoded = await verifyIdToken(input.idToken);
+    const uid = decoded.uid;
+    const email = decoded.email ?? '';
+    const db = getAdminFirestore();
+
+    const userSnap = await db.collection('users').doc(uid).get();
+    const userData = userSnap.data();
+    const name =
+      userData?.firstName || userData?.lastName
+        ? [userData.firstName, userData.lastName].filter(Boolean).join(' ').trim()
+        : userData?.displayName ?? decoded.name ?? null;
+    const candidateId =
+      typeof userData?.candidateId === 'string' && userData.candidateId ? userData.candidateId : null;
+
+    const pendingSnap = await db
+      .collection('supportTickets')
+      .where('uid', '==', uid)
+      .where('status', 'in', ['open', 'in_progress'])
+      .get();
+      
+    if (pendingSnap.size >= 3) {
+      return { success: false, message: 'You have too many open tickets. Please wait for an administrator to respond.' };
+    }
+
+    await db.collection('supportTickets').add({
+      uid,
+      email: email || '',
+      name: name ?? '',
+      candidateId: candidateId || '',
+      subject,
+      message,
+      status: 'open',
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    return { success: true, message: 'Your support ticket has been submitted successfully.' };
+  } catch (e) {
+    console.error('submitSupportTicket', e);
+    return { success: false, message: 'Could not submit your ticket. Please try again later.' };
+  }
+}

@@ -41,13 +41,13 @@ export function getPublicPortalOrigin(): string {
 /** Resolve the From header for outbound mail. Required in production. */
 function resolveFromAddress(): string {
   const fromEnv =
-    (typeof process !== 'undefined' && process.env.EMAIL_FROM?.trim()) || '';
+    (typeof process !== 'undefined' && (process.env.NEXT_PUBLIC_EMAIL_FROM?.trim() || process.env.EMAIL_FROM?.trim())) || '';
   if (fromEnv) return fromEnv;
   const isProd =
     typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
   if (isProd) {
     throw new Error(
-      'EMAIL_FROM must be set in production — refusing to send mail without a verified sender.'
+      'NEXT_PUBLIC_EMAIL_FROM must be set in production — refusing to send mail without a verified sender.'
     );
   }
   return 'FedEx Pilot Portal <noreply@localhost>';
@@ -56,13 +56,13 @@ function resolveFromAddress(): string {
 /** Resolve the Reply-To header for outbound mail. Required in production. */
 function resolveReplyToAddress(): string {
   const replyEnv =
-    (typeof process !== 'undefined' && process.env.EMAIL_REPLY_TO?.trim()) || '';
+    (typeof process !== 'undefined' && (process.env.NEXT_PUBLIC_EMAIL_REPLY_TO?.trim() || process.env.EMAIL_REPLY_TO?.trim())) || '';
   if (replyEnv) return replyEnv;
   const isProd =
     typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
   if (isProd) {
     throw new Error(
-      'EMAIL_REPLY_TO must be set in production — refusing to send mail without a reply inbox.'
+      'NEXT_PUBLIC_EMAIL_REPLY_TO must be set in production — refusing to send mail without a reply inbox.'
     );
   }
   return 'support@localhost';
@@ -112,7 +112,7 @@ const SHARED_EMAIL_CSS = `
   .id-value { font-size: 32px; font-weight: bold; color: #4D148C; letter-spacing: 0.2em; margin-top: 8px; }
   .steps { background: #fafafa; border-radius: 8px; padding: 20px; margin: 20px 0; }
   .step { display: flex; align-items: flex-start; margin-bottom: 12px; }
-  .step-num { background: #4D148C; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 12px; flex-shrink: 0; }
+  .step-num { background: #4D148C; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-block; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px; flex-shrink: 0; }
   .success-box { background: #f0fff4; border: 2px solid #008A00; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
   .info-box { background: #f5f0ff; border-left: 4px solid #4D148C; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; }
   .link { color: #4D148C; text-decoration: underline; }
@@ -134,9 +134,9 @@ function renderEmailHeader(): string {
 function renderEmailFooter(candidateEmail: string): string {
   return `
   <div class="footer">
-    <p>© 2026 FedEx Express. All rights reserved.</p>
-    <p>This email was sent to ${candidateEmail} because you have expressed interest in joining FedEx Express.</p>
-    <p>FedEx Express · 3610 Hacks Cross Rd · Memphis, TN 38125</p>
+    <p>© 2026 FedEx. All rights reserved.</p>
+    <p>This email was sent to ${candidateEmail} because you have expressed interest in joining FedEx.</p>
+    <p>FedEx · 3610 Hacks Cross Rd · Memphis, TN 38125</p>
   </div>`;
 }
 
@@ -173,16 +173,16 @@ export function buildFlowStartedEmail(
   const body = `
     <p>Dear ${safeName},</p>
     <p>We are reaching out to invite you to update your pilot history through our secure Pilot History Update Portal.</p>
-    <p>Your unique Candidate ID is below. You will need it to register and link your new account to your existing profile.</p>
+    <p>Your unique Legacy ID is below. You will need it to register and link your new account to your existing profile.</p>
     <div class="id-box">
-      <div class="id-label">Your Candidate ID</div>
+      <div class="id-label">Your Legacy ID</div>
       <div class="id-value">${candidateId}</div>
     </div>
     <p><strong>To get started:</strong></p>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div>Visit the Pilot Portal at <strong>${portalDisplay}</strong></div>
+        <div>Visit the Pilot History Update Portal at <strong>flyfdx.com</strong></div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
@@ -190,14 +190,14 @@ export function buildFlowStartedEmail(
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div>Enter your Candidate ID when prompted to link your portal account</div>
+        <div>Enter your Legacy ID when prompted to link your portal account</div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
         <div>Review your legacy data and submit your updated information.</div>
       </div>
     </div>
-    <a href="${portal}" class="cta-button">Access Pilot Portal</a>
+    <a href="${portal}" class="cta-button">Go To Fly FDX.com</a>
     <p style="color:#8E8E8E; font-size:13px;">If you have any questions, please visit our <a class="link" href="${portal}/help">Help page</a>.</p>`;
   return renderEmailShell(body, candidateEmail);
 }
@@ -208,7 +208,8 @@ export function buildFlowStartedEmail(
 export function buildSubmissionEmail(
   candidateName: string,
   candidateEmail: string,
-  submittedAt: string
+  submittedAt: string,
+  candidateId: string
 ): string {
   const portal = getPublicPortalOrigin();
   const safeName = candidateName || 'Candidate';
@@ -219,16 +220,20 @@ export function buildSubmissionEmail(
       <div style="font-size:18px; font-weight:bold; color:#008A00; margin-top:8px;">Update Received</div>
       <div style="color:#565656; margin-top:4px;">Submitted on ${submittedAt}</div>
     </div>
+    <div class="id-box">
+      <div class="id-label">Your Legacy ID</div>
+      <div class="id-value">${candidateId}</div>
+    </div>
     <p>Thank you for completing your pilot history update. We have successfully received your submission and it is now under review by our recruiting team.</p>
     <p><strong>What happens next:</strong></p>
     <ul style="color:#565656; line-height:2;">
       <li>Our team will review your updated pilot history and flight hours</li>
-      <li>Qualified candidates will be contacted to schedule an in-person interview</li>
-      <li>You will receive an email notification at each stage of the process</li>
+      <li>We will send these over to our legacy application system for merging and background check and review</li>
+      <li>Once a review and background check is complete we will reach out via email or phone to schedule your in doc dates</li>
     </ul>
-    <p>If you need to make any corrections or have questions about your submission, please visit the <a class="link" href="${portal}/dashboard/help">Help page</a> in the Pilot Portal.</p>
-    <p>We appreciate your interest in joining the FedEx Express family.</p>
-    <p style="margin-top:32px;">Best regards,<br><strong>FedEx Express Pilot Recruiting Team</strong></p>`;
+    <p>If you need to make any corrections or have questions about your submission, please visit the <a class="link" href="${portal}/help">Help page</a> on flyfdx.com.</p>
+    <p>We appreciate your interest in joining the FedEx family.</p>
+    <p style="margin-top:32px;">Best regards,<br><strong>FedEx Pilot Recruiting Team</strong></p>`;
   return renderEmailShell(body, candidateEmail);
 }
 
@@ -245,8 +250,8 @@ export function buildIndoctrinationEmail(
   const safeName = candidateName || 'Candidate';
   const body = `
     <p>Dear ${safeName},</p>
-    <p>Congratulations &mdash; on behalf of the FedEx Express Pilot Recruiting Team, we are delighted to invite you to our <strong>July 2026 Pilot Indoctrination Class</strong>.</p>
-    <p>This is the final step before you officially begin your career as a FedEx Express pilot. Full class details &mdash; dates, times, location, and preparation materials &mdash; are available in your Pilot Portal.</p>
+    <p>Congratulations &mdash; on behalf of the FedEx Pilot Recruiting Team, we are delighted to invite you to our <strong>July 2026 Pilot Indoctrination Class</strong>.</p>
+    <p>This is the final step before you officially begin your career as a FedEx pilot. Full class details &mdash; dates, times, location, and preparation materials &mdash; are available in your Pilot Portal.</p>
     <div class="info-box">
       <strong>Program:</strong> FedEx Pilot Indoctrination<br>
       <strong>Class Session:</strong> July 2026<br>
@@ -254,7 +259,7 @@ export function buildIndoctrinationEmail(
     </div>
     <a href="${portal}/dashboard/indoctrination" class="cta-button">View Class Details</a>
     <p style="color:#8E8E8E; font-size:13px;">If you have any questions, please visit our <a class="link" href="${portal}/dashboard/help">Help page</a>.</p>
-    <p>We look forward to welcoming you to the FedEx Express family.</p>
-    <p style="margin-top:32px;">Best regards,<br><strong>FedEx Express Pilot Recruiting Team</strong></p>`;
+    <p>We look forward to welcoming you to the FedEx family.</p>
+    <p style="margin-top:32px;">Best regards,<br><strong>FedEx Pilot Recruiting Team</strong></p>`;
   return renderEmailShell(body, candidateEmail);
 }

@@ -9,6 +9,7 @@ import {
   Bell,
   CalendarRange,
   ChevronDown,
+  LifeBuoy,
   LogOut,
   Menu,
   Settings,
@@ -26,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getAuth, signOut } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
 import type { ApplicantData } from '@/lib/types';
 import { canAccessDevTools, isAdmin as userIsStaff, isDev as userIsDev } from '@/lib/roles';
 import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
@@ -140,6 +141,7 @@ export function InteriorNavbar() {
   const { data: userData } = useDoc<ApplicantData>(userDocRef);
   const isAdmin = userIsStaff(userData);
   const isDevUser = userIsDev(userData);
+  const [openTicketCount, setOpenTicketCount] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -159,6 +161,13 @@ export function InteriorNavbar() {
   useEffect(() => {
     setNavHash(typeof window !== 'undefined' ? window.location.hash : '');
   }, [pathname]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const q = query(collection(firestore, 'supportTickets'), where('status', '==', 'open'));
+    const unsub = onSnapshot(q, (snap) => setOpenTicketCount(snap.size), () => setOpenTicketCount(0));
+    return () => unsub();
+  }, [isAdmin, firestore]);
 
   const handleSignOut = async () => {
     setMobileMenuOpen(false);
@@ -200,6 +209,7 @@ export function InteriorNavbar() {
       { kind: 'link', label: 'Candidates', href: '/admin/candidates' },
       { kind: 'link', label: 'Import', href: '/admin/import' },
       { kind: 'link', label: 'Scheduling', href: '/admin/scheduling', Icon: CalendarRange },
+      { kind: 'link', label: 'Support', href: '/admin/support', Icon: LifeBuoy },
       { kind: 'link', label: 'Activity', href: '/admin/activity' },
     ];
     if (showDev) {
@@ -226,6 +236,7 @@ export function InteriorNavbar() {
       { kind: 'link', label: 'Candidates', href: '/admin/candidates' },
       { kind: 'link', label: 'Import', href: '/admin/import' },
       { kind: 'link', label: 'Scheduling', href: '/admin/scheduling', Icon: CalendarRange },
+      { kind: 'link', label: 'Support', href: '/admin/support', Icon: LifeBuoy },
       { kind: 'link', label: 'Activity', href: '/admin/activity' },
     ];
     if (showDev) {
@@ -421,14 +432,22 @@ export function InteriorNavbar() {
 
         {/* Right: notifications + settings + avatar + mobile menu */}
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-          <button
-            type="button"
-            className="rounded-full p-2 text-[#4D148C] transition-colors hover:bg-[#4D148C]/10"
-            aria-label="Notifications"
-            title="Notifications"
-          >
-            <Bell className="h-5 w-5 sm:h-[23px] sm:w-[23px]" />
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              className="relative rounded-full p-2 text-[#4D148C] transition-colors hover:bg-[#4D148C]/10"
+              aria-label={openTicketCount > 0 ? `${openTicketCount} open support ticket${openTicketCount !== 1 ? 's' : ''}` : 'Notifications'}
+              title="Support inbox"
+              onClick={() => router.push('/admin/support')}
+            >
+              <Bell className="h-5 w-5 sm:h-[23px] sm:w-[23px]" />
+              {openTicketCount > 0 && (
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#DE002E] text-[9px] font-bold text-white leading-none">
+                  {openTicketCount > 99 ? '99+' : openTicketCount}
+                </span>
+              )}
+            </button>
+          )}
           <Link
             href={isAdmin ? '/admin' : '/dashboard'}
             className="rounded-full p-2 text-[#4D148C] transition-colors hover:bg-[#4D148C]/10"

@@ -1,6 +1,7 @@
 'use server';
 
 import { getAdminFirestore, verifyIdToken } from '@/lib/firebase-admin';
+import { buildSubmissionEmail } from '@/lib/email';
 import {
   FieldValue,
   type DocumentData,
@@ -76,7 +77,7 @@ export async function completeCandidateIdVerification(input: {
     const uid = decoded.uid;
     const authEmail = (decoded.email || '').toLowerCase();
     const inputId = input.candidateId.trim().toUpperCase();
-    if (!inputId) return { ok: false, error: 'Invalid Candidate ID.' };
+    if (!inputId) return { ok: false, error: 'Invalid Legacy ID.' };
 
     const db = getAdminFirestore();
     const candidateRef = db.collection('candidateIds').doc(inputId);
@@ -84,14 +85,14 @@ export async function completeCandidateIdVerification(input: {
     if (!candidateSnap.exists) {
       return {
         ok: false,
-        error: 'Invalid Candidate ID. Please check your email and try again.',
+        error: 'Invalid Legacy ID. Please check your email and try again.',
       };
     }
 
     const candidateData = candidateSnap.data()!;
 
     if (candidateData.status === 'claimed' && candidateData.assignedUid !== uid) {
-      return { ok: false, error: 'This Candidate ID has already been used.' };
+      return { ok: false, error: 'This Legacy ID has already been used.' };
     }
 
     const isMasterKey = candidateData.masterKey === true;
@@ -100,7 +101,7 @@ export async function completeCandidateIdVerification(input: {
       if (masterKeyExpired(candidateData.masterKeyExpiry as Timestamp | undefined)) {
         return {
           ok: false,
-          error: 'This Candidate ID has expired. Please contact HR for assistance.',
+          error: 'This Legacy ID has expired. Please contact HR for assistance.',
         };
       }
       const authorizedEmails = (candidateData.masterKeyEmails as string[] | undefined) || [];
@@ -109,18 +110,9 @@ export async function completeCandidateIdVerification(input: {
         if (!lowered.includes(authEmail)) {
           return {
             ok: false,
-            error: 'This Candidate ID is not authorized for your account.',
+            error: 'This Legacy ID is not authorized for your account.',
           };
         }
-      }
-    } else {
-      const docEmail = candidateData.email as string | undefined;
-      if (docEmail && docEmail.toLowerCase() !== authEmail) {
-        return {
-          ok: false,
-          error:
-            'This Candidate ID is not associated with your account. Please use the email address your Candidate ID was sent to.',
-        };
       }
     }
 
@@ -250,4 +242,65 @@ export async function markApplicationFlowOpened(input: { idToken: string }): Pro
     const msg = e instanceof Error ? e.message : 'Failed to update application status.';
     return { ok: false, error: msg };
   }
+}
+
+/** Send submission confirmation email via Admin SDK (bypasses Firestore rules; handles contactEmail override). */
+export async function sendSubmissionEmailAction(input: {
+  idToken: string;
+  uid: string;
+}): Promise<void> {
+  const decoded = await verifyIdToken(input.idToken);
+  if (decoded.uid !== input.uid) throw new Error('Token mismatch');
+
+  const db = getAdminFirestore();
+  const userSnap = await db.collection('users').doc(decoded.uid).get();
+  const userData = userSnap.data();
+  if (!userData) throw new Error('User not found');
+
+  const nm = [userData.firstName as string | undefined, userData.lastName as string | undefined]
+    .filter(Boolean).join(' ').trim();
+  const cid = (userData.candidateId as string | undefined)?.trim() || '';
+
+  // Prefer admin-set contactEmail override, fall back to auth email
+  let toEmail = decoded.email || '';
+  if (cid) {
+    const candSnap = await db.collection('candidateIds').doc(cid).get();
+    if (candSnap.exists) {
+      const d = candSnap.data()!;
+      const override = d.contactEmail as string | undefined;
+      if (override && override.trim()) toEmail = override.trim();
+    }
+  }
+  if (!toEmail) throw new Error('No email address on file');
+
+  const submittedAt = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+
+  const from =
+    process.env.EMAIL_FROM?.trim() ||
+    process.env.NEXT_PUBLIC_EMAIL_FROM?.trim() ||
+    'FedEx Pilot Portal <noreply@localhost>';
+  const replyTo =
+    process.env.EMAIL_REPLY_TO?.trim() ||
+    process.env.NEXT_PUBLIC_EMAIL_REPLY_TO?.trim() ||
+    'support@localhost';
+
+  await db.collection('mail').add({
+    to: toEmail,
+    from,
+    replyTo,
+    message: {
+      subject: 'FedEx Pilot History Update Received — Thank You',
+      html: buildSubmissionEmail(nm, toEmail, submittedAt, cid),
+    },
+    type: 'application_submitted',
+    candidateId: cid,
+    candidateName: nm,
+    sentBy: 'system',
+    sentByEmail: 'system',
+    portalOrigin: process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:3000',
+    createdAt: FieldValue.serverTimestamp(),
+    status: 'pending',
+  });
 }

@@ -123,7 +123,7 @@ export default function AdminDashboardPage() {
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-[28px] font-bold text-[#333333]">Admin Dashboard</h1>
-        <p className="text-[14px] text-[#8E8E8E] mt-1">Overview of all candidate and application data</p>
+        <p className="text-[14px] text-[#8E8E8E] mt-1">Overview of all candidate and pilot history update data</p>
       </div>
 
       {/* Admin banner */}
@@ -210,9 +210,9 @@ export default function AdminDashboardPage() {
         <AdminUnlockRequestsPanel embedded />
       </section>
 
-      {/* Submitted Applications + live activity */}
+      {/* Submitted Pilot History Updates + live activity */}
       <div>
-        <h2 className="text-[20px] font-bold text-[#333333] mb-4">Submitted Applications</h2>
+        <h2 className="text-[20px] font-bold text-[#333333] mb-4">Submitted Pilot History Updates</h2>
         <div className="flex flex-col lg:flex-row gap-6 items-stretch">
           <div className="w-full lg:w-[60%] lg:min-w-0">
             <div className="bg-white rounded-xl border border-[#E3E3E3] shadow-[0_2px_12px_rgba(0,0,0,0.06)] overflow-hidden h-full">

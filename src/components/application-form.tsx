@@ -69,7 +69,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, setDoc, serverTimestamp, updateDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { writeCandidateAuditLog } from '@/lib/candidate-audit';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -87,7 +87,7 @@ import {
   encryptApplicantSensitiveFields,
   loadApplicantSensitiveFieldsDecrypted,
 } from '@/app/applicant/sensitive-field-actions';
-import { sendEmail, buildSubmissionEmail } from '@/lib/email';
+import { sendSubmissionEmailAction } from '@/app/applicant/verification-actions';
 
 const APPLICATION_TABS: {
   value: string;
@@ -574,28 +574,8 @@ export function ApplicationForm({
           console.error('application_submitted audit:', auditErr);
         }
         try {
-          if (user.email) {
-            const nm = [applicantData.firstName, applicantData.lastName]
-              .filter(Boolean)
-              .join(' ')
-              .trim();
-            const submittedAt = new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            });
-            await sendEmail(firestore, {
-              to: user.email,
-              subject: 'FedEx Pilot History Update Received — Thank You',
-              html: buildSubmissionEmail(nm, user.email, submittedAt),
-              type: 'application_submitted',
-              candidateId: applicantData.candidateId || '',
-              candidateName: nm,
-              sentBy: 'system',
-              sentByEmail: 'system',
-            });
-          }
+          const idToken = await user.getIdToken();
+          await sendSubmissionEmailAction({ idToken, uid: user.uid });
         } catch (emailErr) {
           console.error('Submission confirmation email:', emailErr);
         }

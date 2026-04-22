@@ -70,6 +70,8 @@ import { useToast } from '@/hooks/use-toast';
 import { unparse } from 'papaparse';
 import { adminResetCandidateId } from '@/app/admin/actions';
 import { sendEmail, buildFlowStartedEmail } from '@/lib/email';
+import { generateParadoxExcelBase64 } from '@/app/admin/excel-export-actions';
+import { FileSpreadsheet } from 'lucide-react';
 
 type CandidateRecord = {
   candidateId: string;
@@ -245,6 +247,7 @@ export default function AdminCandidatesPage() {
     draft: string;
   }>({ open: false, candidate: null, draft: '' });
   const [savingContactEmail, setSavingContactEmail] = useState(false);
+  const [exportingCandidateId, setExportingCandidateId] = useState<string | null>(null);
 
   const candidatesQuery = useMemo(() => query(collection(firestore, 'candidateIds')), [firestore]);
   const { data: allCandidates, loading } = useCollection<CandidateRecord>(candidatesQuery);
@@ -487,6 +490,35 @@ export default function AdminCandidatesPage() {
     document.body.removeChild(link);
   };
 
+  const handleExportExcel = async (c: CandidateRecord) => {
+    if (!c.assignedUid) {
+      toast({ variant: 'destructive', title: 'Export unavailable', description: 'No portal account linked.' });
+      return;
+    }
+    setExportingCandidateId(c.candidateId);
+    try {
+      const idToken = await getIdToken();
+      toast({ title: 'Generating Excel...', description: 'Please wait while the workbook is built.' });
+      const base64 = await generateParadoxExcelBase64(idToken, c.assignedUid);
+      const res = await fetch(`data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${base64}`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${c.name || 'Candidate'}_Paradox_Export.xlsx`.replace(/ /g, '_');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e: unknown) {
+      console.error('Excel export failed:', e);
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      toast({ variant: 'destructive', title: 'Excel Export failed', description: msg });
+    } finally {
+      setExportingCandidateId(null);
+    }
+  };
+
   const clearPipelineFromUrl = () => {
     router.replace('/admin/candidates');
   };
@@ -689,7 +721,7 @@ export default function AdminCandidatesPage() {
                     Applied
                   </th>
                   <th className={cn(candidateRowsTableThClass, 'hidden sm:table-cell')}>
-                    Account
+                    Export
                   </th>
                   <th className={cn(candidateRowsTableThClass, 'text-right')}>Actions</th>
                 </tr>
@@ -762,15 +794,20 @@ export default function AdminCandidatesPage() {
                         {appliedDateLabel(c)}
                       </td>
                       <td className={cn(candidateRowsTableTdClass, 'hidden sm:table-cell')}>
-                        <Badge
-                          className={
-                            c.status === 'claimed'
-                              ? 'bg-[#008A00] text-white'
-                              : 'bg-[#8E8E8E] text-white'
-                          }
-                        >
-                          {c.status === 'claimed' ? 'ID linked' : 'Not contacted'}
-                        </Badge>
+                        {c.assignedUid ? (
+                          <button
+                            type="button"
+                            disabled={exportingCandidateId === c.candidateId}
+                            onClick={() => void handleExportExcel(c)}
+                            className="inline-flex items-center rounded-lg border-[1.5px] border-[#E3E3E3] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#565656] transition-all hover:border-[#4D148C] hover:text-[#4D148C] disabled:opacity-40"
+                            title="Export Excel background-check supplement for this candidate"
+                          >
+                            <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
+                            {exportingCandidateId === c.candidateId ? 'Exporting...' : 'Export'}
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-[#8E8E8E] italic">No account</span>
+                        )}
                       </td>
                       <td className={cn(candidateRowsTableTdClass, 'text-right')}>
                         <div className="inline-flex flex-wrap justify-end gap-2">

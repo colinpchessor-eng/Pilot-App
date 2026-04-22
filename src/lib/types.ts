@@ -262,3 +262,20 @@ export type InterviewBookingDoc = {
   status: InterviewBookingStatus;
   createdAt: Timestamp;
 };
+
+export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+
+export type SupportTicketDoc = {
+  uid: string;
+  candidateId: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: SupportTicketStatus;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+  resolvedAt?: Timestamp;
+  resolvedBy?: string;
+  adminNotes?: string;
+};
