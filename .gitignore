@@ -39,7 +39,6 @@ next-env.d.ts
 
 .genkit/*
 .env*
-!.env.example
 # Conventional "never sync" bucket (Next.js convention). Covers *.local editor scratch.
 *.local
 
