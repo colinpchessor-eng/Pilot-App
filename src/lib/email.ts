@@ -136,7 +136,7 @@ function renderEmailFooter(candidateEmail: string): string {
   <div class="footer">
     <p>© 2026 FedEx. All rights reserved.</p>
     <p>This email was sent to ${candidateEmail} because you have expressed interest in joining FedEx.</p>
-    <p>FedEx · 3610 Hacks Cross Rd · Memphis, TN 38125</p>
+    <p>FedEx · 3131 Democrat Rd · Memphis, TN 38118</p>
   </div>`;
 }
 
@@ -180,6 +180,7 @@ export function buildFlowStartedEmail(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
 <style>
   body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
   .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; line-height: normal; }
