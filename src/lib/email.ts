@@ -168,6 +168,9 @@ export function buildFlowStartedEmail(
   candidateId: string
 ): string {
   const portal = getPublicPortalOrigin();
+  // Emails must use absolute https:// URLs for images — http or relative paths
+  // break in iOS Mail and many corporate mail proxies.
+  const httpsPortal = portal.replace(/^http:\/\//, 'https://');
   const safeName = candidateName || 'Candidate';
 
   return `<!DOCTYPE html>
@@ -175,6 +178,8 @@ export function buildFlowStartedEmail(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
 <style>
   body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
   .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; line-height: normal; }
@@ -225,13 +230,29 @@ export function buildFlowStartedEmail(
   .footer-brand { font-size: 15px; font-weight: 700; color: #1a1c1c; margin: 0 0 16px; }
   .footer-legal { font-size: 12px; line-height: 1.8; color: #4b4452; margin: 0 0 20px; }
   .footer-links a { color: #4b4452; text-decoration: none; font-size: 12px; margin: 0 8px; }
+  /* Force light mode — iOS Mail dark mode must not invert or override colors */
+  @media (prefers-color-scheme: dark) {
+    body, .wrapper, .main, .email-footer { background-color: #ffffff !important; color: #1a1c1c !important; }
+    .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
+    .body-text, .closing-body, .sig-name { color: #1a1c1c !important; }
+    .muted-text, .sig-title, .id-card-label, .id-card-hint, .italic-note, .step-text, .footer-legal { color: #4b4452 !important; }
+    .dates-title { color: #ba1a1a !important; }
+    .dates-body { color: #410002 !important; }
+    .dates-banner { background-color: rgba(186,26,26,0.08) !important; }
+    .id-card { background-color: #f3f3f3 !important; border-color: #cdc3d4 !important; }
+    .id-card-value { color: #330066 !important; }
+    .step { background-color: #ffffff !important; border-color: #cdc3d4 !important; }
+    .steps-title, .portal-site, .sig-email { color: #330066 !important; }
+    .closing { border-color: #e2e2e2 !important; }
+    .footer-links a { color: #4b4452 !important; }
+  }
 </style>
 </head>
-<body>
-<div class="wrapper">
+<body style="background-color:#f9f9f9; margin:0; padding:0;">
+<div class="wrapper" style="background-color:#ffffff; color:#1a1c1c; max-width:600px; margin:0 auto;">
 
   <!-- Hero image -->
-  <div class="hero"><img src="${portal}/email-hero.jpg" alt="FedEx cargo aircraft"></div>
+  <div class="hero"><img src="${httpsPortal}/email-hero.jpg" alt="FedEx cargo aircraft" width="600" style="display:block; max-width:100%; height:auto; width:100%; border:0; outline:none; text-decoration:none;"></div>
 
   <!-- Portal branded header -->
   <div class="portal-header">
