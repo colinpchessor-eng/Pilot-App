@@ -383,103 +383,109 @@ export function buildSubmissionEmail(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="light">
-<meta name="supported-color-schemes" content="light">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
 <style>
-  body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-  .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; background-image: linear-gradient(#ffffff, #ffffff); line-height: normal; }
-  .wrapper > * { margin-top: 0; margin-bottom: 0; }
-  .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%); padding: 32px 28px 28px; position: relative; overflow: hidden; }
-  .portal-header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #FF6200 0%, #ff9a00 50%, #FF6200 100%); }
-  .portal-site { font-size: 26px; font-weight: 900; color: #ffffff; margin: 0 0 4px; letter-spacing: -0.01em; }
-  .portal-name { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.12em; margin: 0; }
-  .main { padding: 32px 24px 40px; color: #1a1c1c; }
-  .body-text { font-size: 16px; line-height: 24px; color: #1a1c1c; margin: 0 0 24px; }
-  .success-box { background: #f0fff4; border: 2px solid #008A00; border-radius: 8px; padding: 20px; margin: 0 0 24px; text-align: center; }
-  a { color: inherit; text-decoration: none; }
-  .link { color: #4D148C; text-decoration: underline; }
-  .closing { border-top: 1px solid #e2e2e2; padding-top: 24px; }
-  .closing-body { font-size: 16px; line-height: 24px; color: #1a1c1c; margin: 0 0 24px; }
-  .sig-name { font-size: 20px; font-weight: 600; color: #1a1c1c; margin: 0 0 4px; }
-  .sig-title { font-size: 14px; color: #4b4452; margin: 0 0 4px; }
-  .sig-email { color: #330066; font-weight: 700; font-size: 14px; text-decoration: none; }
-  .email-footer { background: #ffffff; background-image: linear-gradient(#ffffff, #ffffff); border-top: 1px solid #e2e2e2; padding: 32px 24px 48px; text-align: center; }
-  .footer-brand { font-size: 15px; font-weight: 700; color: #1a1c1c; margin: 0 0 16px; }
-  .footer-legal { font-size: 12px; line-height: 1.8; color: #4b4452; margin: 0 0 20px; }
-  .footer-links a { color: #4b4452; text-decoration: none; font-size: 12px; margin: 0 8px; }
   @media (prefers-color-scheme: dark) {
-    body, .wrapper, .main, .email-footer { background-color: #ffffff !important; color: #1a1c1c !important; }
-    .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
-    .portal-site { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
-    .portal-name { color: rgba(255,255,255,0.65) !important; -webkit-text-fill-color: rgba(255,255,255,0.65) !important; }
-    .body-text, .closing-body, .sig-name { color: #1a1c1c !important; }
-    .sig-title, .footer-legal { color: #4b4452 !important; }
-    .closing { border-color: #e2e2e2 !important; }
-    .footer-links a { color: #4b4452 !important; }
+    .email-body-dark { color: #1a1c1c !important; }
+    .email-muted-dark { color: #4b4452 !important; }
+    .email-purple-dark { color: #330066 !important; }
   }
-  /* Gmail dark mode blend mode hack — u + .body targets Gmail app only, not Apple Mail */
   u + .body .gmail-screen { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
   u + .body .gmail-difference { mix-blend-mode: difference; display: inline-block; }
 </style>
 </head>
-<body style="background-color:transparent; margin:0; padding:0;">
-<div class="wrapper" style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); color:#1a1c1c; max-width:600px; margin:0 auto;">
+<body style="margin:0; padding:0; background-color:transparent; font-family:Arial,sans-serif;">
 
-  <!-- Portal branded header -->
-  <div class="portal-header">
-    <p class="portal-site"><span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></span></p>
-    <p class="portal-name"><span class="gmail-difference"><span class="gmail-screen" style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></span></p>
-  </div>
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; width:100%;">
+  <tr>
+    <td align="center" style="padding:20px 0;">
 
-  <!-- Main content -->
-  <div class="main">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
 
-    <p class="body-text">Dear ${safeName},</p>
+        <!-- Purple gradient header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1a0033 0%,#330066 35%,#4D148C 65%,#7c2fc4 100%); padding:32px 28px 28px;">
+            <p style="font-size:26px; font-weight:900; color:#ffffff; margin:0 0 4px; letter-spacing:-0.01em;">
+              <span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></span>
+            </p>
+            <p style="font-size:13px; font-weight:700; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.12em; margin:0;">
+              <span class="gmail-difference"><span class="gmail-screen" style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></span>
+            </p>
+          </td>
+        </tr>
 
-    <div class="success-box">
-      <div style="font-size:40px;">&#10003;</div>
-      <div style="font-size:18px; font-weight:bold; color:#008A00; margin-top:8px;">Update Received</div>
-      <div style="color:#565656; margin-top:4px;">Submitted on ${submittedAt}</div>
-    </div>
+        <!-- Orange accent bar -->
+        <tr>
+          <td style="background:linear-gradient(90deg,#FF6200 0%,#ff9a00 50%,#FF6200 100%); height:3px; font-size:0; line-height:0;">&nbsp;</td>
+        </tr>
 
-    <p class="body-text">Thank you for completing your pilot history update. We have successfully received your submission and it is now under review by our recruiting team.</p>
+        <!-- Main content -->
+        <tr>
+          <td style="padding:32px 24px 40px; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
 
-    <p class="body-text"><strong>What happens next:</strong></p>
-    <ul style="color:#565656; line-height:2; margin: 0 0 24px; padding-left: 24px;">
-      <li>Our team will review your updated pilot history and flight hours</li>
-      <li>We will contact you regarding next steps within 7 business days</li>
-    </ul>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Dear ${safeName},</p>
 
-    <p class="body-text">If you need to make any corrections or have questions about your submission, please visit the <a class="link" href="${portal}/help">Help page</a> on flyfdx.com.</p>
+            <!-- Success box -->
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; background-color:#f0fff4; background-image:linear-gradient(#f0fff4,#f0fff4); border:2px solid #008A00; border-radius:8px; margin:0 0 24px;">
+              <tr>
+                <td style="padding:20px; text-align:center;">
+                  <p style="font-size:40px; margin:0;">&#10003;</p>
+                  <p style="font-size:18px; font-weight:bold; color:#008A00; margin:8px 0 0;">Update Received</p>
+                  <p style="color:#565656; margin:4px 0 0; font-size:14px;">Submitted on ${submittedAt}</p>
+                </td>
+              </tr>
+            </table>
 
-    <!-- Closing -->
-    <div class="closing">
-      <p class="closing-body">We appreciate your interest in joining the FedEx family.</p>
-      <p class="closing-body" style="margin-bottom:16px;">Best regards,</p>
-      <p class="sig-name">Captain Abegael Autry</p>
-      <p class="sig-title">Senior Manager Fleet Standardization and Pilot Recruitment</p>
-      <a class="sig-email" href="mailto:amautry@fedex.com">amautry@fedex.com</a>
-    </div>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Thank you for completing your pilot history update. We have successfully received your submission and it is now under review by our recruiting team.</p>
 
-  </div><!-- /main -->
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 8px;" class="email-body-dark"><strong>What happens next:</strong></p>
+            <ul style="color:#565656; line-height:2; margin:0 0 24px; padding-left:24px; font-size:16px;">
+              <li>Our team will review your updated pilot history and flight hours</li>
+              <li>We will contact you regarding next steps within 7 business days</li>
+            </ul>
 
-  <!-- Footer -->
-  <div class="email-footer">
-    <p class="footer-brand">FedEx</p>
-    <p class="footer-legal">
-      &copy; 2026 FedEx. All rights reserved.<br>
-      This email was sent to <strong>${candidateEmail}</strong>.<br>
-      FedEx &middot; 3131 Democrat Rd &middot; Memphis, TN 38118
-    </p>
-    <div class="footer-links">
-      <a href="${portal}/privacy">Privacy Policy</a>
-      <a href="${portal}/terms">Terms of Use</a>
-      <a href="${portal}/unsubscribe">Unsubscribe</a>
-    </div>
-  </div>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you need to make any corrections or have questions about your submission, please visit the <a href="${portal}/help" style="color:#4D148C; text-decoration:underline;">Help page</a> on flyfdx.com.</p>
 
-</div><!-- /wrapper -->
+            <!-- Closing -->
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; border-top:1px solid #e2e2e2;">
+              <tr>
+                <td style="padding-top:24px;">
+                  <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">We appreciate your interest in joining the FedEx family.</p>
+                  <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 16px;" class="email-body-dark">Best regards,</p>
+                  <p style="font-size:20px; font-weight:600; color:#1a1c1c; margin:0 0 4px;" class="email-body-dark">Captain Abegael Autry</p>
+                  <p style="font-size:14px; color:#4b4452; margin:0 0 4px;" class="email-muted-dark">Senior Manager Fleet Standardization and Pilot Recruitment</p>
+                  <a href="mailto:amautry@fedex.com" style="color:#330066; font-weight:700; font-size:14px; text-decoration:none;">amautry@fedex.com</a>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
+            <p style="font-size:15px; font-weight:700; color:#1a1c1c; margin:0 0 16px;" class="email-body-dark">FedEx</p>
+            <p style="font-size:12px; line-height:1.8; color:#4b4452; margin:0 0 20px;" class="email-muted-dark">
+              &copy; 2026 FedEx. All rights reserved.<br>
+              This email was sent to <strong>${candidateEmail}</strong>.<br>
+              FedEx &middot; 3131 Democrat Rd &middot; Memphis, TN 38118
+            </p>
+            <p style="margin:0;">
+              <a href="${portal}/privacy" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Privacy Policy</a>
+              <a href="${portal}/terms" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Terms of Use</a>
+              <a href="${portal}/unsubscribe" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Unsubscribe</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+
 </body>
 </html>`;
 }
