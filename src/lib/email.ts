@@ -433,7 +433,7 @@ export function buildSubmissionEmail(
                 <td style="padding:20px; text-align:center;">
                   <p style="font-size:40px; margin:0;">&#10003;</p>
                   <p style="font-size:18px; font-weight:bold; color:#008A00; margin:8px 0 0;">Update Received</p>
-                  <p style="color:#565656; margin:4px 0 0; font-size:14px;">Submitted on ${submittedAt}</p>
+                  <p style="color:#4b4452; margin:4px 0 0; font-size:14px;" class="email-muted-dark">Submitted on ${submittedAt}</p>
                 </td>
               </tr>
             </table>
@@ -441,7 +441,7 @@ export function buildSubmissionEmail(
             <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Thank you for completing your pilot history update. We have successfully received your submission and it is now under review by our recruiting team.</p>
 
             <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 8px;" class="email-body-dark"><strong>What happens next:</strong></p>
-            <ul style="color:#565656; line-height:2; margin:0 0 24px; padding-left:24px; font-size:16px;">
+            <ul style="color:#4b4452; line-height:2; margin:0 0 24px; padding-left:24px; font-size:16px;" class="email-muted-dark">
               <li>Our team will review your updated pilot history and flight hours</li>
               <li>We will contact you regarding next steps within 7 business days</li>
             </ul>
