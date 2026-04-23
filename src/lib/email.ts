@@ -236,10 +236,15 @@ export function buildFlowStartedEmail(
     .id-card { background-color: #f3f3f3 !important; border-color: #cdc3d4 !important; }
     .id-card-value { color: #330066 !important; }
     .step { background-color: #ffffff !important; border-color: #cdc3d4 !important; }
-    .steps-title, .portal-site, .sig-email { color: #330066 !important; }
+    .steps-title, .sig-email { color: #330066 !important; }
+    .portal-site { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+    .portal-name { color: rgba(255,255,255,0.65) !important; -webkit-text-fill-color: rgba(255,255,255,0.65) !important; }
     .closing { border-color: #e2e2e2 !important; }
     .footer-links a { color: #4b4452 !important; }
   }
+  [data-ogsc] .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
+  [data-ogsc] .portal-site { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+  [data-ogsc] .portal-name { color: rgba(255,255,255,0.65) !important; -webkit-text-fill-color: rgba(255,255,255,0.65) !important; }
 </style>
 </head>
 <body style="background-color:#f9f9f9; margin:0; padding:0;">
@@ -247,8 +252,8 @@ export function buildFlowStartedEmail(
 
   <!-- Portal branded header -->
   <div class="portal-header">
-    <p class="portal-site">FlyFDX.com</p>
-    <p class="portal-name">Pilot History Portal</p>
+    <p class="portal-site"><span style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></p>
+    <p class="portal-name"><span style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></p>
   </div>
 
   <!-- Main content -->
@@ -375,11 +380,16 @@ export function buildSubmissionEmail(
   @media (prefers-color-scheme: dark) {
     body, .wrapper, .main, .email-footer { background-color: #ffffff !important; color: #1a1c1c !important; }
     .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
+    .portal-site { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+    .portal-name { color: rgba(255,255,255,0.65) !important; -webkit-text-fill-color: rgba(255,255,255,0.65) !important; }
     .body-text, .closing-body, .sig-name { color: #1a1c1c !important; }
     .sig-title, .footer-legal { color: #4b4452 !important; }
     .closing { border-color: #e2e2e2 !important; }
     .footer-links a { color: #4b4452 !important; }
   }
+  [data-ogsc] .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
+  [data-ogsc] .portal-site { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+  [data-ogsc] .portal-name { color: rgba(255,255,255,0.65) !important; -webkit-text-fill-color: rgba(255,255,255,0.65) !important; }
 </style>
 </head>
 <body style="background-color:#f9f9f9; margin:0; padding:0;">
@@ -387,8 +397,8 @@ export function buildSubmissionEmail(
 
   <!-- Portal branded header -->
   <div class="portal-header">
-    <p class="portal-site"><span style="color:#ffffff; text-decoration:none;">FlyFDX.com</span></p>
-    <p class="portal-name"><span style="color:rgba(255,255,255,0.65); text-decoration:none;">Pilot History Portal</span></p>
+    <p class="portal-site"><span style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></p>
+    <p class="portal-name"><span style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></p>
   </div>
 
   <!-- Main content -->
