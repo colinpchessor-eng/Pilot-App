@@ -35,6 +35,7 @@ export function buildSubmissionEmail(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
 <style>
   body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
   .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; line-height: normal; }
@@ -56,6 +57,7 @@ export function buildSubmissionEmail(
   .footer-brand { font-size: 15px; font-weight: 700; color: #1a1c1c; margin: 0 0 16px; }
   .footer-legal { font-size: 12px; line-height: 1.8; color: #4b4452; margin: 0 0 20px; }
   .footer-links a { color: #4b4452; text-decoration: none; font-size: 12px; margin: 0 8px; }
+  a { color: inherit; text-decoration: none; }
   @media (prefers-color-scheme: dark) {
     body, .wrapper, .main, .email-footer { background-color: #ffffff !important; color: #1a1c1c !important; }
     .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
@@ -71,8 +73,8 @@ export function buildSubmissionEmail(
 
   <!-- Portal branded header -->
   <div class="portal-header">
-    <p class="portal-site">FlyFDX.com</p>
-    <p class="portal-name">Pilot History Portal</p>
+    <p class="portal-site"><span style="color:#ffffff; text-decoration:none;">FlyFDX.com</span></p>
+    <p class="portal-name"><span style="color:rgba(255,255,255,0.65); text-decoration:none;">Pilot History Portal</span></p>
   </div>
 
   <!-- Main content -->
@@ -148,10 +150,12 @@ Start the dev server (`npm run dev`) and log in as a dev admin. Navigate to the 
 - "Best regards," followed by Captain Abegael Autry name/title/email
 - Footer: FedEx brand, © 2026 all rights reserved, address, Privacy/Terms/Unsubscribe links
 - No dark mode color inversions
+- "FlyFDX.com" header text is NOT a hyperlink in iOS Mail
+- Dates and phone numbers in the body are NOT auto-linked by iOS Mail
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add src/lib/email.ts
-git commit -m "feat(email): match submission received template to start flow style"
+git commit -m "feat(email): match submission received template to start flow style with iOS compat fixes"
 ```
