@@ -340,23 +340,106 @@ export function buildSubmissionEmail(
 ): string {
   const portal = getPublicPortalOrigin();
   const safeName = candidateName || 'Candidate';
-  const body = `
-    <p>Dear ${safeName},</p>
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
+<style>
+  body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+  .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; line-height: normal; }
+  .wrapper > * { margin-top: 0; margin-bottom: 0; }
+  .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%); padding: 32px 28px 28px; position: relative; overflow: hidden; }
+  .portal-header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #FF6200 0%, #ff9a00 50%, #FF6200 100%); }
+  .portal-site { font-size: 26px; font-weight: 900; color: #ffffff; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .portal-name { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.12em; margin: 0; }
+  .main { padding: 32px 24px 40px; color: #1a1c1c; }
+  .body-text { font-size: 16px; line-height: 24px; color: #1a1c1c; margin: 0 0 24px; }
+  .success-box { background: #f0fff4; border: 2px solid #008A00; border-radius: 8px; padding: 20px; margin: 0 0 24px; text-align: center; }
+  .link { color: #4D148C; text-decoration: underline; }
+  .closing { border-top: 1px solid #e2e2e2; padding-top: 24px; }
+  .closing-body { font-size: 16px; line-height: 24px; color: #1a1c1c; margin: 0 0 24px; }
+  .sig-name { font-size: 20px; font-weight: 600; color: #1a1c1c; margin: 0 0 4px; }
+  .sig-title { font-size: 14px; color: #4b4452; margin: 0 0 4px; }
+  .sig-email { color: #330066; font-weight: 700; font-size: 14px; text-decoration: none; }
+  .email-footer { background: #ffffff; border-top: 1px solid #e2e2e2; padding: 32px 24px 48px; text-align: center; }
+  .footer-brand { font-size: 15px; font-weight: 700; color: #1a1c1c; margin: 0 0 16px; }
+  .footer-legal { font-size: 12px; line-height: 1.8; color: #4b4452; margin: 0 0 20px; }
+  .footer-links a { color: #4b4452; text-decoration: none; font-size: 12px; margin: 0 8px; }
+  a { color: inherit; text-decoration: none; }
+  @media (prefers-color-scheme: dark) {
+    body, .wrapper, .main, .email-footer { background-color: #ffffff !important; color: #1a1c1c !important; }
+    .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
+    .body-text, .closing-body, .sig-name { color: #1a1c1c !important; }
+    .sig-title, .footer-legal { color: #4b4452 !important; }
+    .closing { border-color: #e2e2e2 !important; }
+    .footer-links a { color: #4b4452 !important; }
+  }
+</style>
+</head>
+<body style="background-color:#f9f9f9; margin:0; padding:0;">
+<div class="wrapper" style="background-color:#ffffff; color:#1a1c1c; max-width:600px; margin:0 auto;">
+
+  <!-- Portal branded header -->
+  <div class="portal-header">
+    <p class="portal-site"><span style="color:#ffffff; text-decoration:none;">FlyFDX.com</span></p>
+    <p class="portal-name"><span style="color:rgba(255,255,255,0.65); text-decoration:none;">Pilot History Portal</span></p>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+
+    <p class="body-text">Dear ${safeName},</p>
+
     <div class="success-box">
       <div style="font-size:40px;">&#10003;</div>
       <div style="font-size:18px; font-weight:bold; color:#008A00; margin-top:8px;">Update Received</div>
       <div style="color:#565656; margin-top:4px;">Submitted on ${submittedAt}</div>
     </div>
-    <p>Thank you for completing your pilot history update. We have successfully received your submission and it is now under review by our recruiting team.</p>
-    <p><strong>What happens next:</strong></p>
-    <ul style="color:#565656; line-height:2;">
+
+    <p class="body-text">Thank you for completing your pilot history update. We have successfully received your submission and it is now under review by our recruiting team.</p>
+
+    <p class="body-text"><strong>What happens next:</strong></p>
+    <ul style="color:#565656; line-height:2; margin: 0 0 24px; padding-left: 24px;">
       <li>Our team will review your updated pilot history and flight hours</li>
       <li>We will contact you regarding next steps within 7 business days</li>
     </ul>
-    <p>If you need to make any corrections or have questions about your submission, please visit the <a class="link" href="${portal}/help">Help page</a> on flyfdx.com.</p>
-    <p>We appreciate your interest in joining the FedEx family.</p>
-    <p style="margin-top:32px;">Best regards,<br><strong>FedEx Pilot Recruiting Team</strong></p>`;
-  return renderEmailShell(body, candidateEmail);
+
+    <p class="body-text">If you need to make any corrections or have questions about your submission, please visit the <a class="link" href="${portal}/help">Help page</a> on flyfdx.com.</p>
+
+    <!-- Closing -->
+    <div class="closing">
+      <p class="closing-body">We appreciate your interest in joining the FedEx family.</p>
+      <p class="closing-body" style="margin-bottom:16px;">Best regards,</p>
+      <p class="sig-name">Captain Abegael Autry</p>
+      <p class="sig-title">Senior Manager Fleet Standardization and Pilot Recruitment</p>
+      <a class="sig-email" href="mailto:amautry@fedex.com">amautry@fedex.com</a>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- Footer -->
+  <div class="email-footer">
+    <p class="footer-brand">FedEx</p>
+    <p class="footer-legal">
+      &copy; 2026 FedEx. All rights reserved.<br>
+      This email was sent to <strong>${candidateEmail}</strong>.<br>
+      FedEx &middot; 3131 Democrat Rd &middot; Memphis, TN 38118
+    </p>
+    <div class="footer-links">
+      <a href="${portal}/privacy">Privacy Policy</a>
+      <a href="${portal}/terms">Terms of Use</a>
+      <a href="${portal}/unsubscribe">Unsubscribe</a>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+</body>
+</html>`;
 }
 
 /* -------------------------------------------------------------------------
