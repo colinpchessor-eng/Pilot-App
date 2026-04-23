@@ -72,13 +72,13 @@ export function AuthMarketingSplit({ variant, heroDescription, children }: AuthM
               <div className="inline-flex items-center gap-2">
                 <div className="h-1 w-8 rounded-full bg-[#FF6200]" />
                 <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
-                  FedEx Flight Operations
+                  Flight Operations
                 </span>
               </div>
-              <h1 className="mt-4 max-w-[95%] font-headline text-[64px] font-black uppercase leading-[0.95] tracking-tight text-white">
-                Chart your
+              <h1 className="mt-4 max-w-[95%] font-headline text-[48px] font-black uppercase leading-[0.95] tracking-tight text-white">
+                Connect Your Legacy
                 <br />
-                course.
+                to Begin Your Journey.
               </h1>
               <p className="mt-4 max-w-md text-left text-lg font-medium leading-relaxed text-white/90">
                 {heroDescription}
@@ -92,7 +92,7 @@ export function AuthMarketingSplit({ variant, heroDescription, children }: AuthM
               <div className="flex flex-col items-end text-right">
                 <FedExBrandMark height={32} />
                 <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/85">
-                  FedEx Flight Operations
+                  Flight Operations
                 </p>
               </div>
             </div>

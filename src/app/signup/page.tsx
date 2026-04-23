@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { SignupForm } from '@/components/signup-form';
 import Link from 'next/link';
 import {
@@ -5,6 +6,11 @@ import {
   AuthTransactionalFooter,
 } from '@/components/auth/auth-marketing-split';
 import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
+
+export const metadata: Metadata = {
+  title: 'Pilot Portal — FlyFDX.com',
+  description: 'Flight Operations. Connect Your Legacy to Begin Your Journey.',
+};
 
 export default function SignupPage() {
   return (

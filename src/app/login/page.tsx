@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { LoginForm } from '@/components/login-form';
 import Link from 'next/link';
 import {
@@ -6,11 +7,16 @@ import {
 } from '@/components/auth/auth-marketing-split';
 import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
+export const metadata: Metadata = {
+  title: 'Pilot Portal — FlyFDX.com',
+  description: 'Flight Operations. Connect Your Legacy to Begin Your Journey.',
+};
+
 export default function LoginPage() {
   return (
     <AuthMarketingSplit
       variant="login"
-      heroDescription="Your next destination starts here. Log in to manage your flight path and career milestones."
+      heroDescription="Connect Your Legacy to Begin Your Journey."
     >
       <div className="mb-10 flex justify-center lg:hidden">
         <FedExBrandMark height={44} />

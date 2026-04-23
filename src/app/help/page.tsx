@@ -4,8 +4,8 @@ import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 import { SUPPORT_EMAIL } from '@/lib/support-contact';
 
 export const metadata = {
-  title: 'Help — FedEx Pilot Portal',
-  description: 'Get help with your FedEx Pilot History Update invitation.',
+  title: 'Help — Pilot Portal',
+  description: 'Get help with your Pilot History Update invitation.',
 };
 
 export default function PublicHelpPage() {
