@@ -184,14 +184,7 @@ export function buildFlowStartedEmail(
   body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
   .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; line-height: normal; }
   .wrapper > * { margin-top: 0; margin-bottom: 0; }
-  /* Hero image */
-  .hero { background: #330066; height: 220px; overflow: hidden; line-height: 0; font-size: 0; }
-  .hero img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; display: block; margin: 0; padding: 0; border: 0; }
-  /* Header bar — sits directly on hero, no gap */
-  .email-header { background: #ffffff; border-bottom: 1px solid #e2e2e2; padding: 14px 24px; margin: 0; }
-  .header-inner { display: flex; align-items: center; justify-content: space-between; }
-  .brand { font-size: 22px; font-weight: 900; color: #4D148C; margin: 0; }
-  .portal-label { font-size: 12px; font-weight: 700; color: #4b4452; text-transform: uppercase; letter-spacing: 0.05em; }
+  /* Portal branded header — top of email, no image above */
   /* Portal branded header */
   .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%); padding: 32px 28px 28px; position: relative; overflow: hidden; }
   .portal-header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #FF6200 0%, #ff9a00 50%, #FF6200 100%); }
@@ -250,9 +243,6 @@ export function buildFlowStartedEmail(
 </head>
 <body style="background-color:#f9f9f9; margin:0; padding:0;">
 <div class="wrapper" style="background-color:#ffffff; color:#1a1c1c; max-width:600px; margin:0 auto;">
-
-  <!-- Hero image -->
-  <div class="hero"><img src="${httpsPortal}/email-hero.jpg" alt="FedEx cargo aircraft" width="600" style="display:block; max-width:100%; height:auto; width:100%; border:0; outline:none; text-decoration:none;"></div>
 
   <!-- Portal branded header -->
   <div class="portal-header">
