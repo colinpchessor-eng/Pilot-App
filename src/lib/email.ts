@@ -360,6 +360,7 @@ export function buildSubmissionEmail(
   .main { padding: 32px 24px 40px; color: #1a1c1c; }
   .body-text { font-size: 16px; line-height: 24px; color: #1a1c1c; margin: 0 0 24px; }
   .success-box { background: #f0fff4; border: 2px solid #008A00; border-radius: 8px; padding: 20px; margin: 0 0 24px; text-align: center; }
+  a { color: inherit; text-decoration: none; }
   .link { color: #4D148C; text-decoration: underline; }
   .closing { border-top: 1px solid #e2e2e2; padding-top: 24px; }
   .closing-body { font-size: 16px; line-height: 24px; color: #1a1c1c; margin: 0 0 24px; }
@@ -370,7 +371,6 @@ export function buildSubmissionEmail(
   .footer-brand { font-size: 15px; font-weight: 700; color: #1a1c1c; margin: 0 0 16px; }
   .footer-legal { font-size: 12px; line-height: 1.8; color: #4b4452; margin: 0 0 20px; }
   .footer-links a { color: #4b4452; text-decoration: none; font-size: 12px; margin: 0 8px; }
-  a { color: inherit; text-decoration: none; }
   @media (prefers-color-scheme: dark) {
     body, .wrapper, .main, .email-footer { background-color: #ffffff !important; color: #1a1c1c !important; }
     .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
