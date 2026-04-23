@@ -183,7 +183,7 @@ export function buildFlowStartedEmail(
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
 <style>
   body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-  .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; line-height: normal; }
+  .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; background-image: linear-gradient(#ffffff, #ffffff); line-height: normal; }
   .wrapper > * { margin-top: 0; margin-bottom: 0; }
   /* Portal branded header — top of email, no image above */
   /* Portal branded header */
@@ -207,7 +207,7 @@ export function buildFlowStartedEmail(
   .italic-note { font-size: 14px; font-style: italic; color: #4b4452; line-height: 20px; margin: 0 0 40px; }
   /* Steps */
   .steps-title { font-size: 20px; font-weight: 600; color: #330066; line-height: 28px; margin: 0 0 16px; }
-  .step { display: flex; align-items: flex-start; padding: 14px 16px; background: #ffffff; border: 1px solid #cdc3d4; border-radius: 8px; margin-bottom: 8px; }
+  .step { display: flex; align-items: flex-start; padding: 14px 16px; background: #ffffff; background-image: linear-gradient(#ffffff, #ffffff); border: 1px solid #cdc3d4; border-radius: 8px; margin-bottom: 8px; }
   .step-num { background: #330066; color: #ffffff; min-width: 30px; height: 30px; border-radius: 50%; font-size: 13px; font-weight: 700; text-align: center; line-height: 30px; margin-right: 14px; flex-shrink: 0; }
   .step-text { font-size: 14px; line-height: 20px; color: #1a1c1c; margin: 0; padding-top: 5px; }
   /* CTA */
@@ -220,7 +220,7 @@ export function buildFlowStartedEmail(
   .sig-title { font-size: 14px; color: #4b4452; margin: 0 0 4px; }
   .sig-email { color: #330066; font-weight: 700; font-size: 14px; text-decoration: none; }
   /* Footer */
-  .email-footer { background: #ffffff; border-top: 1px solid #e2e2e2; padding: 32px 24px 48px; text-align: center; }
+  .email-footer { background: #ffffff; background-image: linear-gradient(#ffffff, #ffffff); border-top: 1px solid #e2e2e2; padding: 32px 24px 48px; text-align: center; }
   .footer-brand { font-size: 15px; font-weight: 700; color: #1a1c1c; margin: 0 0 16px; }
   .footer-legal { font-size: 12px; line-height: 1.8; color: #4b4452; margin: 0 0 20px; }
   .footer-links a { color: #4b4452; text-decoration: none; font-size: 12px; margin: 0 8px; }
@@ -242,18 +242,18 @@ export function buildFlowStartedEmail(
     .closing { border-color: #e2e2e2 !important; }
     .footer-links a { color: #4b4452 !important; }
   }
-  [data-ogsc] .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
-  [data-ogsc] .portal-site { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
-  [data-ogsc] .portal-name { color: rgba(255,255,255,0.65) !important; -webkit-text-fill-color: rgba(255,255,255,0.65) !important; }
+  /* Gmail dark mode blend mode hack — u + .body targets Gmail app only, not Apple Mail */
+  u + .body .gmail-screen { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
+  u + .body .gmail-difference { mix-blend-mode: difference; display: inline-block; }
 </style>
 </head>
-<body style="background-color:#f9f9f9; margin:0; padding:0;">
-<div class="wrapper" style="background-color:#ffffff; color:#1a1c1c; max-width:600px; margin:0 auto;">
+<body style="background-color:transparent; margin:0; padding:0;">
+<div class="wrapper" style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); color:#1a1c1c; max-width:600px; margin:0 auto;">
 
   <!-- Portal branded header -->
   <div class="portal-header">
-    <p class="portal-site"><span style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></p>
-    <p class="portal-name"><span style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></p>
+    <p class="portal-site"><span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></span></p>
+    <p class="portal-name"><span class="gmail-difference"><span class="gmail-screen" style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></span></p>
   </div>
 
   <!-- Main content -->
@@ -357,7 +357,7 @@ export function buildSubmissionEmail(
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
 <style>
   body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-  .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; line-height: normal; }
+  .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; background-image: linear-gradient(#ffffff, #ffffff); line-height: normal; }
   .wrapper > * { margin-top: 0; margin-bottom: 0; }
   .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%); padding: 32px 28px 28px; position: relative; overflow: hidden; }
   .portal-header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #FF6200 0%, #ff9a00 50%, #FF6200 100%); }
@@ -373,7 +373,7 @@ export function buildSubmissionEmail(
   .sig-name { font-size: 20px; font-weight: 600; color: #1a1c1c; margin: 0 0 4px; }
   .sig-title { font-size: 14px; color: #4b4452; margin: 0 0 4px; }
   .sig-email { color: #330066; font-weight: 700; font-size: 14px; text-decoration: none; }
-  .email-footer { background: #ffffff; border-top: 1px solid #e2e2e2; padding: 32px 24px 48px; text-align: center; }
+  .email-footer { background: #ffffff; background-image: linear-gradient(#ffffff, #ffffff); border-top: 1px solid #e2e2e2; padding: 32px 24px 48px; text-align: center; }
   .footer-brand { font-size: 15px; font-weight: 700; color: #1a1c1c; margin: 0 0 16px; }
   .footer-legal { font-size: 12px; line-height: 1.8; color: #4b4452; margin: 0 0 20px; }
   .footer-links a { color: #4b4452; text-decoration: none; font-size: 12px; margin: 0 8px; }
@@ -387,18 +387,18 @@ export function buildSubmissionEmail(
     .closing { border-color: #e2e2e2 !important; }
     .footer-links a { color: #4b4452 !important; }
   }
-  [data-ogsc] .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%) !important; }
-  [data-ogsc] .portal-site { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
-  [data-ogsc] .portal-name { color: rgba(255,255,255,0.65) !important; -webkit-text-fill-color: rgba(255,255,255,0.65) !important; }
+  /* Gmail dark mode blend mode hack — u + .body targets Gmail app only, not Apple Mail */
+  u + .body .gmail-screen { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
+  u + .body .gmail-difference { mix-blend-mode: difference; display: inline-block; }
 </style>
 </head>
-<body style="background-color:#f9f9f9; margin:0; padding:0;">
-<div class="wrapper" style="background-color:#ffffff; color:#1a1c1c; max-width:600px; margin:0 auto;">
+<body style="background-color:transparent; margin:0; padding:0;">
+<div class="wrapper" style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); color:#1a1c1c; max-width:600px; margin:0 auto;">
 
   <!-- Portal branded header -->
   <div class="portal-header">
-    <p class="portal-site"><span style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></p>
-    <p class="portal-name"><span style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></p>
+    <p class="portal-site"><span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></span></p>
+    <p class="portal-name"><span class="gmail-difference"><span class="gmail-screen" style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></span></p>
   </div>
 
   <!-- Main content -->
