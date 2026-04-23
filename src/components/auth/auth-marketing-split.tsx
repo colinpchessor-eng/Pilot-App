@@ -80,9 +80,6 @@ export function AuthMarketingSplit({ variant, heroDescription, children }: AuthM
                 <br />
                 to Begin Your Journey.
               </h1>
-              <p className="mt-4 max-w-md text-left text-lg font-medium leading-relaxed text-white/90">
-                {heroDescription}
-              </p>
             </div>
 
             <div className="min-h-4 flex-1" aria-hidden />
