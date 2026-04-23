@@ -286,7 +286,7 @@ export function buildFlowStartedEmail(
 
     <!-- CTA -->
     <div class="cta-wrap">
-      <a href="${portal}/signup" class="cta-btn">Go To FlyFDX.com</a>
+      <a href="${portal}/signup" class="cta-btn" style="color:#ffffff !important;text-decoration:none !important;display:inline-block;">Go To FlyFDX.com</a>
     </div>
 
     <!-- Closing -->
