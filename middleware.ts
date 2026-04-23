@@ -13,7 +13,8 @@ function isPublicPath(pathname: string) {
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/assets') ||
     pathname.startsWith('/public') ||
-    pathname.startsWith('/api')
+    pathname.startsWith('/api') ||
+    /\.(jpg|jpeg|png|gif|webp|svg|ico|woff2?|ttf|eot)$/i.test(pathname)
   );
 }
 
