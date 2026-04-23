@@ -50,7 +50,7 @@ function resolveFromAddress(): string {
       'NEXT_PUBLIC_EMAIL_FROM must be set in production — refusing to send mail without a verified sender.'
     );
   }
-  return 'FedEx Pilot Portal <noreply@localhost>';
+  return 'FedEx Pilot Hiring <FedexPilotHiring@flyfdx.com>';
 }
 
 /** Resolve the Reply-To header for outbound mail. Required in production. */
@@ -168,38 +168,155 @@ export function buildFlowStartedEmail(
   candidateId: string
 ): string {
   const portal = getPublicPortalOrigin();
-  const portalDisplay = portal.replace(/^https?:\/\//, '');
   const safeName = candidateName || 'Candidate';
-  const body = `
-    <p>Dear ${safeName},</p>
-    <p>We are reaching out to invite you to update your pilot history through our secure Pilot History Update Portal.</p>
-    <p>Your unique Legacy ID is below. You will need it to register and link your new account to your existing profile.</p>
-    <div class="id-box">
-      <div class="id-label">Your Legacy ID</div>
-      <div class="id-value">${candidateId}</div>
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+  .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; line-height: normal; }
+  .wrapper > * { margin-top: 0; margin-bottom: 0; }
+  /* Hero image */
+  .hero { background: #330066; height: 220px; overflow: hidden; line-height: 0; font-size: 0; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; display: block; margin: 0; padding: 0; border: 0; }
+  /* Header bar — sits directly on hero, no gap */
+  .email-header { background: #ffffff; border-bottom: 1px solid #e2e2e2; padding: 14px 24px; margin: 0; }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-size: 22px; font-weight: 900; color: #4D148C; margin: 0; }
+  .portal-label { font-size: 12px; font-weight: 700; color: #4b4452; text-transform: uppercase; letter-spacing: 0.05em; }
+  /* Portal branded header */
+  .portal-header { background: linear-gradient(135deg, #1a0033 0%, #330066 35%, #4D148C 65%, #7c2fc4 100%); padding: 32px 28px 28px; position: relative; overflow: hidden; }
+  .portal-header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #FF6200 0%, #ff9a00 50%, #FF6200 100%); }
+  .portal-site { font-size: 26px; font-weight: 900; color: #ffffff; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .portal-name { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.12em; margin: 0; }
+  /* Main */
+  .main { padding: 32px 24px 40px; color: #1a1c1c; }
+  .body-text { font-size: 16px; line-height: 24px; color: #1a1c1c; margin: 0 0 24px; }
+  .muted-text { font-size: 16px; line-height: 24px; color: #4b4452; margin: 0 0 24px; }
+  /* Important Dates banner */
+  .dates-banner { background: rgba(186,26,26,0.08); border-left: 4px solid #ba1a1a; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 0 0 24px; }
+  .dates-title { font-size: 18px; font-weight: 600; color: #ba1a1a; margin: 0 0 8px; line-height: 28px; }
+  .dates-body { font-size: 14px; line-height: 20px; color: #410002; margin: 0; }
+  /* Legacy ID card */
+  .id-card { background: #f3f3f3; border: 1px solid #cdc3d4; border-radius: 12px; padding: 24px 20px; margin: 0 0 16px; text-align: center; }
+  .id-card-label { font-size: 12px; font-weight: 700; color: #4b4452; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px; }
+  .id-card-value { font-size: 32px; font-weight: 700; color: #330066; letter-spacing: 0.2em; padding: 8px 0; margin: 0; }
+  .id-card-hint { font-size: 14px; color: #4b4452; margin: 8px 0 0; line-height: 20px; }
+  .italic-note { font-size: 14px; font-style: italic; color: #4b4452; line-height: 20px; margin: 0 0 40px; }
+  /* Steps */
+  .steps-title { font-size: 20px; font-weight: 600; color: #330066; line-height: 28px; margin: 0 0 16px; }
+  .step { display: flex; align-items: flex-start; padding: 14px 16px; background: #ffffff; border: 1px solid #cdc3d4; border-radius: 8px; margin-bottom: 8px; }
+  .step-num { background: #330066; color: #ffffff; min-width: 30px; height: 30px; border-radius: 50%; font-size: 13px; font-weight: 700; text-align: center; line-height: 30px; margin-right: 14px; flex-shrink: 0; }
+  .step-text { font-size: 14px; line-height: 20px; color: #1a1c1c; margin: 0; padding-top: 5px; }
+  /* CTA */
+  .cta-wrap { text-align: center; margin: 40px 0; }
+  .cta-btn { display: inline-block; color: #ffffff; font-size: 16px; font-weight: 600; line-height: 24px; padding: 16px 40px; border-radius: 12px; text-decoration: none; background: #4D148C; background-image: linear-gradient(135deg, #4D148C 0%, #7D22C3 55%, #FF6200 100%); }
+  /* Closing */
+  .closing { border-top: 1px solid #e2e2e2; padding-top: 24px; }
+  .closing-body { font-size: 16px; line-height: 24px; color: #1a1c1c; margin: 0 0 24px; }
+  .sig-name { font-size: 20px; font-weight: 600; color: #1a1c1c; margin: 0 0 4px; }
+  .sig-title { font-size: 14px; color: #4b4452; margin: 0 0 4px; }
+  .sig-email { color: #330066; font-weight: 700; font-size: 14px; text-decoration: none; }
+  /* Footer */
+  .email-footer { background: #ffffff; border-top: 1px solid #e2e2e2; padding: 32px 24px 48px; text-align: center; }
+  .footer-brand { font-size: 15px; font-weight: 700; color: #1a1c1c; margin: 0 0 16px; }
+  .footer-legal { font-size: 12px; line-height: 1.8; color: #4b4452; margin: 0 0 20px; }
+  .footer-links a { color: #4b4452; text-decoration: none; font-size: 12px; margin: 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Hero image -->
+  <div class="hero"><img src="${portal}/email-hero.jpg" alt="FedEx cargo aircraft"></div>
+
+  <!-- Portal branded header -->
+  <div class="portal-header">
+    <p class="portal-site">FlyFDX.com</p>
+    <p class="portal-name">Pilot History Portal</p>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+
+    <p class="body-text">Dear ${safeName},</p>
+
+    <p class="muted-text">We are reaching out because your name is on our list of candidates who successfully completed the FedEx flight crew interview process. As we plan upcoming staffing needs we'd like to confirm whether you're still interested in pursuing a career with FedEx.</p>
+
+    <!-- Important Dates -->
+    <div class="dates-banner">
+      <p class="dates-title">&#128197; Important Dates</p>
+      <p class="dates-body">The deadline to update your pilot history is <strong>May 15th 2026 at 2359 Central time.</strong> If you do not complete your pilot history update by the deadline you will be considered no longer interested.</p>
     </div>
-    <p><strong>To get started:</strong></p>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div>Visit the Pilot History Update Portal at <strong>flyfdx.com</strong></div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div>Register for an account using <strong>${candidateEmail}</strong> as your email address</div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div>Enter your Legacy ID when prompted to link your portal account</div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div>Review your legacy data and submit your updated information.</div>
-      </div>
+
+    <p class="body-text">If you would like to remain under consideration please complete the pilot history update form on our secure pilot portal at <a href="${portal}/signup" style="color:#4D148C;font-weight:700;">flyfdx.com</a>.</p>
+
+    <p class="body-text">Your unique Legacy ID is below. You will need it to register and link your new account to your existing profile.</p>
+
+    <p class="body-text">Once logged in, your latest flight information will be displayed. Please fill in the gap in flight information from these dates until present.</p>
+
+    <!-- Legacy ID card -->
+    <div class="id-card">
+      <p class="id-card-label">Your Unique Legacy ID</p>
+      <p class="id-card-value">${candidateId}</p>
     </div>
-    <a href="${portal}" class="cta-button">Go To Fly FDX.com</a>
-    <p style="color:#8E8E8E; font-size:13px;">If you have any questions, please visit our <a class="link" href="${portal}/help">Help page</a>.</p>`;
-  return renderEmailShell(body, candidateEmail);
+
+    <!-- Next Steps -->
+    <p class="steps-title">Next Steps</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <p class="step-text">Visit the Pilot History Update Portal at <a href="${portal}/signup" style="color:#4D148C;font-weight:700;text-decoration:none;">flyfdx.com</a></p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <p class="step-text">Register for an account using <strong>${candidateEmail}</strong> as your email address</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <p class="step-text">Enter your Legacy ID when prompted to link your portal account</p>
+    </div>
+    <div class="step" style="margin-bottom:0;">
+      <div class="step-num">4</div>
+      <p class="step-text">Review your legacy data and submit your updated information.</p>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <a href="${portal}/signup" class="cta-btn">Go To FlyFDX.com</a>
+    </div>
+
+    <!-- Closing -->
+    <div class="closing">
+      <p class="closing-body">If you have any questions, please visit our <a href="${portal}/help" style="color:#330066;">Help page</a>. Thank you for your continued interest in FedEx, and best wishes in your professional journey.</p>
+      <p class="sig-name">Captain Abegael Autry</p>
+      <p class="sig-title">Senior Manager Fleet Standardization and Pilot Recruitment</p>
+      <a class="sig-email" href="mailto:amautry@fedex.com">amautry@fedex.com</a>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- Footer -->
+  <div class="email-footer">
+    <p class="footer-brand">FedEx</p>
+    <p class="footer-legal">
+      &copy; 2026 FedEx. All rights reserved.<br>
+      This email was sent to <strong>${candidateEmail}</strong>.<br>
+      FedEx &middot; 3131 Democrat Rd &middot; Memphis, TN 38118
+    </p>
+    <div class="footer-links">
+      <a href="${portal}/privacy">Privacy Policy</a>
+      <a href="${portal}/terms">Terms of Use</a>
+      <a href="${portal}/unsubscribe">Unsubscribe</a>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+</body>
+</html>`;
 }
 
 /* -------------------------------------------------------------------------

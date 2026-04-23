@@ -63,7 +63,8 @@ import {
   extractCandidateIdFromFilename,
   parseParadoxHTMLString,
 } from '@/lib/paradox-html-parser';
-import { Loader2, RefreshCw, Copy } from 'lucide-react';
+import { Loader2, RefreshCw, Copy, Mail } from 'lucide-react';
+import { testEmailDelivery } from '@/app/admin/devtools/email-test-actions';
 
 type CandidateRow = {
   id: string;
@@ -191,6 +192,28 @@ export function DevToolsPage() {
   const [nukeOpen, setNukeOpen] = useState(false);
   const [nukePhrase, setNukePhrase] = useState('');
   const [nukeBusy, setNukeBusy] = useState(false);
+
+  const [testEmailAddr, setTestEmailAddr] = useState('');
+  const [testEmailBusy, setTestEmailBusy] = useState<string | null>(null);
+  const [testEmailMsg, setTestEmailMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const runTestEmail = async (type: 'flow_started' | 'submission' | 'indoctrination') => {
+    if (!testEmailAddr.trim()) {
+      setTestEmailMsg({ type: 'error', text: 'Please enter a target email address.' });
+      return;
+    }
+    setTestEmailBusy(type);
+    setTestEmailMsg(null);
+    try {
+      const token = await idToken();
+      await testEmailDelivery({ idToken: token, targetEmail: testEmailAddr.trim(), templateType: type });
+      setTestEmailMsg({ type: 'success', text: `Successfully queued ${type} email to ${testEmailAddr.trim()}! Please check your inbox (it may take 30-60 seconds to arrive).` });
+    } catch (e) {
+      setTestEmailMsg({ type: 'error', text: e instanceof Error ? e.message : 'Failed to queue email' });
+    } finally {
+      setTestEmailBusy(null);
+    }
+  };
 
   const runFind = async () => {
     if (!firestore) return;
@@ -1043,6 +1066,64 @@ export function DevToolsPage() {
               <Copy className="h-4 w-4" />
               Copy credentials
             </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Section: Email Delivery Testing */}
+      <Card className="border-[#E3E3E3]">
+        <CardHeader>
+          <CardTitle>Email Delivery Testing</CardTitle>
+          <CardDescription>
+            Send identical production-ready emails directly to your own inbox to verify deliverability and layout.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2 max-w-md">
+            <Label>Target Email Address</Label>
+            <Input 
+              type="email" 
+              placeholder="you@example.com" 
+              value={testEmailAddr} 
+              onChange={(e) => setTestEmailAddr(e.target.value)} 
+            />
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row flex-wrap">
+            <Button 
+              type="button" 
+              variant="outline"
+              disabled={testEmailBusy !== null}
+              onClick={() => runTestEmail('flow_started')}
+              className="bg-white border-[#4D148C] text-[#4D148C] hover:bg-[#4D148C]/5"
+            >
+              {testEmailBusy === 'flow_started' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+              Flow Started Email
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline"
+              disabled={testEmailBusy !== null}
+              onClick={() => runTestEmail('submission')}
+              className="bg-white border-[#4D148C] text-[#4D148C] hover:bg-[#4D148C]/5"
+            >
+              {testEmailBusy === 'submission' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+              Application Submitted Email
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline"
+              disabled={testEmailBusy !== null}
+              onClick={() => runTestEmail('indoctrination')}
+              className="bg-white border-[#4D148C] text-[#4D148C] hover:bg-[#4D148C]/5"
+            >
+              {testEmailBusy === 'indoctrination' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+              Indoc Invite Email
+            </Button>
+          </div>
+          {testEmailMsg && (
+            <p className={`text-sm font-medium ${testEmailMsg.type === 'success' ? 'text-[#008A00]' : 'text-[#DE002E]'}`}>
+              {testEmailMsg.text}
+            </p>
           )}
         </CardContent>
       </Card>
