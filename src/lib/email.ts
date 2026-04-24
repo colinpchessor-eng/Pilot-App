@@ -204,8 +204,8 @@ export function buildFlowStartedEmail(
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
               <tr>
                 <td style="vertical-align:middle;">
-                  <p style="font-size:11px; font-weight:700; color:rgba(255,255,254,0.7); text-transform:uppercase; letter-spacing:0.1em; margin:0 0 2px; font-family:system-ui,Arial,sans-serif;">
-                    <span class="gmail-difference"><span class="gmail-screen" style="color:rgba(255,255,254,0.7) !important; -webkit-text-fill-color:rgba(255,255,254,0.7) !important; text-decoration:none;">by FlyFDX.com</span></span>
+                  <p style="font-size:11px; font-weight:700; color:#fffffe; text-transform:uppercase; letter-spacing:0.1em; margin:0 0 2px; font-family:system-ui,Arial,sans-serif;">
+                    <span class="gmail-difference"><span class="gmail-screen" style="color:#fffffe !important; -webkit-text-fill-color:#fffffe !important; text-decoration:none;">by FlyFDX.com</span></span>
                   </p>
                   <p style="font-size:20px; font-weight:900; color:#fffffe; text-transform:uppercase; letter-spacing:0.05em; margin:0; font-family:system-ui,Arial,sans-serif;">
                     <span class="gmail-difference"><span class="gmail-screen" style="color:#fffffe !important; -webkit-text-fill-color:#fffffe !important; text-decoration:none;">&#9992; Pilot History Portal</span></span>
