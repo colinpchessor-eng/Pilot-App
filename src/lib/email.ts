@@ -101,21 +101,21 @@ export async function sendEmail(
 const SHARED_EMAIL_CSS = `
   body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
   .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-  .header { background: #4D148C; padding: 32px 40px; text-align: left; }
+  .header { background: #1a1d24; padding: 32px 40px; text-align: left; }
   .header .brand { color: white; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 0.01em; }
   .header .sub { color: #F3EAFB; margin: 4px 0 0; font-size: 14px; font-weight: 400; letter-spacing: 0.02em; }
   .orange-bar { height: 4px; background: #FF6200; }
   .body { padding: 40px; color: #333333; line-height: 1.6; }
   .cta-button { display: inline-block; background: #FF6200; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; margin: 24px 0; }
-  .id-box { background: #f5f0ff; border: 2px solid #4D148C; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
+  .id-box { background: #f5f0ff; border: 2px solid #1a1d24; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
   .id-label { font-size: 12px; color: #8E8E8E; text-transform: uppercase; letter-spacing: 0.1em; }
-  .id-value { font-size: 32px; font-weight: bold; color: #4D148C; letter-spacing: 0.2em; margin-top: 8px; }
+  .id-value { font-size: 32px; font-weight: bold; color: #1a1d24; letter-spacing: 0.2em; margin-top: 8px; }
   .steps { background: #fafafa; border-radius: 8px; padding: 20px; margin: 20px 0; }
   .step { display: flex; align-items: flex-start; margin-bottom: 12px; }
-  .step-num { background: #4D148C; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-block; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px; flex-shrink: 0; }
+  .step-num { background: #1a1d24; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-block; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px; flex-shrink: 0; }
   .success-box { background: #f0fff4; border: 2px solid #008A00; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
-  .info-box { background: #f5f0ff; border-left: 4px solid #4D148C; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; }
-  .link { color: #4D148C; text-decoration: underline; }
+  .info-box { background: #f5f0ff; border-left: 4px solid #1a1d24; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; }
+  .link { color: #1a1d24; text-decoration: underline; }
   .footer { background: #f5f5f5; padding: 24px 40px; font-size: 12px; color: #8E8E8E; }
   .footer p { margin: 4px 0; }
 `;
@@ -446,7 +446,7 @@ export function buildSubmissionEmail(
 
         <!-- Purple gradient header -->
         <tr>
-          <td style="background:linear-gradient(135deg,#1a0033 0%,#330066 35%,#4D148C 65%,#7c2fc4 100%); padding:32px 28px 28px;">
+          <td style="background-color:#1a1d24; padding:32px 28px 28px;">
             <p style="font-size:26px; font-weight:900; color:#ffffff; margin:0 0 4px; letter-spacing:-0.01em;">FlyFDX.com</p>
             <p style="font-size:13px; font-weight:700; color:#e3d9ff; text-transform:uppercase; letter-spacing:0.12em; margin:0;">Pilot History Portal</p>
           </td>
@@ -482,7 +482,7 @@ export function buildSubmissionEmail(
               <li>We will contact you regarding next steps within 7 business days</li>
             </ul>
 
-            <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;">If you need to make any corrections or have questions about your submission, please visit the <a href="${portal}/help" class="email-link-dark" style="color:#4D148C; text-decoration:underline;">Help page</a> on flyfdx.com.</p>
+            <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;">If you need to make any corrections or have questions about your submission, please visit the <a href="${portal}/help" class="email-link-dark" style="color:#1a1d24; text-decoration:underline;">Help page</a> on flyfdx.com.</p>
 
             <!-- Closing -->
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-divider" style="border-collapse:collapse; border-top:1px solid #e2e2e2;">
@@ -492,7 +492,7 @@ export function buildSubmissionEmail(
                   <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 16px;">Best regards,</p>
                   <p class="email-body-dark" style="font-size:20px; font-weight:600; color:#1a1c1c; margin:0 0 4px;">Captain Abegael Autry</p>
                   <p class="email-muted-dark" style="font-size:14px; color:#4b4452; margin:0 0 4px;">Senior Manager Fleet Standardization and Pilot Recruitment</p>
-                  <a href="mailto:amautry@fedex.com" class="email-link-dark" style="color:#330066; font-weight:700; font-size:14px; text-decoration:none; font-family:system-ui,Arial,sans-serif;">amautry@fedex.com</a>
+                  <a href="mailto:amautry@fedex.com" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-size:14px; text-decoration:none; font-family:system-ui,Arial,sans-serif;">amautry@fedex.com</a>
                 </td>
               </tr>
             </table>
