@@ -340,7 +340,7 @@ export function buildFlowStartedEmail(
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:40px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; color:#ffffff; background-color:#4D148C; background-image:linear-gradient(135deg,#4D148C 0%,#7D22C3 55%,#FF6200 100%); font-family:system-ui,Arial,sans-serif;">Go To FlyFDX.com</a>
+                        <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; color:#ffffff; background-color:#2A0B4E; font-family:system-ui,Arial,sans-serif;">Go To FlyFDX.com</a>
                       </td>
                     </tr>
                   </table>
