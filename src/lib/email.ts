@@ -178,17 +178,24 @@ export function buildFlowStartedEmail(
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
+</head>
+<body class="body" style="margin:0; padding:0; background-color:transparent; font-family:system-ui,Arial,sans-serif;">
+
 <style>
-  :root { color-scheme: light; }
-  u + .body .gmail-screen { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
+  [data-ogsc] .email-body-dark    { color: #1a1c1c !important; -webkit-text-fill-color: #1a1c1c !important; }
+  [data-ogsc] .email-muted-dark   { color: #4b4452 !important; -webkit-text-fill-color: #4b4452 !important; }
+  [data-ogsc] .email-red-dark     { color: #ba1a1a !important; -webkit-text-fill-color: #ba1a1a !important; }
+  [data-ogsc] .email-darkred-dark { color: #410002 !important; -webkit-text-fill-color: #410002 !important; }
+  [data-ogsc] .email-purple-dark  { color: #330066 !important; -webkit-text-fill-color: #330066 !important; }
+  [data-ogsb] .email-card-bg     { background-color: #ffffff !important; }
+  [data-ogsb] .email-outer-bg    { background-color: #f3f3f3 !important; }
+  u + .body .gmail-screen     { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
   u + .body .gmail-difference { mix-blend-mode: difference; display: inline-block; }
 </style>
-</head>
-<body style="margin:0; padding:0; background-color:transparent; font-family:system-ui,Arial,sans-serif;">
 
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; width:100%;">
   <tr>
-    <td align="center" style="padding:20px 0; background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3);">
+    <td align="center" class="email-outer-bg" style="padding:20px 0; background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3);">
 
       <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
 
@@ -210,9 +217,9 @@ export function buildFlowStartedEmail(
 
         <!-- Main content — light grey outer, white card inner -->
         <tr>
-          <td style="padding:24px; background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3);">
+          <td class="email-outer-bg" style="padding:24px; background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3);">
 
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px;" class="email-card-bg">
               <tr>
                 <td style="padding:24px;">
 
@@ -345,7 +352,7 @@ export function buildFlowStartedEmail(
 
         <!-- Footer -->
         <tr>
-          <td style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
+          <td class="email-card-bg" style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
             <p style="font-size:18px; font-weight:700; margin:0 0 16px; font-family:system-ui,Arial,sans-serif;">
               <span style="color:#4D148C;">Fed</span><span style="color:#FF6200;">Ex</span>
             </p>
@@ -390,19 +397,23 @@ export function buildSubmissionEmail(
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
+</head>
+<body class="body" style="margin:0; padding:0; background-color:transparent; font-family:Arial,sans-serif;">
+
 <style>
-  :root { color-scheme: light; }
-  u + .body .gmail-screen { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
+  [data-ogsc] .email-body-dark    { color: #1a1c1c !important; -webkit-text-fill-color: #1a1c1c !important; }
+  [data-ogsc] .email-muted-dark   { color: #4b4452 !important; -webkit-text-fill-color: #4b4452 !important; }
+  [data-ogsc] .email-purple-dark  { color: #330066 !important; -webkit-text-fill-color: #330066 !important; }
+  [data-ogsb] .email-card-bg     { background-color: #ffffff !important; }
+  u + .body .gmail-screen     { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
   u + .body .gmail-difference { mix-blend-mode: difference; display: inline-block; }
 </style>
-</head>
-<body style="margin:0; padding:0; background-color:transparent; font-family:Arial,sans-serif;">
 
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; width:100%;">
   <tr>
     <td align="center" style="padding:20px 0;">
 
-      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);" class="email-card-bg">
 
         <!-- Purple gradient header -->
         <tr>
@@ -423,7 +434,7 @@ export function buildSubmissionEmail(
 
         <!-- Main content -->
         <tr>
-          <td style="padding:32px 24px 40px; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
+          <td class="email-card-bg" style="padding:32px 24px 40px; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
 
             <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Dear ${safeName},</p>
 
@@ -466,7 +477,7 @@ export function buildSubmissionEmail(
 
         <!-- Footer -->
         <tr>
-          <td style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
+          <td class="email-card-bg" style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
             <p style="font-size:15px; font-weight:700; color:#1a1c1c; margin:0 0 16px;" class="email-body-dark">FedEx</p>
             <p style="font-size:12px; line-height:1.8; color:#4b4452; margin:0 0 20px;" class="email-muted-dark">
               &copy; 2026 FedEx. All rights reserved.<br>
