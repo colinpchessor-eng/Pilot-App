@@ -175,17 +175,11 @@ export function buildFlowStartedEmail(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
 <style>
-  @media (prefers-color-scheme: dark) {
-    .email-body-dark { color: #1a1c1c !important; }
-    .email-muted-dark { color: #4b4452 !important; }
-    .email-purple-dark { color: #330066 !important; }
-    .email-red-dark { color: #ba1a1a !important; }
-    .email-darkred-dark { color: #410002 !important; }
-  }
+  :root { color-scheme: light; }
   u + .body .gmail-screen { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
   u + .body .gmail-difference { mix-blend-mode: difference; display: inline-block; }
 </style>
@@ -393,15 +387,11 @@ export function buildSubmissionEmail(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
 <style>
-  @media (prefers-color-scheme: dark) {
-    .email-body-dark { color: #1a1c1c !important; }
-    .email-muted-dark { color: #4b4452 !important; }
-    .email-purple-dark { color: #330066 !important; }
-  }
+  :root { color-scheme: light; }
   u + .body .gmail-screen { mix-blend-mode: screen; background-color: #000000; display: inline-block; }
   u + .body .gmail-difference { mix-blend-mode: difference; display: inline-block; }
 </style>
