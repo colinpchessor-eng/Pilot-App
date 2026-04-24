@@ -18,7 +18,7 @@ export async function testEmailDelivery(input: {
 
   if (input.templateType === 'flow_started') {
     html = buildFlowStartedEmail('Test Candidate', input.targetEmail, '12345678');
-    subject = 'FedEx Pilot Hiring: Action Required to Update Your Profile';
+    subject = 'Pilot History Portal - Action Required';
   } else if (input.templateType === 'submission') {
     html = buildSubmissionEmail('Test Candidate', input.targetEmail, format(new Date(), 'MMM d, yyyy'));
     subject = 'Pilot Portal: Application Update Received';
