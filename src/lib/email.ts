@@ -197,12 +197,12 @@ export function buildFlowStartedEmail(
   <tr>
     <td align="center" class="email-outer-bg" style="padding:20px 0; background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3);">
 
-      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
 
         <!-- Horizontal gradient header -->
         <tr>
-          <td style="background-color:#4D148C; -webkit-text-fill-color:#4D148C; background-image:linear-gradient(90deg,#4D148C 0%,#7D22C3 50%,#FF6200 100%); padding:20px 24px;">
-            <p style="font-size:20px; font-weight:900; color:#fffffe; text-transform:uppercase; letter-spacing:0.05em; margin:0; font-family:system-ui,Arial,sans-serif;">
+          <td style="background-color:#4D148C; background-image:linear-gradient(90deg,#4D148C 0%,#7D22C3 50%,#FF6200 100%); padding:20px 24px;">
+            <p style="font-size:20px; font-weight:900; color:#fffffe; -webkit-text-fill-color:#fffffe; text-transform:uppercase; letter-spacing:0.05em; margin:0; font-family:system-ui,Arial,sans-serif;">
               <span class="gmail-difference"><span class="gmail-screen" style="color:#fffffe !important; -webkit-text-fill-color:#fffffe !important; text-decoration:none;">&#9992; Pilot History Portal</span></span>
             </p>
           </td>
@@ -230,7 +230,7 @@ export function buildFlowStartedEmail(
                   <!-- Important Dates banner -->
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:0 0 24px;">
                     <tr>
-                      <td style="background:rgba(186,26,26,0.08); border-left:4px solid #ba1a1a; border-radius:0 8px 8px 0; padding:16px 20px;">
+                      <td style="background-color:#fdf0f0; background-image:linear-gradient(#fdf0f0,#fdf0f0); border-left:4px solid #ba1a1a; border-radius:0 8px 8px 0; padding:16px 20px;">
                         <p style="font-size:18px; font-weight:600; color:#ba1a1a; -webkit-text-fill-color:#ba1a1a; margin:0 0 8px; line-height:28px; font-family:system-ui,Arial,sans-serif;" class="email-red-dark">&#128197; Important Dates</p>
                         <p style="font-size:14px; line-height:20px; color:#410002; -webkit-text-fill-color:#410002; margin:0; font-family:system-ui,Arial,sans-serif;" class="email-darkred-dark">The deadline to update your pilot history is <strong>May 15th, 2026.</strong> If you do not complete your pilot history update by the deadline you will be considered no longer interested.</p>
                       </td>
@@ -263,7 +263,7 @@ export function buildFlowStartedEmail(
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                           <tr>
                             <td valign="top" style="padding-right:14px;">
-                              <div style="background-color:#330066; -webkit-text-fill-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; -webkit-text-fill-color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">1</div>
+                              <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; -webkit-text-fill-color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">1</div>
                             </td>
                             <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; -webkit-text-fill-color:#1a1c1c; font-family:system-ui,Arial,sans-serif;" class="email-body-dark">Visit the Pilot History Update Portal at <a href="${portal}/signup" style="color:#4D148C; -webkit-text-fill-color:#4D148C; font-weight:700; text-decoration:none; font-family:system-ui,Arial,sans-serif;">flyfdx.com</a></td>
                           </tr>
@@ -279,7 +279,7 @@ export function buildFlowStartedEmail(
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                           <tr>
                             <td valign="top" style="padding-right:14px;">
-                              <div style="background-color:#330066; -webkit-text-fill-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; -webkit-text-fill-color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">2</div>
+                              <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; -webkit-text-fill-color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">2</div>
                             </td>
                             <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; -webkit-text-fill-color:#1a1c1c; font-family:system-ui,Arial,sans-serif;" class="email-body-dark">Register for an account using <strong>${candidateEmail}</strong> as your email address</td>
                           </tr>
@@ -295,9 +295,9 @@ export function buildFlowStartedEmail(
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                           <tr>
                             <td valign="top" style="padding-right:14px;">
-                              <div style="background-color:#330066; -webkit-text-fill-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; -webkit-text-fill-color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">3</div>
+                              <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; -webkit-text-fill-color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">3</div>
                             </td>
-                            <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; -webkit-text-fill-color:#1a1c1c; font-family:system-ui,Arial,sans-serif;" class="email-body-dark">Enter your Legacy ID <strong style="font-family:'Courier New',Courier,monospace; letter-spacing:0.1em;">${candidateId}</strong> when prompted to link your portal account</td>
+                            <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; -webkit-text-fill-color:#1a1c1c; font-family:system-ui,Arial,sans-serif;" class="email-body-dark">Enter your Legacy ID <strong style="font-family:'Courier New',Courier,monospace; letter-spacing:0.1em; color:#330066; -webkit-text-fill-color:#330066;">${candidateId}</strong> when prompted to link your portal account</td>
                           </tr>
                         </table>
                       </td>
@@ -311,7 +311,7 @@ export function buildFlowStartedEmail(
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                           <tr>
                             <td valign="top" style="padding-right:14px;">
-                              <div style="background-color:#330066; -webkit-text-fill-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; -webkit-text-fill-color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">4</div>
+                              <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; -webkit-text-fill-color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">4</div>
                             </td>
                             <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; -webkit-text-fill-color:#1a1c1c; font-family:system-ui,Arial,sans-serif;" class="email-body-dark">Review your legacy data and submit your updated information.</td>
                           </tr>
@@ -324,7 +324,7 @@ export function buildFlowStartedEmail(
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:40px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; color:#fffffe; background-color:#4D148C; -webkit-text-fill-color:#4D148C; background-image:linear-gradient(135deg,#4D148C 0%,#7D22C3 55%,#FF6200 100%); font-family:system-ui,Arial,sans-serif;">
+                        <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; color:#fffffe; -webkit-text-fill-color:#fffffe; background-color:#4D148C; background-image:linear-gradient(135deg,#4D148C 0%,#7D22C3 55%,#FF6200 100%); font-family:system-ui,Arial,sans-serif;">
                           <span class="gmail-difference"><span class="gmail-screen" style="color:#fffffe !important; -webkit-text-fill-color:#fffffe !important;">Go To FlyFDX.com</span></span>
                         </a>
                       </td>
