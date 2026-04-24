@@ -1,167 +1,25 @@
-import {
-  addDoc,
-  collection,
-  serverTimestamp,
-  type Firestore,
-} from 'firebase/firestore';
+# Email Template: Table Layout + Inline CSS Implementation Plan
 
-export interface EmailRecord {
-  to: string | string[];
-  from?: string;
-  replyTo?: string;
-  subject: string;
-  html: string;
-  type: string;
-  candidateId?: string;
-  candidateName?: string;
-  sentBy?: string;
-  sentByEmail?: string;
-  createdAt?: ReturnType<typeof serverTimestamp>;
-  status?: string;
-}
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-/**
- * Public site origin for links inside HTML (client-safe).
- * Must be set via `NEXT_PUBLIC_APP_URL` in production. Dev falls back to localhost.
- */
-export function getPublicPortalOrigin(): string {
-  const raw =
-    (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL?.trim()) || '';
-  if (raw) return raw.replace(/\/+$/, '');
-  const isProd =
-    typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
-  if (isProd) {
-    throw new Error(
-      'NEXT_PUBLIC_APP_URL must be set in production — refusing to build email links without a public origin.'
-    );
-  }
-  return 'http://localhost:3000';
-}
+**Goal:** Rewrite both `buildFlowStartedEmail` and `buildSubmissionEmail` in `src/lib/email.ts` using table-based layout with fully inlined CSS, inline gradient background hacks, blend-mode spans on all white-on-dark text, and updated meta color-scheme tags — achieving maximum Gmail iOS/Android dark mode compatibility.
 
-/** Resolve the From header for outbound mail. Required in production. */
-function resolveFromAddress(): string {
-  const fromEnv =
-    (typeof process !== 'undefined' && (process.env.NEXT_PUBLIC_EMAIL_FROM?.trim() || process.env.EMAIL_FROM?.trim())) || '';
-  if (fromEnv) return fromEnv;
-  const isProd =
-    typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
-  if (isProd) {
-    throw new Error(
-      'NEXT_PUBLIC_EMAIL_FROM must be set in production — refusing to send mail without a verified sender.'
-    );
-  }
-  return 'FedEx Pilot Hiring <FedexPilotHiring@flyfdx.com>';
-}
+**Architecture:** Replace the `<div>`-based, class-driven templates with `<table>`/`<tr>`/`<td>` structures. All structural and color styles move to inline `style=""` attributes on their elements. The `<style>` block retains only `@media (prefers-color-scheme: dark)` and `u + .body` blend-mode rules, which cannot be inlined. The orange accent bar (previously a CSS `::after` pseudo-element) becomes its own `<tr>`. The unused `httpsPortal` variable is removed from `buildFlowStartedEmail`.
 
-/** Resolve the Reply-To header for outbound mail. Required in production. */
-function resolveReplyToAddress(): string {
-  const replyEnv =
-    (typeof process !== 'undefined' && (process.env.NEXT_PUBLIC_EMAIL_REPLY_TO?.trim() || process.env.EMAIL_REPLY_TO?.trim())) || '';
-  if (replyEnv) return replyEnv;
-  const isProd =
-    typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
-  if (isProd) {
-    throw new Error(
-      'NEXT_PUBLIC_EMAIL_REPLY_TO must be set in production — refusing to send mail without a reply inbox.'
-    );
-  }
-  return 'support@localhost';
-}
+**Tech Stack:** TypeScript template literals, HTML email, `src/lib/email.ts` only — no other files touched.
 
-export async function sendEmail(
-  firestore: Firestore,
-  email: EmailRecord
-): Promise<string> {
-  const origin = getPublicPortalOrigin();
-  const docRef = await addDoc(collection(firestore, 'mail'), {
-    to: email.to,
-    from: email.from || resolveFromAddress(),
-    replyTo: email.replyTo || resolveReplyToAddress(),
-    message: {
-      subject: email.subject,
-      html: email.html,
-    },
-    type: email.type,
-    candidateId: email.candidateId || '',
-    candidateName: email.candidateName || '',
-    sentBy: email.sentBy || '',
-    sentByEmail: email.sentByEmail || '',
-    portalOrigin: origin,
-    createdAt: serverTimestamp(),
-    status: 'pending',
-  });
-  return docRef.id;
-}
+---
 
-/* -------------------------------------------------------------------------
- * Shared email skeleton (FlyFDX header + unified footer) — used by every
- * candidate-facing template below.
- * ------------------------------------------------------------------------- */
+### Task 1: Rewrite `buildFlowStartedEmail` as table-based inline-CSS template
 
-const SHARED_EMAIL_CSS = `
-  body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
-  .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-  .header { background: #4D148C; padding: 32px 40px; text-align: left; }
-  .header .brand { color: white; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 0.01em; }
-  .header .sub { color: #F3EAFB; margin: 4px 0 0; font-size: 14px; font-weight: 400; letter-spacing: 0.02em; }
-  .orange-bar { height: 4px; background: #FF6200; }
-  .body { padding: 40px; color: #333333; line-height: 1.6; }
-  .cta-button { display: inline-block; background: #FF6200; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; margin: 24px 0; }
-  .id-box { background: #f5f0ff; border: 2px solid #4D148C; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
-  .id-label { font-size: 12px; color: #8E8E8E; text-transform: uppercase; letter-spacing: 0.1em; }
-  .id-value { font-size: 32px; font-weight: bold; color: #4D148C; letter-spacing: 0.2em; margin-top: 8px; }
-  .steps { background: #fafafa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-  .step { display: flex; align-items: flex-start; margin-bottom: 12px; }
-  .step-num { background: #4D148C; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-block; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px; flex-shrink: 0; }
-  .success-box { background: #f0fff4; border: 2px solid #008A00; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
-  .info-box { background: #f5f0ff; border-left: 4px solid #4D148C; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; }
-  .link { color: #4D148C; text-decoration: underline; }
-  .footer { background: #f5f5f5; padding: 24px 40px; font-size: 12px; color: #8E8E8E; }
-  .footer p { margin: 4px 0; }
-`;
+**Files:**
+- Modify: `src/lib/email.ts:165-337`
 
-/** Purple FlyFDX.com / Pilot History Portal header used on every candidate email. */
-function renderEmailHeader(): string {
-  return `
-  <div class="header">
-    <p class="brand">FlyFDX.com</p>
-    <p class="sub">Pilot History Portal</p>
-  </div>
-  <div class="orange-bar"></div>`;
-}
+- [ ] **Step 1: Replace the entire `buildFlowStartedEmail` function**
 
-/** Shared 3-line footer used on every candidate email. */
-function renderEmailFooter(candidateEmail: string): string {
-  return `
-  <div class="footer">
-    <p>© 2026 FedEx. All rights reserved.</p>
-    <p>This email was sent to ${candidateEmail} because you have expressed interest in joining FedEx.</p>
-    <p>FedEx · 3131 Democrat Rd · Memphis, TN 38118</p>
-  </div>`;
-}
+In `src/lib/email.ts`, replace the full `buildFlowStartedEmail` function (from `export function buildFlowStartedEmail` through its closing `}`) with:
 
-function renderEmailShell(bodyHtml: string, candidateEmail: string): string {
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>${SHARED_EMAIL_CSS}</style>
-</head>
-<body>
-<div class="container">
-  ${renderEmailHeader()}
-  <div class="body">
-${bodyHtml}
-  </div>
-  ${renderEmailFooter(candidateEmail)}
-</div>
-</body>
-</html>`;
-}
-
-/* -------------------------------------------------------------------------
- * Email 2 — Pilot History Invitation (section 3.2a of the plan).
- * ------------------------------------------------------------------------- */
+```typescript
 export function buildFlowStartedEmail(
   candidateName: string,
   candidateEmail: string,
@@ -219,7 +77,7 @@ export function buildFlowStartedEmail(
         <tr>
           <td style="padding:32px 24px 40px; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
 
-            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Dear ${safeName},</p>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Dear \${safeName},</p>
 
             <p style="font-size:16px; line-height:24px; color:#4b4452; margin:0 0 24px;" class="email-muted-dark">We are reaching out because your name is on our list of candidates who successfully completed the FedEx flight crew interview process. As we plan upcoming staffing needs we'd like to confirm whether you're still interested in pursuing a career with FedEx.</p>
 
@@ -233,7 +91,7 @@ export function buildFlowStartedEmail(
               </tr>
             </table>
 
-            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you would like to remain under consideration please complete the pilot history update form on our secure pilot portal at <a href="${portal}/signup" style="color:#4D148C; font-weight:700;">flyfdx.com</a>.</p>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you would like to remain under consideration please complete the pilot history update form on our secure pilot portal at <a href="\${portal}/signup" style="color:#4D148C; font-weight:700;">flyfdx.com</a>.</p>
 
             <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Your unique Legacy ID is below. You will need it to register and link your new account to your existing profile.</p>
 
@@ -244,7 +102,7 @@ export function buildFlowStartedEmail(
               <tr>
                 <td style="background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3); border:1px solid #cdc3d4; border-radius:12px; padding:24px 20px; text-align:center;">
                   <p style="font-size:12px; font-weight:700; color:#4b4452; text-transform:uppercase; letter-spacing:0.05em; margin:0 0 8px;" class="email-muted-dark">Your Unique Legacy ID</p>
-                  <p style="font-size:32px; font-weight:700; color:#330066; letter-spacing:0.2em; padding:8px 0; margin:0;" class="email-purple-dark">${candidateId}</p>
+                  <p style="font-size:32px; font-weight:700; color:#330066; letter-spacing:0.2em; padding:8px 0; margin:0;" class="email-purple-dark">\${candidateId}</p>
                 </td>
               </tr>
             </table>
@@ -260,7 +118,7 @@ export function buildFlowStartedEmail(
                       <td valign="top" style="padding-right:14px;">
                         <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px;">1</div>
                       </td>
-                      <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c;" class="email-body-dark">Visit the Pilot History Update Portal at <a href="${portal}/signup" style="color:#4D148C; font-weight:700; text-decoration:none;">flyfdx.com</a></td>
+                      <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c;" class="email-body-dark">Visit the Pilot History Update Portal at <a href="\${portal}/signup" style="color:#4D148C; font-weight:700; text-decoration:none;">flyfdx.com</a></td>
                     </tr>
                   </table>
                 </td>
@@ -276,7 +134,7 @@ export function buildFlowStartedEmail(
                       <td valign="top" style="padding-right:14px;">
                         <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px;">2</div>
                       </td>
-                      <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c;" class="email-body-dark">Register for an account using <strong>${candidateEmail}</strong> as your email address</td>
+                      <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c;" class="email-body-dark">Register for an account using <strong>\${candidateEmail}</strong> as your email address</td>
                     </tr>
                   </table>
                 </td>
@@ -319,7 +177,7 @@ export function buildFlowStartedEmail(
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:40px 0;">
               <tr>
                 <td align="center">
-                  <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; background-color:#4D148C; background-image:linear-gradient(135deg,#4D148C 0%,#7D22C3 55%,#FF6200 100%);">
+                  <a href="\${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; background-color:#4D148C; background-image:linear-gradient(135deg,#4D148C 0%,#7D22C3 55%,#FF6200 100%);">
                     <span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important;">Go To FlyFDX.com</span></span>
                   </a>
                 </td>
@@ -330,7 +188,7 @@ export function buildFlowStartedEmail(
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; border-top:1px solid #e2e2e2;">
               <tr>
                 <td style="padding-top:24px;">
-                  <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you have any questions, please visit our <a href="${portal}/help" style="color:#330066;">Help page</a>. Thank you for your continued interest in FedEx, and best wishes in your professional journey.</p>
+                  <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you have any questions, please visit our <a href="\${portal}/help" style="color:#330066;">Help page</a>. Thank you for your continued interest in FedEx, and best wishes in your professional journey.</p>
                   <p style="font-size:20px; font-weight:600; color:#1a1c1c; margin:0 0 4px;" class="email-body-dark">Captain Abegael Autry</p>
                   <p style="font-size:14px; color:#4b4452; margin:0 0 4px;" class="email-muted-dark">Senior Manager Fleet Standardization and Pilot Recruitment</p>
                   <a href="mailto:amautry@fedex.com" style="color:#330066; font-weight:700; font-size:14px; text-decoration:none;">amautry@fedex.com</a>
@@ -347,13 +205,13 @@ export function buildFlowStartedEmail(
             <p style="font-size:15px; font-weight:700; color:#1a1c1c; margin:0 0 16px;" class="email-body-dark">FedEx</p>
             <p style="font-size:12px; line-height:1.8; color:#4b4452; margin:0 0 20px;" class="email-muted-dark">
               &copy; 2026 FedEx. All rights reserved.<br>
-              This email was sent to <strong>${candidateEmail}</strong>.<br>
+              This email was sent to <strong>\${candidateEmail}</strong>.<br>
               FedEx &middot; 3131 Democrat Rd &middot; Memphis, TN 38118
             </p>
             <p style="margin:0;">
-              <a href="${portal}/privacy" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Privacy Policy</a>
-              <a href="${portal}/terms" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Terms of Use</a>
-              <a href="${portal}/unsubscribe" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Unsubscribe</a>
+              <a href="\${portal}/privacy" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Privacy Policy</a>
+              <a href="\${portal}/terms" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Terms of Use</a>
+              <a href="\${portal}/unsubscribe" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Unsubscribe</a>
             </p>
           </td>
         </tr>
@@ -366,10 +224,35 @@ export function buildFlowStartedEmail(
 </body>
 </html>`;
 }
+```
 
-/* -------------------------------------------------------------------------
- * Email 2b — Submission Received (section 3.2ab of the plan).
- * ------------------------------------------------------------------------- */
+- [ ] **Step 2: Run typecheck**
+
+```bash
+npm run typecheck
+```
+
+Expected: no errors. If TypeScript reports any errors, fix them before continuing. Common issue: if the old `httpsPortal` variable appears elsewhere in the file, remove it here too.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/lib/email.ts
+git commit -m "feat(email): rewrite buildFlowStartedEmail with table layout and inline CSS"
+```
+
+---
+
+### Task 2: Rewrite `buildSubmissionEmail` as table-based inline-CSS template
+
+**Files:**
+- Modify: `src/lib/email.ts:342-454`
+
+- [ ] **Step 1: Replace the entire `buildSubmissionEmail` function**
+
+In `src/lib/email.ts`, replace the full `buildSubmissionEmail` function (from `export function buildSubmissionEmail` through its closing `}`) with:
+
+```typescript
 export function buildSubmissionEmail(
   candidateName: string,
   candidateEmail: string,
@@ -425,7 +308,7 @@ export function buildSubmissionEmail(
         <tr>
           <td style="padding:32px 24px 40px; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
 
-            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Dear ${safeName},</p>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Dear \${safeName},</p>
 
             <!-- Success box -->
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; background-color:#f0fff4; background-image:linear-gradient(#f0fff4,#f0fff4); border:2px solid #008A00; border-radius:8px; margin:0 0 24px;">
@@ -433,7 +316,7 @@ export function buildSubmissionEmail(
                 <td style="padding:20px; text-align:center;">
                   <p style="font-size:40px; margin:0;">&#10003;</p>
                   <p style="font-size:18px; font-weight:bold; color:#008A00; margin:8px 0 0;">Update Received</p>
-                  <p style="color:#4b4452; margin:4px 0 0; font-size:14px;" class="email-muted-dark">Submitted on ${submittedAt}</p>
+                  <p style="color:#565656; margin:4px 0 0; font-size:14px;">Submitted on \${submittedAt}</p>
                 </td>
               </tr>
             </table>
@@ -441,12 +324,12 @@ export function buildSubmissionEmail(
             <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Thank you for completing your pilot history update. We have successfully received your submission and it is now under review by our recruiting team.</p>
 
             <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 8px;" class="email-body-dark"><strong>What happens next:</strong></p>
-            <ul style="color:#4b4452; line-height:2; margin:0 0 24px; padding-left:24px; font-size:16px;" class="email-muted-dark">
+            <ul style="color:#565656; line-height:2; margin:0 0 24px; padding-left:24px; font-size:16px;">
               <li>Our team will review your updated pilot history and flight hours</li>
               <li>We will contact you regarding next steps within 7 business days</li>
             </ul>
 
-            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you need to make any corrections or have questions about your submission, please visit the <a href="${portal}/help" style="color:#4D148C; text-decoration:underline;">Help page</a> on flyfdx.com.</p>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you need to make any corrections or have questions about your submission, please visit the <a href="\${portal}/help" style="color:#4D148C; text-decoration:underline;">Help page</a> on flyfdx.com.</p>
 
             <!-- Closing -->
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; border-top:1px solid #e2e2e2;">
@@ -470,13 +353,13 @@ export function buildSubmissionEmail(
             <p style="font-size:15px; font-weight:700; color:#1a1c1c; margin:0 0 16px;" class="email-body-dark">FedEx</p>
             <p style="font-size:12px; line-height:1.8; color:#4b4452; margin:0 0 20px;" class="email-muted-dark">
               &copy; 2026 FedEx. All rights reserved.<br>
-              This email was sent to <strong>${candidateEmail}</strong>.<br>
+              This email was sent to <strong>\${candidateEmail}</strong>.<br>
               FedEx &middot; 3131 Democrat Rd &middot; Memphis, TN 38118
             </p>
             <p style="margin:0;">
-              <a href="${portal}/privacy" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Privacy Policy</a>
-              <a href="${portal}/terms" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Terms of Use</a>
-              <a href="${portal}/unsubscribe" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Unsubscribe</a>
+              <a href="\${portal}/privacy" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Privacy Policy</a>
+              <a href="\${portal}/terms" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Terms of Use</a>
+              <a href="\${portal}/unsubscribe" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px;">Unsubscribe</a>
             </p>
           </td>
         </tr>
@@ -489,30 +372,19 @@ export function buildSubmissionEmail(
 </body>
 </html>`;
 }
+```
 
-/* -------------------------------------------------------------------------
- * Email 3 — Indoctrination Class Invitation (section 3.2c of the plan).
- * Replaces the old buildInterviewEmail. July 2026 cohort is hardcoded; update
- * the copy when the class session changes.
- * ------------------------------------------------------------------------- */
-export function buildIndoctrinationEmail(
-  candidateName: string,
-  candidateEmail: string
-): string {
-  const portal = getPublicPortalOrigin();
-  const safeName = candidateName || 'Candidate';
-  const body = `
-    <p>Dear ${safeName},</p>
-    <p>Congratulations &mdash; on behalf of the FedEx Pilot Recruiting Team, we are delighted to invite you to our <strong>July 2026 Pilot Indoctrination Class</strong>.</p>
-    <p>This is the final step before you officially begin your career as a FedEx pilot. Full class details &mdash; dates, times, location, and preparation materials &mdash; are available in your Pilot Portal.</p>
-    <div class="info-box">
-      <strong>Program:</strong> FedEx Pilot Indoctrination<br>
-      <strong>Class Session:</strong> July 2026<br>
-      <strong>Details:</strong> Available in your Pilot Portal
-    </div>
-    <a href="${portal}/dashboard/indoctrination" class="cta-button">View Class Details</a>
-    <p style="color:#8E8E8E; font-size:13px;">If you have any questions, please visit our <a class="link" href="${portal}/dashboard/help">Help page</a>.</p>
-    <p>We look forward to welcoming you to the FedEx family.</p>
-    <p style="margin-top:32px;">Best regards,<br><strong>FedEx Pilot Recruiting Team</strong></p>`;
-  return renderEmailShell(body, candidateEmail);
-}
+- [ ] **Step 2: Run typecheck**
+
+```bash
+npm run typecheck
+```
+
+Expected: no errors.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/lib/email.ts
+git commit -m "feat(email): rewrite buildSubmissionEmail with table layout and inline CSS"
+```
