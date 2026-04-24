@@ -257,7 +257,7 @@ export function buildFlowStartedEmail(
                   <p style="font-size:20px; font-weight:600; color:#330066; -webkit-text-fill-color:#330066; line-height:28px; margin:0 0 16px; font-family:system-ui,Arial,sans-serif;" class="email-purple-dark">Next Steps</p>
 
                   <!-- Step 1 -->
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
                     <tr>
                       <td style="padding:14px 16px;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -273,7 +273,7 @@ export function buildFlowStartedEmail(
                   </table>
 
                   <!-- Step 2 -->
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
                     <tr>
                       <td style="padding:14px 16px;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -289,7 +289,7 @@ export function buildFlowStartedEmail(
                   </table>
 
                   <!-- Step 3 — Legacy ID in bold monospace inline -->
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
                     <tr>
                       <td style="padding:14px 16px;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -305,7 +305,7 @@ export function buildFlowStartedEmail(
                   </table>
 
                   <!-- Step 4 -->
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:0;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; -webkit-text-fill-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:0;">
                     <tr>
                       <td style="padding:14px 16px;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
