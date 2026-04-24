@@ -444,17 +444,11 @@ export function buildSubmissionEmail(
 
       <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="email-card-bg" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff;">
 
-        <!-- Purple gradient header -->
+        <!-- Unified header image (branding + hero in one image; immune to Gmail iOS dark mode inversion) -->
         <tr>
-          <td style="background-color:#1a1d24; padding:32px 28px 28px;">
-            <p style="font-size:26px; font-weight:900; color:#ffffff; margin:0 0 4px; letter-spacing:-0.01em;">FlyFDX.com</p>
-            <p style="font-size:13px; font-weight:700; color:#e3d9ff; text-transform:uppercase; letter-spacing:0.12em; margin:0;">Pilot History Portal</p>
+          <td style="padding:0; line-height:0; font-size:0;">
+            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="FlyFDX.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
           </td>
-        </tr>
-
-        <!-- Orange accent bar -->
-        <tr>
-          <td style="background:linear-gradient(90deg,#FF6200 0%,#ff9a00 50%,#FF6200 100%); height:3px; font-size:0; line-height:0;">&nbsp;</td>
         </tr>
 
         <!-- Main content -->
