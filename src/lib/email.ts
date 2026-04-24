@@ -224,17 +224,10 @@ export function buildFlowStartedEmail(
 
       <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="email-card-bg" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff;">
 
-        <!-- Horizontal gradient header -->
-        <tr>
-          <td style="background-color:#4D148C; background-image:linear-gradient(90deg,#4D148C 0%,#7D22C3 50%,#FF6200 100%); padding:20px 24px;">
-            <p style="font-size:20px; font-weight:900; color:#ffffff; text-transform:uppercase; letter-spacing:0.05em; margin:0; font-family:system-ui,Arial,sans-serif;">&#9992; Pilot History Portal</p>
-          </td>
-        </tr>
-
-        <!-- Hero image -->
+        <!-- Unified header image (branding + hero in one image; immune to Gmail iOS dark mode inversion) -->
         <tr>
           <td style="padding:0; line-height:0; font-size:0;">
-            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/201504-15-002-03-04-02-105-dm-160125%20(1).jpg?alt=media&token=4b2da13b-1d4c-44af-9d27-a6876b2f65ea" alt="FedEx aircraft" width="600" style="max-width:100%; display:block; width:100%; height:auto;">
+            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="FlyFDX.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
           </td>
         </tr>
 
