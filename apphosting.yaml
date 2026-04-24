@@ -6,7 +6,29 @@ runConfig:
   # more instances in response to increased traffic.
   maxInstances: 1
 env:
+  # --- Server-only secrets (never shipped to the browser) ---
   - variable: VERIFICATION_ADMIN_EMAIL
     secret: VERIFICATION_ADMIN_EMAIL
   - variable: ENCRYPTION_KEY
     secret: ENCRYPTION_KEY
+
+  # --- Client-visible config (NEXT_PUBLIC_* gets inlined into the JS
+  #     bundle at build time, so plain `value:` is correct — no secret
+  #     manager needed, and these must have availability: BUILD so Next.js
+  #     can bake them into the client-side React code that calls
+  #     sendEmail / getPublicPortalOrigin / resolveFromAddress). ---
+  - variable: NEXT_PUBLIC_APP_URL
+    value: "https://flyfdx.com"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_EMAIL_FROM
+    value: "FedEx Pilot Hiring <FedExPilotHiring@flyfdx.com>"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_EMAIL_REPLY_TO
+    value: "support@flyfdx.com"
+    availability:
+      - BUILD
+      - RUNTIME
