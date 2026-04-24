@@ -337,7 +337,7 @@ export function buildFlowStartedEmail(
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:40px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; background-color:#4D148C; background-image:linear-gradient(135deg,#4D148C 0%,#7D22C3 55%,#FF6200 100%); font-family:system-ui,Arial,sans-serif;">
+                        <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; color:#fffffe; background-color:#4D148C; background-image:linear-gradient(135deg,#4D148C 0%,#7D22C3 55%,#FF6200 100%); font-family:system-ui,Arial,sans-serif;">
                           <span class="gmail-difference"><span class="gmail-screen" style="color:#fffffe !important; -webkit-text-fill-color:#fffffe !important;">Go To FlyFDX.com</span></span>
                         </a>
                       </td>
@@ -480,7 +480,7 @@ export function buildSubmissionEmail(
                   <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 16px;" class="email-body-dark">Best regards,</p>
                   <p style="font-size:20px; font-weight:600; color:#1a1c1c; margin:0 0 4px;" class="email-body-dark">Captain Abegael Autry</p>
                   <p style="font-size:14px; color:#4b4452; margin:0 0 4px;" class="email-muted-dark">Senior Manager Fleet Standardization and Pilot Recruitment</p>
-                  <a href="mailto:amautry@fedex.com" style="color:#330066; font-weight:700; font-size:14px; text-decoration:none;">amautry@fedex.com</a>
+                  <a href="mailto:amautry@fedex.com" style="color:#330066; font-weight:700; font-size:14px; text-decoration:none; font-family:system-ui,Arial,sans-serif;">amautry@fedex.com</a>
                 </td>
               </tr>
             </table>
