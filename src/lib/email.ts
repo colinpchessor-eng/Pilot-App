@@ -179,11 +179,13 @@ export function buildFlowStartedEmail(
 <meta name="supported-color-schemes" content="light dark">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
 <style>
-  /* Apple Mail iOS/macOS + Outlook.com honor prefers-color-scheme.
-     Gmail iOS partially honors it; Gmail Android mostly runs its own inversion.
-     For Gmail iOS dark mode, white cards are preserved via the
-     background-image:linear-gradient(#fff,#fff) trick on each card, because
-     Gmail iOS only transforms background-color, not background-image. */
+  /* Apple Mail iOS/macOS + Outlook.com honor prefers-color-scheme and will
+     use the palette below as an intentional dark variant.
+     Gmail iOS app ignores @media and runs its own inversion: it darkens light
+     backgrounds and lightens dark text. We deliberately let it do so — trying
+     to "freeze" card backgrounds (via linear-gradient tricks) only produced
+     a washed-out light-text-on-white-card render. Letting Gmail invert both
+     bg and text together produces a legible native dark mode. */
   @media (prefers-color-scheme: dark) {
     .email-outer-bg {
       background-color: #0f1117 !important;
@@ -218,9 +220,9 @@ export function buildFlowStartedEmail(
 
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; width:100%;">
   <tr>
-    <td align="center" class="email-outer-bg" style="padding:20px 0; background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3);">
+    <td align="center" class="email-outer-bg" style="padding:20px 0; background-color:#f3f3f3;">
 
-      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="email-card-bg" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="email-card-bg" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff;">
 
         <!-- Horizontal gradient header -->
         <tr>
@@ -238,9 +240,9 @@ export function buildFlowStartedEmail(
 
         <!-- Main content — light grey outer, white card inner -->
         <tr>
-          <td class="email-outer-bg" style="padding:24px; background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3);">
+          <td class="email-outer-bg" style="padding:24px; background-color:#f3f3f3;">
 
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; border:1px solid #cdc3d4; border-radius:8px;">
               <tr>
                 <td style="padding:24px;">
 
@@ -251,7 +253,7 @@ export function buildFlowStartedEmail(
                   <!-- Important Dates banner -->
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:0 0 24px;">
                     <tr>
-                      <td class="email-dates-box" style="background-color:#fdf0f0; background-image:linear-gradient(#fdf0f0,#fdf0f0); border-left:4px solid #ba1a1a; border-radius:0 8px 8px 0; padding:16px 20px;">
+                      <td class="email-dates-box" style="background-color:#fdf0f0; border-left:4px solid #ba1a1a; border-radius:0 8px 8px 0; padding:16px 20px;">
                         <p class="email-red-dark" style="font-size:18px; font-weight:600; color:#ba1a1a; margin:0 0 8px; line-height:28px; font-family:system-ui,Arial,sans-serif;">&#128197; Important Dates</p>
                         <p class="email-darkred-dark" style="font-size:14px; line-height:20px; color:#410002; margin:0; font-family:system-ui,Arial,sans-serif;">The deadline to update your pilot history is <strong>May 15th, 2026.</strong> If you do not complete your pilot history update by the deadline you will be considered no longer interested.</p>
                       </td>
@@ -267,7 +269,7 @@ export function buildFlowStartedEmail(
                   <!-- Legacy ID card -->
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:0 0 16px;">
                     <tr>
-                      <td class="email-legacy-box" style="background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3); border:1px solid #cdc3d4; border-radius:12px; padding:24px 20px; text-align:center;">
+                      <td class="email-legacy-box" style="background-color:#f3f3f3; border:1px solid #cdc3d4; border-radius:12px; padding:24px 20px; text-align:center;">
                         <p class="email-muted-dark" style="font-size:12px; font-weight:700; color:#4b4452; text-transform:uppercase; letter-spacing:0.05em; margin:0 0 4px; font-family:system-ui,Arial,sans-serif;">Your Unique Legacy ID</p>
                         <p class="email-muted-dark" style="font-size:13px; color:#4b4452; font-style:italic; margin:0 0 8px; font-family:system-ui,Arial,sans-serif;">You will need this to link your profile.</p>
                         <p class="email-purple-dark" style="font-size:32px; font-weight:700; color:#330066; letter-spacing:0.2em; padding:8px 0; margin:0; font-family:'Courier New',Courier,monospace;">${candidateId}</p>
@@ -278,13 +280,13 @@ export function buildFlowStartedEmail(
                   <p class="email-purple-dark" style="font-size:20px; font-weight:600; color:#330066; line-height:28px; margin:0 0 16px; font-family:system-ui,Arial,sans-serif;">Next Steps</p>
 
                   <!-- Step 1 -->
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
                     <tr>
                       <td style="padding:14px 16px;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                           <tr>
                             <td valign="top" style="padding-right:14px;">
-                              <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">1</div>
+                              <div style="background-color:#330066; color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">1</div>
                             </td>
                             <td valign="top" class="email-body-dark" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; font-family:system-ui,Arial,sans-serif;">Visit the Pilot History Update Portal at <a href="${portal}/signup" class="email-link-dark" style="color:#4D148C; font-weight:700; text-decoration:none; font-family:system-ui,Arial,sans-serif;">flyfdx.com</a></td>
                           </tr>
@@ -294,13 +296,13 @@ export function buildFlowStartedEmail(
                   </table>
 
                   <!-- Step 2 -->
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
                     <tr>
                       <td style="padding:14px 16px;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                           <tr>
                             <td valign="top" style="padding-right:14px;">
-                              <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">2</div>
+                              <div style="background-color:#330066; color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">2</div>
                             </td>
                             <td valign="top" class="email-body-dark" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; font-family:system-ui,Arial,sans-serif;">Register for an account using <strong>${candidateEmail}</strong> as your email address</td>
                           </tr>
@@ -310,13 +312,13 @@ export function buildFlowStartedEmail(
                   </table>
 
                   <!-- Step 3 — Legacy ID in bold monospace inline -->
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; border:1px solid #cdc3d4; border-radius:8px; margin-bottom:8px;">
                     <tr>
                       <td style="padding:14px 16px;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                           <tr>
                             <td valign="top" style="padding-right:14px;">
-                              <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">3</div>
+                              <div style="background-color:#330066; color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">3</div>
                             </td>
                             <td valign="top" class="email-body-dark" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; font-family:system-ui,Arial,sans-serif;">Enter your Legacy ID <strong class="email-purple-dark" style="font-family:'Courier New',Courier,monospace; letter-spacing:0.1em; color:#330066;">${candidateId}</strong> when prompted to link your portal account</td>
                           </tr>
@@ -326,13 +328,13 @@ export function buildFlowStartedEmail(
                   </table>
 
                   <!-- Step 4 -->
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border:1px solid #cdc3d4; border-radius:8px; margin-bottom:0;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-card-bg" style="border-collapse:collapse; background-color:#ffffff; border:1px solid #cdc3d4; border-radius:8px; margin-bottom:0;">
                     <tr>
                       <td style="padding:14px 16px;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                           <tr>
                             <td valign="top" style="padding-right:14px;">
-                              <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">4</div>
+                              <div style="background-color:#330066; color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">4</div>
                             </td>
                             <td valign="top" class="email-body-dark" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; font-family:system-ui,Arial,sans-serif;">Review your legacy data and submit your updated information.</td>
                           </tr>
@@ -371,7 +373,7 @@ export function buildFlowStartedEmail(
 
         <!-- Footer -->
         <tr>
-          <td class="email-card-bg email-divider" style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
+          <td class="email-card-bg email-divider" style="background-color:#ffffff; border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
             <p style="font-size:18px; font-weight:700; margin:0 0 16px; font-family:system-ui,Arial,sans-serif;">
               <span style="color:#4D148C;">Fed</span><span style="color:#FF6200;">Ex</span>
             </p>
@@ -443,11 +445,11 @@ export function buildSubmissionEmail(
 </head>
 <body style="margin:0; padding:0; background-color:#f3f3f3; font-family:Arial,sans-serif;">
 
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-outer-bg" style="border-collapse:collapse; width:100%; background-color:#f3f3f3; background-image:linear-gradient(#f3f3f3,#f3f3f3);">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-outer-bg" style="border-collapse:collapse; width:100%; background-color:#f3f3f3;">
   <tr>
     <td align="center" style="padding:20px 0;">
 
-      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="email-card-bg" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="email-card-bg" style="max-width:600px; width:100%; border-collapse:collapse; background-color:#ffffff;">
 
         <!-- Purple gradient header -->
         <tr>
@@ -464,14 +466,14 @@ export function buildSubmissionEmail(
 
         <!-- Main content -->
         <tr>
-          <td class="email-card-bg" style="padding:32px 24px 40px; background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff);">
+          <td class="email-card-bg" style="padding:32px 24px 40px; background-color:#ffffff;">
 
             <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;">Dear ${safeName},</p>
 
             <!-- Success box -->
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:0 0 24px;">
               <tr>
-                <td class="email-success-box" style="padding:20px; text-align:center; background-color:#f0fff4; background-image:linear-gradient(#f0fff4,#f0fff4); border:2px solid #008A00; border-radius:8px;">
+                <td class="email-success-box" style="padding:20px; text-align:center; background-color:#f0fff4; border:2px solid #008A00; border-radius:8px;">
                   <p style="font-size:40px; margin:0; color:#008A00;" class="email-green-dark">&#10003;</p>
                   <p class="email-green-dark" style="font-size:18px; font-weight:bold; color:#008A00; margin:8px 0 0;">Update Received</p>
                   <p class="email-muted-dark" style="color:#4b4452; margin:4px 0 0; font-size:14px;">Submitted on ${submittedAt}</p>
@@ -507,7 +509,7 @@ export function buildSubmissionEmail(
 
         <!-- Footer -->
         <tr>
-          <td class="email-card-bg email-divider" style="background-color:#ffffff; background-image:linear-gradient(#ffffff,#ffffff); border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
+          <td class="email-card-bg email-divider" style="background-color:#ffffff; border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
             <p class="email-body-dark" style="font-size:15px; font-weight:700; color:#1a1c1c; margin:0 0 16px;">FedEx</p>
             <p class="email-muted-dark" style="font-size:12px; line-height:1.8; color:#4b4452; margin:0 0 20px;">
               &copy; 2026 FedEx. All rights reserved.<br>
