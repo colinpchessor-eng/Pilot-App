@@ -35,11 +35,21 @@ function normalizedRecipient(addr: string): string {
   return (angle ? angle[1] : t).trim().toLowerCase();
 }
 
+/** Webhook `data.to` is usually string[]; normalize if Resend ever sends a single string. */
+function coerceToRecipients(to: unknown): string[] {
+  if (to == null) return [];
+  if (Array.isArray(to)) {
+    return to.filter((x): x is string => typeof x === 'string');
+  }
+  if (typeof to === 'string' && to.trim() !== '') {
+    return [to];
+  }
+  return [];
+}
+
 function targetsSupportInbox(to: unknown): boolean {
-  if (!Array.isArray(to)) return false;
-  return to.some(
-    (addr) => typeof addr === 'string' && SUPPORT_INBOUND_ADDRESSES.has(normalizedRecipient(addr))
-  );
+  const recipients = coerceToRecipients(to);
+  return recipients.some((addr) => SUPPORT_INBOUND_ADDRESSES.has(normalizedRecipient(addr)));
 }
 
 type ResendReceivingEmail = {
@@ -140,6 +150,12 @@ app.post(
         }
 
         if (!targetsSupportInbox(data.to)) {
+          console.warn('resendInboundWebhook: skipped — no support inbox in data.to', {
+            emailId,
+            to: data.to,
+            normalized: coerceToRecipients(data.to).map(normalizedRecipient),
+            wantOneOf: [...SUPPORT_INBOUND_ADDRESSES],
+          });
           res.status(200).send('ok');
           return;
         }
@@ -177,6 +193,7 @@ app.post(
         });
 
         await db.collection('supportInboundMail').doc(emailId).set(doc, { merge: true });
+        console.info('resendInboundWebhook: stored supportInboundMail', emailId);
         res.status(200).json({ ok: true });
       } catch (e) {
         console.error('resendInboundWebhook:', e);
