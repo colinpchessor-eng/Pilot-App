@@ -379,6 +379,12 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Inbound support mail (Resend receiving → Cloud Function); Admin SDK writes only.
+    match /supportInboundMail/{mailId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
     match /emailTemplates/{templateId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();

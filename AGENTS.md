@@ -30,6 +30,8 @@ Public domain: `FlyFDX.com`. Support inbox: `support@flyFDX.com`
   - **Auth** — email/password + session cookies. Middleware gates routes.
   - **App Check** — reCAPTCHA Enterprise in prod, debug token in dev.
   - **App Hosting** — `@apphosting/adapter-nextjs` with `apphosting.yaml`.
+  - **Cloud Functions (gen2)** — `functions/` HTTP webhook for Resend
+    `email.received` → `supportInboundMail` in Firestore.
   - **Trigger Email extension** — writes to the `mail` collection;
     the extension sends via Resend SMTP.
 - **Resend** — transactional email (both via the Trigger Email extension
@@ -41,6 +43,7 @@ Public domain: `FlyFDX.com`. Support inbox: `support@flyFDX.com`
 ## 3. Directory map (what lives where)
 
 ```
+functions/                   Firebase Cloud Functions (gen2) — Resend inbound webhook
 src/
 ├── app/                       Next.js App Router
 │   ├── page.tsx               marketing / login split
@@ -111,6 +114,8 @@ src/
   remain intact for now; data can be purged via `/admin/maintenance`.
 - `mail/{id}` — outbound email queue consumed by the Trigger Email
   extension. Written by `sendEmail()` in `src/lib/email.ts`.
+- `supportInboundMail/{id}` — inbound support messages (Resend receiving
+  webhook → Cloud Function). Admin read only in `firestore.rules`.
 - `auditLog/{id}` — append-only activity events. Written via
   `writeCandidateAuditLog` in `src/lib/candidate-audit.ts`.
 - `deletionRequests/`, `applicationUnlockRequests/` — candidate-submitted
@@ -128,7 +133,8 @@ behavior in production. The short list:
 | `NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN` | App Check (dev only) | — |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Admin SDK on server | Yes (via fallback chain) |
 | `ENCRYPTION_KEY` | `src/lib/encryption-server.ts` (ATP + medical date at rest) | Implicit |
-| `RESEND_API_KEY` | `src/app/actions.ts` admin-inbox alerts | Yes if `EMAIL_FROM` set |
+| `RESEND_API_KEY` | `src/app/actions.ts` admin-inbox alerts; Cloud Function `resendInboundWebhook` (Receiving API) | Yes if `EMAIL_FROM` set (app); Function uses secret |
+| `RESEND_WEBHOOK_SECRET` | Cloud Function `resendInboundWebhook` (Svix verify) | Set via `firebase functions:secrets:set` |
 | `EMAIL_FROM` | `src/lib/email.ts` `resolveFromAddress()` | **Yes in prod** |
 | `EMAIL_REPLY_TO` | `src/lib/email.ts` `resolveReplyToAddress()` | **Yes in prod** |
 | `NEXT_PUBLIC_APP_URL` | `getPublicPortalOrigin()` for email links + ICS UID | **Yes in prod** |
@@ -189,7 +195,10 @@ npm run lint         # ⚠  Next.js 16 removed `next lint`; no ESLint config yet
                      #   Rely on typecheck + ReadLints in-editor for now.
 npm run genkit:dev   # Genkit scaffolding (unused in prod flows)
 firebase deploy --only firestore:rules   # ship rules
+firebase deploy --only functions       # Resend inbound webhook (user-initiated)
 ```
+
+Inbound receiving setup (MX + webhook secrets + deploy order): [`docs/resend-inbound-setup.md`](docs/resend-inbound-setup.md).
 
 ## 8. Live session state
 
