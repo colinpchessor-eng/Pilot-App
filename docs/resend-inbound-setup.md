@@ -39,10 +39,10 @@ Copy the HTTPS URL for **`resendInboundWebhook`** from the CLI output (region `u
 
 ## 5. Verify
 
-1. Send a test email to **support@flyfdx.com** (or the address you route in Resend).
+1. Send a test email to **support@fdxonboard.com** (or the address you route in Resend).
 2. In Firebase: **Functions** logs should show a successful run; **Firestore** should contain `supportInboundMail/{email_id}`.
 3. In the app: **Admin → Activity → Inbound** should list the message.
 
 ## Support address filter
 
-The function only fetches and stores mail whose `to` list includes `support@flyfdx.com` (case-insensitive; supports `Name <support@flyfdx.com>`). To allow more addresses, edit `SUPPORT_INBOUND_ADDRESSES` in [`functions/src/index.ts`](../functions/src/index.ts).
+The function only fetches and stores mail whose `to` list includes `support@fdxonboard.com` (case-insensitive; supports `Name <support@fdxonboard.com>`). To allow more addresses, edit `SUPPORT_INBOUND_ADDRESSES` in [`functions/src/index.ts`](../functions/src/index.ts).

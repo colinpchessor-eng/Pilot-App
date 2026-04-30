@@ -50,7 +50,7 @@ function resolveFromAddress(): string {
       'NEXT_PUBLIC_EMAIL_FROM must be set in production — refusing to send mail without a verified sender.'
     );
   }
-  return 'FedEx Pilot Hiring <FedexPilotHiring@flyfdx.com>';
+  return 'FedEx Pilot Hiring <FedexPilotHiring@fdxonboard.com>';
 }
 
 /** Resolve the Reply-To header for outbound mail. Required in production. */
@@ -94,7 +94,7 @@ export async function sendEmail(
 }
 
 /* -------------------------------------------------------------------------
- * Shared email skeleton (FlyFDX header + unified footer) — used by every
+ * Shared email skeleton (fdxonboard header + unified footer) — used by every
  * candidate-facing template below.
  * ------------------------------------------------------------------------- */
 
@@ -120,11 +120,11 @@ const SHARED_EMAIL_CSS = `
   .footer p { margin: 4px 0; }
 `;
 
-/** Purple FlyFDX.com / Pilot History Portal header used on every candidate email. */
+/** Purple fdxonboard.com / Pilot History Portal header used on every candidate email. */
 function renderEmailHeader(): string {
   return `
   <div class="header">
-    <p class="brand">FlyFDX.com</p>
+    <p class="brand">fdxonboard.com</p>
     <p class="sub">Pilot History Portal</p>
   </div>
   <div class="orange-bar"></div>`;
@@ -227,7 +227,7 @@ export function buildFlowStartedEmail(
         <!-- Unified header image (branding + hero in one image; immune to Gmail iOS dark mode inversion) -->
         <tr>
           <td style="padding:0; line-height:0; font-size:0;">
-            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="FlyFDX.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
+            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="fdxonboard.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
           </td>
         </tr>
 
@@ -241,7 +241,7 @@ export function buildFlowStartedEmail(
 
                   <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Dear ${safeName},</p>
 
-                  <p class="email-muted-dark" style="font-size:16px; line-height:24px; color:#4b4452; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">We are reaching out because your name is on our list of candidates who successfully completed the FedEx flight crew interview process. As we plan upcoming staffing needs we'd like to confirm whether you're still interested in pursuing a career with FedEx.</p>
+                  <p class="email-muted-dark" style="font-size:16px; line-height:24px; color:#4b4452; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Your name remains on our list of people pursuing a FedEx pilot career opportunity. Visit our Onboard site and update your recent flight hours and work history.</p>
 
                   <!-- Important Dates banner -->
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:0 0 24px;">
@@ -253,7 +253,7 @@ export function buildFlowStartedEmail(
                     </tr>
                   </table>
 
-                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">If you would like to remain under consideration please complete the pilot history update form on our secure pilot portal at <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-family:system-ui,Arial,sans-serif;">flyfdx.com</a>.</p>
+                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">If you would like to remain under consideration please complete the pilot history update form on our secure pilot portal at <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-family:system-ui,Arial,sans-serif;">fdxonboard.com</a>.</p>
 
                   <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Your unique Legacy ID is below. You will need it to register and link your new account to your existing profile.</p>
 
@@ -281,7 +281,7 @@ export function buildFlowStartedEmail(
                             <td valign="top" style="padding-right:14px;">
                               <div style="background-color:#1a1d24; color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">1</div>
                             </td>
-                            <td valign="top" class="email-body-dark" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; font-family:system-ui,Arial,sans-serif;">Visit the Pilot History Update Portal at <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-weight:700; text-decoration:none; font-family:system-ui,Arial,sans-serif;">flyfdx.com</a></td>
+                            <td valign="top" class="email-body-dark" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; font-family:system-ui,Arial,sans-serif;">Visit the Pilot History Update Portal at <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-weight:700; text-decoration:none; font-family:system-ui,Arial,sans-serif;">fdxonboard.com</a></td>
                           </tr>
                         </table>
                       </td>
@@ -340,7 +340,7 @@ export function buildFlowStartedEmail(
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:40px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; color:#ffffff; background-color:#1a1d24; font-family:system-ui,Arial,sans-serif;">Go To FlyFDX.com</a>
+                        <a href="${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; color:#ffffff; background-color:#1a1d24; font-family:system-ui,Arial,sans-serif;">Go To fdxonboard.com</a>
                       </td>
                     </tr>
                   </table>
@@ -447,7 +447,7 @@ export function buildSubmissionEmail(
         <!-- Unified header image (branding + hero in one image; immune to Gmail iOS dark mode inversion) -->
         <tr>
           <td style="padding:0; line-height:0; font-size:0;">
-            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="FlyFDX.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
+            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="fdxonboard.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
           </td>
         </tr>
 
@@ -476,7 +476,7 @@ export function buildSubmissionEmail(
               <li>We will contact you regarding next steps within 7 business days</li>
             </ul>
 
-            <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;">If you need to make any corrections or have questions about your submission, please visit the <a href="${portal}/help" class="email-link-dark" style="color:#1a1d24; text-decoration:underline;">Help page</a> on flyfdx.com.</p>
+            <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;">If you need to make any corrections or have questions about your submission, please visit the <a href="${portal}/help" class="email-link-dark" style="color:#1a1d24; text-decoration:underline;">Help page</a> on fdxonboard.com.</p>
 
             <!-- Closing -->
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-divider" style="border-collapse:collapse; border-top:1px solid #e2e2e2;">

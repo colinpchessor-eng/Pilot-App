@@ -8,7 +8,7 @@ import {
 import { FedExBrandMark } from '@/components/brand/fedex-brand-mark';
 
 export const metadata: Metadata = {
-  title: 'Pilot Portal — FlyFDX.com',
+  title: 'Pilot Portal — fdxonboard.com',
   description: 'Flight Operations. Connect Your Legacy to Begin Your Journey.',
 };
 

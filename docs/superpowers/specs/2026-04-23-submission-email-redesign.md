@@ -22,7 +22,7 @@ Option A: Rewrite `buildSubmissionEmail` as a self-contained standalone HTML tem
 
 ### Header
 Gradient purple `portal-header` block, identical to the start flow:
-- `FlyFDX.com` (large white bold)
+- `fdxonboard.com` (large white bold)
 - `Pilot History Portal` (small muted caps)
 - Orange accent line (`::after` pseudo-element)
 
@@ -33,7 +33,7 @@ Gradient purple `portal-header` block, identical to the start flow:
 4. "**What happens next:**"
    - "Our team will review your updated pilot history and flight hours"
    - "We will contact you regarding next steps within 7 business days"
-5. "If you need to make any corrections or have questions about your submission, please visit the [Help page](${portal}/help) on flyfdx.com."
+5. "If you need to make any corrections or have questions about your submission, please visit the [Help page](${portal}/help) on fdxonboard.com."
 6. "We appreciate your interest in joining the FedEx family."
 
 ### Closing / Signature

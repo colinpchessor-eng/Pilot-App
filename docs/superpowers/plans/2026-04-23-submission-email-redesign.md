@@ -73,7 +73,7 @@ export function buildSubmissionEmail(
 
   <!-- Portal branded header -->
   <div class="portal-header">
-    <p class="portal-site"><span style="color:#ffffff; text-decoration:none;">FlyFDX.com</span></p>
+    <p class="portal-site"><span style="color:#ffffff; text-decoration:none;">fdxonboard.com</span></p>
     <p class="portal-name"><span style="color:rgba(255,255,255,0.65); text-decoration:none;">Pilot History Portal</span></p>
   </div>
 
@@ -96,7 +96,7 @@ export function buildSubmissionEmail(
       <li>We will contact you regarding next steps within 7 business days</li>
     </ul>
 
-    <p class="body-text">If you need to make any corrections or have questions about your submission, please visit the <a class="link" href="${portal}/help">Help page</a> on flyfdx.com.</p>
+    <p class="body-text">If you need to make any corrections or have questions about your submission, please visit the <a class="link" href="${portal}/help">Help page</a> on fdxonboard.com.</p>
 
     <!-- Closing -->
     <div class="closing">
@@ -142,7 +142,7 @@ Expected: no errors. If errors appear, fix them before continuing.
 
 Start the dev server (`npm run dev`) and log in as a dev admin. Navigate to the admin devtools email test panel. Send a test `submission` email to your own address. Verify in the received email:
 
-- Gradient purple header with `FlyFDX.com` / `Pilot History Portal`
+- Gradient purple header with `fdxonboard.com` / `Pilot History Portal`
 - Orange accent line below header
 - Green checkmark success box with "Update Received" and submitted date
 - Body text matches verbatim (thank you paragraph, what happens next bullets, help link)
@@ -150,7 +150,7 @@ Start the dev server (`npm run dev`) and log in as a dev admin. Navigate to the 
 - "Best regards," followed by Captain Abegael Autry name/title/email
 - Footer: FedEx brand, © 2026 all rights reserved, address, Privacy/Terms/Unsubscribe links
 - No dark mode color inversions
-- "FlyFDX.com" header text is NOT a hyperlink in iOS Mail
+- "fdxonboard.com" header text is NOT a hyperlink in iOS Mail
 - Dates and phone numbers in the body are NOT auto-linked by iOS Mail
 
 - [ ] **Step 4: Commit**

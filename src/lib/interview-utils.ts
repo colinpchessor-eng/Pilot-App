@@ -19,7 +19,7 @@ export function buildClassIcs(params: {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//FlyFDX Pilot Portal//Calendar//EN',
+    'PRODID:-//fdxonboard Pilot Portal//Calendar//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',

@@ -17,7 +17,7 @@ Admin / HR staff and dev users manage the pipeline, review applications,
 import legacy Paradox data, schedule capacity-based sessions, and send
 templated emails.
 
-Public domain: `FlyFDX.com`. Support inbox: `support@flyFDX.com`
+Public domain: `fdxonboard.com`. Support inbox: `support@fdxonboard.com`
 (`src/lib/support-contact.ts`).
 
 ## 2. Stack
@@ -138,7 +138,7 @@ behavior in production. The short list:
 | `EMAIL_FROM` | `src/lib/email.ts` `resolveFromAddress()` | **Yes in prod** |
 | `EMAIL_REPLY_TO` | `src/lib/email.ts` `resolveReplyToAddress()` | **Yes in prod** |
 | `NEXT_PUBLIC_APP_URL` | `getPublicPortalOrigin()` for email links + ICS UID | **Yes in prod** |
-| `NEXT_PUBLIC_SUPPORT_EMAIL` | `support-contact.ts` (overrides `support@flyFDX.com`) | — |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | `support-contact.ts` (overrides `support@fdxonboard.com`) | — |
 | `PORTAL_REQUESTS_ADMIN_EMAIL` | Admin-inbox alerts (`src/app/actions.ts`) | — |
 | `VERIFICATION_ADMIN_EMAIL` | Fallback admin inbox | — |
 

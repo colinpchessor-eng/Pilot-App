@@ -60,7 +60,7 @@ export function buildFlowStartedEmail(
         <tr>
           <td style="background:linear-gradient(135deg,#1a0033 0%,#330066 35%,#4D148C 65%,#7c2fc4 100%); padding:32px 28px 28px;">
             <p style="font-size:26px; font-weight:900; color:#ffffff; margin:0 0 4px; letter-spacing:-0.01em;">
-              <span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></span>
+              <span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">fdxonboard.com</span></span>
             </p>
             <p style="font-size:13px; font-weight:700; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.12em; margin:0;">
               <span class="gmail-difference"><span class="gmail-screen" style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></span>
@@ -91,7 +91,7 @@ export function buildFlowStartedEmail(
               </tr>
             </table>
 
-            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you would like to remain under consideration please complete the pilot history update form on our secure pilot portal at <a href="\${portal}/signup" style="color:#4D148C; font-weight:700;">flyfdx.com</a>.</p>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you would like to remain under consideration please complete the pilot history update form on our secure pilot portal at <a href="\${portal}/signup" style="color:#4D148C; font-weight:700;">fdxonboard.com</a>.</p>
 
             <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">Your unique Legacy ID is below. You will need it to register and link your new account to your existing profile.</p>
 
@@ -118,7 +118,7 @@ export function buildFlowStartedEmail(
                       <td valign="top" style="padding-right:14px;">
                         <div style="background-color:#330066; background-image:linear-gradient(#330066,#330066); color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px;">1</div>
                       </td>
-                      <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c;" class="email-body-dark">Visit the Pilot History Update Portal at <a href="\${portal}/signup" style="color:#4D148C; font-weight:700; text-decoration:none;">flyfdx.com</a></td>
+                      <td valign="top" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c;" class="email-body-dark">Visit the Pilot History Update Portal at <a href="\${portal}/signup" style="color:#4D148C; font-weight:700; text-decoration:none;">fdxonboard.com</a></td>
                     </tr>
                   </table>
                 </td>
@@ -178,7 +178,7 @@ export function buildFlowStartedEmail(
               <tr>
                 <td align="center">
                   <a href="\${portal}/signup" style="display:inline-block; font-size:16px; font-weight:600; line-height:24px; padding:16px 40px; border-radius:12px; text-decoration:none; background-color:#4D148C; background-image:linear-gradient(135deg,#4D148C 0%,#7D22C3 55%,#FF6200 100%);">
-                    <span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important;">Go To FlyFDX.com</span></span>
+                    <span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important;">Go To fdxonboard.com</span></span>
                   </a>
                 </td>
               </tr>
@@ -291,7 +291,7 @@ export function buildSubmissionEmail(
         <tr>
           <td style="background:linear-gradient(135deg,#1a0033 0%,#330066 35%,#4D148C 65%,#7c2fc4 100%); padding:32px 28px 28px;">
             <p style="font-size:26px; font-weight:900; color:#ffffff; margin:0 0 4px; letter-spacing:-0.01em;">
-              <span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">FlyFDX.com</span></span>
+              <span class="gmail-difference"><span class="gmail-screen" style="color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; text-decoration:none;">fdxonboard.com</span></span>
             </p>
             <p style="font-size:13px; font-weight:700; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.12em; margin:0;">
               <span class="gmail-difference"><span class="gmail-screen" style="color:rgba(255,255,255,0.65) !important; -webkit-text-fill-color:rgba(255,255,255,0.65) !important; text-decoration:none;">Pilot History Portal</span></span>
@@ -329,7 +329,7 @@ export function buildSubmissionEmail(
               <li>We will contact you regarding next steps within 7 business days</li>
             </ul>
 
-            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you need to make any corrections or have questions about your submission, please visit the <a href="\${portal}/help" style="color:#4D148C; text-decoration:underline;">Help page</a> on flyfdx.com.</p>
+            <p style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px;" class="email-body-dark">If you need to make any corrections or have questions about your submission, please visit the <a href="\${portal}/help" style="color:#4D148C; text-decoration:underline;">Help page</a> on fdxonboard.com.</p>
 
             <!-- Closing -->
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; border-top:1px solid #e2e2e2;">

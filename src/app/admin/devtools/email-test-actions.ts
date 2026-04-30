@@ -28,8 +28,8 @@ export async function testEmailDelivery(input: {
   }
 
   const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, '') || 'http://localhost:3000';
-  const fromAddr = process.env.EMAIL_FROM || process.env.NEXT_PUBLIC_EMAIL_FROM || 'FedEx Pilot Hiring <FedexPilotHiring@flyfdx.com>';
-  const replyToAddr = process.env.EMAIL_REPLY_TO || process.env.NEXT_PUBLIC_EMAIL_REPLY_TO || 'noreply@flyfdx.com';
+  const fromAddr = process.env.EMAIL_FROM || process.env.NEXT_PUBLIC_EMAIL_FROM || 'FedEx Pilot Hiring <FedexPilotHiring@fdxonboard.com>';
+  const replyToAddr = process.env.EMAIL_REPLY_TO || process.env.NEXT_PUBLIC_EMAIL_REPLY_TO || 'noreply@fdxonboard.com';
 
   const docRef = await db.collection('mail').add({
     to: input.targetEmail,

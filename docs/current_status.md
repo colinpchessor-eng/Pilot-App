@@ -13,7 +13,7 @@ _Last updated: 2026-04-22 (before first cross-machine push)._
 ### Canonical plan
 
 [`.cursor/plans/support_tickets_and_email_domain_16384eba.plan.md`](../.cursor/plans/support_tickets_and_email_domain_16384eba.plan.md)
-— the master multi-phase plan covering the FlyFDX.com rebrand, email
+— the master multi-phase plan covering the fdxonboard.com rebrand, email
 domain migration, support-ticket overhaul, admin inbox, bell
 notifications, and App Hosting deploy.
 
@@ -28,7 +28,7 @@ Scope:
 - Added production fail-fast env resolution for `NEXT_PUBLIC_APP_URL`,
   `EMAIL_FROM`, `EMAIL_REPLY_TO`.
 - Introduced shared email header / footer (`renderEmailShell` helper)
-  with the unified FlyFDX.com / Pilot History Portal branding.
+  with the unified fdxonboard.com / Pilot History Portal branding.
 - Rewrote Email 2 (`buildFlowStartedEmail`), Email 2b
   (`buildSubmissionEmail`), Email 3 (`buildIndoctrinationEmail`, renamed
   from `buildInterviewEmail`).
