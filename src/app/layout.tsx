@@ -7,7 +7,7 @@ import { ParallaxRoot } from '@/components/parallax-root';
 import { PageTransition } from '@/components/page-transition';
 
 export const metadata: Metadata = {
-  title: 'Pilot Portal — FlyFDX.com',
+  title: 'Pilot Portal — fdxonboard.com',
   description: 'Flight Operations. Connect Your Legacy to Begin Your Journey.',
   icons: {
     icon: [{ url: '/assets/favicon.svg', type: 'image/svg+xml' }],

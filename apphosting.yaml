@@ -18,17 +18,17 @@ env:
   #     can bake them into the client-side React code that calls
   #     sendEmail / getPublicPortalOrigin / resolveFromAddress). ---
   - variable: NEXT_PUBLIC_APP_URL
-    value: "https://flyfdx.com"
+    value: "https://fdxonboard.com"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_EMAIL_FROM
-    value: "FedEx Pilot Hiring <FedExPilotHiring@flyfdx.com>"
+    value: "FedEx Pilot Hiring <FedExPilotHiring@fdxonboard.com>"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_EMAIL_REPLY_TO
-    value: "support@flyfdx.com"
+    value: "support@fdxonboard.com"
     availability:
       - BUILD
       - RUNTIME

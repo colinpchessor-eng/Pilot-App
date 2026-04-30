@@ -253,11 +253,11 @@ export function buildFlowStartedEmail(
                     </tr>
                   </table>
 
-                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">If you would like to remain under consideration please complete the pilot history update form on our secure pilot portal at <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-family:system-ui,Arial,sans-serif;">fdxonboard.com</a>.</p>
+                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Please complete the pilot history update form on our secure pilot portal at <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-family:system-ui,Arial,sans-serif;">fdxonboard.com</a>.</p>
 
-                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Your unique Legacy ID is below. You will need it to register and link your new account to your existing profile.</p>
+                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Your unique Legacy ID is below. You will need it to register and link your new account to your existing flight records.</p>
 
-                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Once logged in, your latest flight information will be displayed. Please fill in the gap in flight information from these dates until present.</p>
+                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Once logged in, your latest flight and employment information will be displayed. Please fill in the gap in this information from these dates until present.</p>
 
                   <!-- Legacy ID card -->
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:0 0 16px;">
@@ -297,7 +297,7 @@ export function buildFlowStartedEmail(
                             <td valign="top" style="padding-right:14px;">
                               <div style="background-color:#1a1d24; color:#ffffff; width:30px; height:30px; border-radius:50%; font-size:13px; font-weight:700; text-align:center; line-height:30px; min-width:30px; font-family:system-ui,Arial,sans-serif;">2</div>
                             </td>
-                            <td valign="top" class="email-body-dark" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; font-family:system-ui,Arial,sans-serif;">Register for an account using <strong>${candidateEmail}</strong> as your email address</td>
+                            <td valign="top" class="email-body-dark" style="padding-top:5px; font-size:14px; line-height:20px; color:#1a1c1c; font-family:system-ui,Arial,sans-serif;">Register for an account.</td>
                           </tr>
                         </table>
                       </td>
@@ -349,10 +349,10 @@ export function buildFlowStartedEmail(
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-divider" style="border-collapse:collapse; border-top:1px solid #e2e2e2;">
                     <tr>
                       <td style="padding-top:24px;">
-                        <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">If you have any questions, please visit our <a href="${portal}/help" class="email-link-dark" style="color:#1a1d24; font-family:system-ui,Arial,sans-serif;">Help page</a>. Thank you for your continued interest in FedEx, and best wishes in your professional journey.</p>
+                        <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">If you have any questions, please email pilot_hiring@fedex.com" class="email-link-dark" style="color:#1a1d24; font-family:system-ui,Arial,sans-serif;">Help page</a>. Thank you for your continued interest in FedEx, and best wishes in your professional journey.</p>
                         <p class="email-body-dark" style="font-size:20px; font-weight:600; color:#1a1c1c; margin:0 0 4px; font-family:system-ui,Arial,sans-serif;">Captain Abegael Autry</p>
                         <p class="email-muted-dark" style="font-size:14px; color:#4b4452; margin:0 0 4px; font-family:system-ui,Arial,sans-serif;">Senior Manager Fleet Standardization and Pilot Recruitment</p>
-                        <a href="mailto:amautry@fedex.com" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-size:14px; text-decoration:none; font-family:system-ui,Arial,sans-serif;">amautry@fedex.com</a>
+                        <a href="mailto:amautry@fedex.com" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-size:14px; text-decoration:none; font-family:system-ui,Arial,sans-serif;">Pilot_Hiring@fedex.com</a>
                       </td>
                     </tr>
                   </table>

@@ -957,7 +957,7 @@ Once you plug in that API key and hit save in the Firebase Console, those emails
 
 ### User Input
 
-for the public app url what should it be for testing and for live. My live app is hosted vie firebase app hosting the domain is from cloudfare https://flyfdx.com
+for the public app url what should it be for testing and for live. My live app is hosted vie firebase app hosting the domain is from cloudfare https://fdxonboard.com
 
 ### Planner Response
 
@@ -974,23 +974,23 @@ NEXT_PUBLIC_APP_URL="http://localhost:9002"
 ### For Live Production (in Firebase App Hosting)
 For your live production environment, it needs to be your official domain so candidates are sent to the real website:
 ```env
-NEXT_PUBLIC_APP_URL="https://flyfdx.com"
+NEXT_PUBLIC_APP_URL="https://fdxonboard.com"
 ```
 
 **How to set it for live production:**
-Because you are using Firebase App Hosting, you don't put the live URL in your `.env.local` file (since that file stays on your computer). Instead, you'll want to set it in the Google Cloud Console for your App Hosting backend, or define it in your `apphosting.yaml` file so that Firebase knows to use `https://flyfdx.com` when it builds the live site!
+Because you are using Firebase App Hosting, you don't put the live URL in your `.env.local` file (since that file stays on your computer). Instead, you'll want to set it in the Google Cloud Console for your App Hosting backend, or define it in your `apphosting.yaml` file so that Firebase knows to use `https://fdxonboard.com` when it builds the live site!
 
 ### User Input
 
-ok i have it saved in my app hosting envorimnet under NEXT_PUBLIC_APP_URL value flyfdx.com
+ok i have it saved in my app hosting envorimnet under NEXT_PUBLIC_APP_URL value fdxonboard.com
 
 ### Planner Response
 
 Wait! Make sure you add **`https://`** to the beginning of it in your App Hosting environment. 
 
-It needs to be exactly: **`https://flyfdx.com`**
+It needs to be exactly: **`https://fdxonboard.com`**
 
-If you leave it as just `flyfdx.com`, the email links will break. When an applicant clicks the button in their email, their email client (like Gmail) will think it's a relative link and try to send them to something weird like `mail.google.com/flyfdx.com` instead of the actual website! 
+If you leave it as just `fdxonboard.com`, the email links will break. When an applicant clicks the button in their email, their email client (like Gmail) will think it's a relative link and try to send them to something weird like `mail.google.com/fdxonboard.com` instead of the actual website! 
 
 Once you add the `https://`, you'll be 100% good to go.
 
@@ -1067,7 +1067,7 @@ message
 
 
 html
-"<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <style> body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; } .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.1); } .header { background: #4D148C; padding: 32px 40px; text-align: left; } .header .brand { color: white; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 0.01em; } .header .sub { color: #F3EAFB; margin: 4px 0 0; font-size: 14px; font-weight: 400; letter-spacing: 0.02em; } .orange-bar { height: 4px; background: #FF6200; } .body { padding: 40px; color: #333333; line-height: 1.6; } .cta-button { display: inline-block; background: #FF6200; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; margin: 24px 0; } .id-box { background: #f5f0ff; border: 2px solid #4D148C; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; } .id-label { font-size: 12px; color: #8E8E8E; text-transform: uppercase; letter-spacing: 0.1em; } .id-value { font-size: 32px; font-weight: bold; color: #4D148C; letter-spacing: 0.2em; margin-top: 8px; } .steps { background: #fafafa; border-radius: 8px; padding: 20px; margin: 20px 0; } .step { display: flex; align-items: flex-start; margin-bottom: 12px; } .step-num { background: #4D148C; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 12px; flex-shrink: 0; } .success-box { background: #f0fff4; border: 2px solid #008A00; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; } .info-box { background: #f5f0ff; border-left: 4px solid #4D148C; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; } .link { color: #4D148C; text-decoration: underline; } .footer { background: #f5f5f5; padding: 24px 40px; font-size: 12px; color: #8E8E8E; } .footer p { margin: 4px 0; } </style> </head> <body> <div class="container"> <div class="header"> <p class="brand">FlyFDX.com</p> <p class="sub">Pilot History Portal</p> </div> <div class="orange-bar"></div> <div class="body"> <p>Dear Jonathan Becraft,</p> <p>We are reaching out to invite you to update your pilot history through our secure Pilot History Update Portal.</p> <p>Your unique Candidate ID is below. You will need it to register and link your new account to your existing profile.</p> <div class="id-box"> <div class="id-label">Your Candidate ID</div> <div class="id-value">123575840</div> </div> <p><strong>To get started:</strong></p> <div class="steps"> <div class="step"> <div class="step-num">1</div> <div>Visit the Pilot Portal at <strong>localhost:9002</strong></div> </div> <div class="step"> <div class="step-num">2</div> <div>Register for an account using <strong>colinpchessor@gmail.com</strong> as your email address</div> </div> <div class="step"> <div class="step-num">3</div> <div>Enter your Candidate ID when prompted to link your portal account</div> </div> <div class="step"> <div class="step-num">4</div> <div>Review your legacy data and submit your updated information.</div> </div> </div> <a href="http://localhost:9002" class="cta-button">Access Pilot Portal</a> <p style="color:#8E8E8E; font-size:13px;">If you have any questions, please visit our <a class="link" href="http://localhost:9002/help">Help page</a>.</p> </div> <div class="footer"> <p>© 2026 FedEx Express. All rights reserved.</p> <p>This email was sent to colinpchessor@gmail.com because you have expressed interest in joining FedEx Express.</p> <p>FedEx Express · 3610 Hacks Cross Rd · Memphis, TN 38125</p> </div> </div> </body> </html>"
+"<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <style> body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; } .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.1); } .header { background: #4D148C; padding: 32px 40px; text-align: left; } .header .brand { color: white; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 0.01em; } .header .sub { color: #F3EAFB; margin: 4px 0 0; font-size: 14px; font-weight: 400; letter-spacing: 0.02em; } .orange-bar { height: 4px; background: #FF6200; } .body { padding: 40px; color: #333333; line-height: 1.6; } .cta-button { display: inline-block; background: #FF6200; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; margin: 24px 0; } .id-box { background: #f5f0ff; border: 2px solid #4D148C; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; } .id-label { font-size: 12px; color: #8E8E8E; text-transform: uppercase; letter-spacing: 0.1em; } .id-value { font-size: 32px; font-weight: bold; color: #4D148C; letter-spacing: 0.2em; margin-top: 8px; } .steps { background: #fafafa; border-radius: 8px; padding: 20px; margin: 20px 0; } .step { display: flex; align-items: flex-start; margin-bottom: 12px; } .step-num { background: #4D148C; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 12px; flex-shrink: 0; } .success-box { background: #f0fff4; border: 2px solid #008A00; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; } .info-box { background: #f5f0ff; border-left: 4px solid #4D148C; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; } .link { color: #4D148C; text-decoration: underline; } .footer { background: #f5f5f5; padding: 24px 40px; font-size: 12px; color: #8E8E8E; } .footer p { margin: 4px 0; } </style> </head> <body> <div class="container"> <div class="header"> <p class="brand">fdxonboard.com</p> <p class="sub">Pilot History Portal</p> </div> <div class="orange-bar"></div> <div class="body"> <p>Dear Jonathan Becraft,</p> <p>We are reaching out to invite you to update your pilot history through our secure Pilot History Update Portal.</p> <p>Your unique Candidate ID is below. You will need it to register and link your new account to your existing profile.</p> <div class="id-box"> <div class="id-label">Your Candidate ID</div> <div class="id-value">123575840</div> </div> <p><strong>To get started:</strong></p> <div class="steps"> <div class="step"> <div class="step-num">1</div> <div>Visit the Pilot Portal at <strong>localhost:9002</strong></div> </div> <div class="step"> <div class="step-num">2</div> <div>Register for an account using <strong>colinpchessor@gmail.com</strong> as your email address</div> </div> <div class="step"> <div class="step-num">3</div> <div>Enter your Candidate ID when prompted to link your portal account</div> </div> <div class="step"> <div class="step-num">4</div> <div>Review your legacy data and submit your updated information.</div> </div> </div> <a href="http://localhost:9002" class="cta-button">Access Pilot Portal</a> <p style="color:#8E8E8E; font-size:13px;">If you have any questions, please visit our <a class="link" href="http://localhost:9002/help">Help page</a>.</p> </div> <div class="footer"> <p>© 2026 FedEx Express. All rights reserved.</p> <p>This email was sent to colinpchessor@gmail.com because you have expressed interest in joining FedEx Express.</p> <p>FedEx Express · 3610 Hacks Cross Rd · Memphis, TN 38125</p> </div> </div> </body> </html>"
 (string)
 
 
@@ -1136,7 +1136,7 @@ Since I modified your `.env.local` file, **you must restart your development ser
 2. Stop it (`Ctrl + C`).
 3. Start it again (`npm run dev`).
 
-Once it boots back up, click "Start Flow" again. This time it will correctly read the `flyfdx.com` email address, and Resend will accept it with a `SUCCESS`! (Make sure you also make the same `NEXT_PUBLIC_` name changes in your App Hosting environment variables for production).
+Once it boots back up, click "Start Flow" again. This time it will correctly read the `fdxonboard.com` email address, and Resend will accept it with a `SUCCESS`! (Make sure you also make the same `NEXT_PUBLIC_` name changes in your App Hosting environment variables for production).
 
 ### User Input
 
@@ -1181,10 +1181,10 @@ By making these updates, **that single email field on the Candidates page now ac
 
 ### User Input
 
-this is the start flow email change the language to replace candidate ID to "Legacy ID" and then under the to Get Started: make the numbers look better and in the center of the circle, change pilot portal to Pilot History Update Portal and hardcode flyfdx.com 
+this is the start flow email change the language to replace candidate ID to "Legacy ID" and then under the to Get Started: make the numbers look better and in the center of the circle, change pilot portal to Pilot History Update Portal and hardcode fdxonboard.com 
 the registered account should be the same as the email that this was sent to. 
 
-the access pilot portal button should say Go To Fly FDX.com 
+the access pilot portal button should say Go To fdxonboard.com 
 
 *Viewed [email.ts](file:///c:/Users/colin/Projects/Work/Pilot-App/Pilot-App/src/lib/email.ts) *
 
@@ -1198,8 +1198,8 @@ Here are the changes I made to `src/lib/email.ts`:
 1. **Centered the numbers:** Email clients (like Outlook or older versions of Gmail) are notorious for ignoring CSS `flexbox` properties, which is why those numbers got squashed to the top-left! I updated the CSS to use `line-height` and `text-align` which forces the numbers to the dead center of the circles regardless of the email client.
 2. **Text Updates:** Swapped out all mentions of "Candidate ID" to say "Legacy ID".
 3. **Portal Wording:** Changed "Pilot Portal" to "Pilot History Update Portal".
-4. **Hardcoded Domain:** Removed the dynamic domain text and hardcoded `flyfdx.com` into the step 1 instructions.
-5. **Button Wording:** The button now says "Go To Fly FDX.com".
+4. **Hardcoded Domain:** Removed the dynamic domain text and hardcoded `fdxonboard.com` into the step 1 instructions.
+5. **Button Wording:** The button now says "Go To fdxonboard.com".
 
 If you trigger another test flow, the new template will look perfect!
 
@@ -1249,7 +1249,7 @@ Now, Google Password Manager (as well as Apple Keychain, 1Password, etc.) will i
 
 ### User Input
 
-This is the current e-mail after submission let's change the wording after what happens next it will have a bullet point says our team will review your updated pilot history and flight hours the next bullet point will say we will send these over to our legacy application system for merging and background check and review the next bullet point wants a review and background check is complete we will reach out via e-mail or phone to schedule your in doc dates and then continue the page that says if you need to make any corrections or about your submission please visit the help page on flyfdx.com and make sure that help page link links back to the website help page and remove express after FedEx everywhere on this e-mail
+This is the current e-mail after submission let's change the wording after what happens next it will have a bullet point says our team will review your updated pilot history and flight hours the next bullet point will say we will send these over to our legacy application system for merging and background check and review the next bullet point wants a review and background check is complete we will reach out via e-mail or phone to schedule your in doc dates and then continue the page that says if you need to make any corrections or about your submission please visit the help page on fdxonboard.com and make sure that help page link links back to the website help page and remove express after FedEx everywhere on this e-mail
 
 *Viewed [email.ts](file:///c:/Users/colin/Projects/Work/Pilot-App/Pilot-App/src/lib/email.ts) *
 
@@ -1261,12 +1261,12 @@ I have updated the "Update Received" submission email as well as the overarching
 
 Here are the exact changes that were made:
 1. **"What happens next" Bullets**: I completely replaced the bullets with your new copy detailing the legacy system merging, background check, and the timeline for scheduling "in doc" dates.
-2. **Help Page Link**: I updated the help page line to say "on flyfdx.com" and changed the actual clickable link so that it directs them to the public `flyfdx.com/help` page instead of the signed-in dashboard help page.
+2. **Help Page Link**: I updated the help page line to say "on fdxonboard.com" and changed the actual clickable link so that it directs them to the public `fdxonboard.com/help` page instead of the signed-in dashboard help page.
 3. **Removed "Express"**: I went through every single email template (Start Flow, Submission, Indoctrination, and the global email Footer) and stripped out the word "Express" so that it just reads "FedEx" and "FedEx Pilot Recruiting Team" everywhere!
 
 ### User Input
 
-Let's change the browser tab instead of it saying FedEx pilot portal let's have it say fly fdx.com
+Let's change the browser tab instead of it saying FedEx pilot portal let's have it say fdxonboard.com
 
 *Viewed [layout.tsx](file:///c:/Users/colin/Projects/Work/Pilot-App/Pilot-App/src/app/layout.tsx) *
 
@@ -1274,7 +1274,7 @@ Let's change the browser tab instead of it saying FedEx pilot portal let's have 
 
 ### Planner Response
 
-I've updated the root layout of the app! The browser tab will now display `FlyFDX.com` instead of "FedEx Pilot Portal" across all pages.
+I've updated the root layout of the app! The browser tab will now display `fdxonboard.com` instead of "FedEx Pilot Portal" across all pages.
 
 ### User Input
 
