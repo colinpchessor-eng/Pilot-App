@@ -339,7 +339,7 @@ export function InteriorNavbar() {
       >
         {/* Pill Logo */}
         <Link href={brandHref} className="flex shrink-0 items-center">
-          <FedExBrandMark height={28} />
+          <FedExBrandMark height={48} />
         </Link>
 
         {/* Desktop Nav — centered cluster */}

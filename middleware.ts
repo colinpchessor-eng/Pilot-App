@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 const SESSION_COOKIE = 'ff_session';
 
 function isPublicPath(pathname: string) {
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    pathname === '/email-preview-flow-started'
+  ) {
+    return true;
+  }
+
   return (
     pathname === '/' ||
     pathname.startsWith('/login') ||

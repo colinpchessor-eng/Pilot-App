@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-/** Collective Engineering wordmark (FedEx Collective); `public/assets/collective_eng_2c_pos_rgb.svg`. */
-const LOGO_SOURCES = ['/assets/collective_eng_2c_pos_rgb.svg'] as const;
+/** FDX Onboard wordmark; `public/assets/FDX_Onboard_logo_dark_transparent.png`. */
+const LOGO_SOURCES = ['/assets/FDX_Onboard_logo_dark_transparent.png'] as const;
 
 type FedExBrandMarkProps = {
   className?: string;
@@ -14,7 +14,7 @@ type FedExBrandMarkProps = {
 
 /**
  * Brand mark image with text fallback matching app colors.
- * Asset: `public/assets/collective_eng_2c_pos_rgb.svg`
+ * Asset: `public/assets/FDX_Onboard_logo_dark_transparent.png`
  */
 export function FedExBrandMark({ className, height = 28 }: FedExBrandMarkProps) {
   const [sourceIndex, setSourceIndex] = useState(0);
@@ -22,12 +22,11 @@ export function FedExBrandMark({ className, height = 28 }: FedExBrandMarkProps) 
   if (sourceIndex >= LOGO_SOURCES.length) {
     return (
       <span
-        className={cn('inline-flex items-center font-bold italic leading-none', className)}
+        className={cn('inline-flex items-center font-bold leading-none', className)}
         style={{ fontSize: Math.max(14, height * 0.72) }}
       >
-        <span className="text-[#4D148C]">Fed</span>
-        <span className="text-[#FF6200]">Ex</span>
-        <span className="ml-0.5 align-top text-[0.55em] text-[#FF6200]">®</span>
+        <span className="text-[#4D148C]">FDX</span>
+        <span className="ml-1 text-[#FF6200]">ONBOARD</span>
       </span>
     );
   }
@@ -37,9 +36,9 @@ export function FedExBrandMark({ className, height = 28 }: FedExBrandMarkProps) 
   return (
     <img
       src={src}
-      alt="FedEx"
+      alt="FDX Onboard"
       height={height}
-      className={cn('w-auto max-w-[200px] object-contain object-left', className)}
+      className={cn('w-auto max-w-[min(320px,85vw)] object-contain object-left', className)}
       style={{ height }}
       onError={() => setSourceIndex((i) => i + 1)}
     />

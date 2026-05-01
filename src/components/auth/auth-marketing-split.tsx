@@ -87,7 +87,7 @@ export function AuthMarketingSplit({ variant, heroDescription, children }: AuthM
             <div className="flex shrink-0 items-end justify-between px-12 pb-12 xl:px-16">
               <ProgressMarkers variant={variant} />
               <div className="flex flex-col items-end text-right">
-                <FedExBrandMark height={32} />
+                <FedExBrandMark height={52} />
                 <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/85">
                   Flight Operations
                 </p>

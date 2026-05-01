@@ -18,8 +18,11 @@ export default function SignupPage() {
       variant="signup"
       heroDescription="Join the world's largest express transportation company. Your journey to the cockpit begins here."
     >
-      <div className="mb-10 flex justify-center lg:hidden">
-        <FedExBrandMark height={44} />
+      <div className="mb-8 flex justify-center sm:mb-10">
+        <FedExBrandMark
+          height={144}
+          className="mx-auto max-w-[min(600px,calc(100vw-4rem))] object-contain"
+        />
       </div>
 
       <div className="auth-glass-panel rounded-3xl border border-white/50 p-10 shadow-[0_25px_60px_-15px_rgba(77,20,140,0.12)] md:p-12">
@@ -28,7 +31,7 @@ export default function SignupPage() {
             Create Account
           </h2>
           <p className="mt-2 text-[15px] font-medium text-[#565656]">
-            Enter your details to start your application
+            Enter your details to start your update
           </p>
         </div>
 

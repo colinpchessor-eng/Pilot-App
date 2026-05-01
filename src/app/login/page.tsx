@@ -18,8 +18,11 @@ export default function LoginPage() {
       variant="login"
       heroDescription="Connect Your Legacy to Begin Your Journey."
     >
-      <div className="mb-10 flex justify-center lg:hidden">
-        <FedExBrandMark height={44} />
+      <div className="mb-8 flex justify-center sm:mb-10">
+        <FedExBrandMark
+          height={144}
+          className="mx-auto max-w-[min(600px,calc(100vw-4rem))] object-contain"
+        />
       </div>
 
       <div className="auth-glass-panel rounded-3xl border border-white/50 p-10 shadow-[0_25px_60px_-15px_rgba(77,20,140,0.12)] md:p-12">
@@ -28,14 +31,14 @@ export default function LoginPage() {
             Welcome Back
           </h2>
           <p className="mt-2 text-[15px] font-medium text-[#565656]">
-            Access your flight deck dashboard.
+            Access your Pilot History Portal
           </p>
         </div>
 
         <LoginForm />
 
         <p className="mt-4 text-center text-[12px] text-[#8E8E8E]">
-          HR Staff — use your FedEx email to sign in. No Candidate ID required.
+          HR Staff — use your FedEx email to sign in. No Legacy ID required.
         </p>
 
         <p className="mt-10 text-center text-sm font-medium text-[#565656]">

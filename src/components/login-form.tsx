@@ -197,12 +197,12 @@ export function LoginForm() {
                     type="email"
                     placeholder="name@fedex.com"
                     autoComplete="email"
-                    className="auth-inset-field h-14 rounded-2xl border-0 bg-white pl-6 pr-12 text-[15px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0"
+                    className="auth-inset-field h-[73px] rounded-2xl border-0 bg-white pl-8 pr-14 text-[20px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0"
                     {...field}
                   />
                 </FormControl>
                 <Mail
-                  className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#B8B8C8]"
+                  className="pointer-events-none absolute right-5 top-1/2 h-[26px] w-[26px] -translate-y-1/2 text-[#B8B8C8]"
                   aria-hidden
                 />
               </div>
@@ -220,7 +220,7 @@ export function LoginForm() {
                 <button
                   type="button"
                   onClick={openForgotPassword}
-                  className="shrink-0 cursor-pointer text-[11px] font-bold text-[#4D148C] transition-colors hover:text-[#FF6200]"
+                  className="shrink-0 cursor-pointer text-[14px] font-bold text-[#4D148C] transition-colors hover:text-[#FF6200]"
                 >
                   Forgot password?
                 </button>
@@ -231,12 +231,12 @@ export function LoginForm() {
                     type="password"
                     placeholder="••••••••"
                     autoComplete="current-password"
-                    className="auth-inset-field h-14 rounded-2xl border-0 bg-white pl-6 pr-12 text-[15px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0"
+                    className="auth-inset-field h-[73px] rounded-2xl border-0 bg-white pl-8 pr-14 text-[20px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0"
                     {...field}
                   />
                 </FormControl>
                 <Lock
-                  className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#B8B8C8]"
+                  className="pointer-events-none absolute right-5 top-1/2 h-[26px] w-[26px] -translate-y-1/2 text-[#B8B8C8]"
                   aria-hidden
                 />
               </div>
@@ -259,10 +259,10 @@ export function LoginForm() {
                   name={field.name}
                   ref={field.ref}
                   className="shrink-0 cursor-pointer rounded border-[#E3E3E3] text-[#4D148C] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4D148C]"
-                  style={{ width: 18, height: 18, minWidth: 18, accentColor: '#4D148C' }}
+                  style={{ width: 23, height: 23, minWidth: 23, accentColor: '#4D148C' }}
                 />
               </FormControl>
-              <FormLabel className="!mt-0 cursor-pointer text-[13px] font-medium leading-normal text-[#565656]">
+              <FormLabel className="!mt-0 cursor-pointer text-[17px] font-medium leading-normal text-[#565656]">
                 Remember me
               </FormLabel>
             </FormItem>
@@ -272,15 +272,15 @@ export function LoginForm() {
         <div className="pt-2">
           <Button
             type="submit"
-            className="group fedex-btn-primary h-14 w-full text-base font-bold"
+            className="group fedex-btn-primary h-[73px] w-full text-[21px] font-bold"
             disabled={loading}
           >
             {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-6 w-6 animate-spin" />
             ) : (
               <>
                 <span>Sign In to Portal</span>
-                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-0.5" />
               </>
             )}
           </Button>
@@ -305,7 +305,7 @@ export function LoginForm() {
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 placeholder="name@fedex.com"
-                className="h-12 rounded-2xl border border-[#E3E3E3] bg-white px-4 text-[15px] font-medium text-[#333333]"
+                className="h-[62px] rounded-2xl border border-[#E3E3E3] bg-white px-4 text-[20px] font-medium text-[#333333]"
                 autoComplete="email"
               />
             </div>

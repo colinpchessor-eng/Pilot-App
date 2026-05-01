@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-[#333333]">Admin Dashboard</h1>
+        <h1 className="text-[36px] font-bold text-[#333333]">Admin Dashboard</h1>
         <p className="text-[14px] text-[#8E8E8E] mt-1">Overview of all candidate and pilot history update data</p>
       </div>
 

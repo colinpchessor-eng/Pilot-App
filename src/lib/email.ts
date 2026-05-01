@@ -27,7 +27,11 @@ export interface EmailRecord {
 export function getPublicPortalOrigin(): string {
   const raw =
     (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL?.trim()) || '';
-  if (raw) return raw.replace(/\/+$/, '');
+  if (raw) {
+    const trimmed = raw.replace(/\/+$/, '');
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed.replace(/^\/+/, '')}`;
+  }
   const isProd =
     typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
   if (isProd) {
@@ -35,7 +39,44 @@ export function getPublicPortalOrigin(): string {
       'NEXT_PUBLIC_APP_URL must be set in production — refusing to build email links without a public origin.'
     );
   }
-  return 'http://localhost:3000';
+  /* Match `next dev --turbopack -p 9002` so local email previews load /public assets. */
+  return 'http://localhost:9002';
+}
+
+/** Encode `&` in URLs placed in HTML attributes so strict email clients do not truncate the message. */
+export function encodeUrlForHtmlAttribute(url: string): string {
+  return url.replace(/&/g, '&amp;');
+}
+
+/**
+ * Footer wordmark in Firebase Storage
+ * (`gs://studio-3449665797-2559e.firebasestorage.app/FDX_Onboard_logo_dark_transparent.png`).
+ * Hosted URL avoids first-party-portal `/assets/` fetches many clients block or proxy poorly.
+ *
+ * Rotate token in Console → recreate URL, then update here or set
+ * `NEXT_PUBLIC_EMAIL_FOOTER_ONBOARD_LOGO_URL`.
+ */
+const DEFAULT_ONBOARD_EMAIL_FOOTER_LOGO_FIREBASE_URL =
+  'https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/FDX_Onboard_logo_dark_transparent.png?alt=media&token=dead7280-f309-4a81-924b-58b4eb9990ca';
+
+/** Absolute URL for footer wordmark `<img src>` in HTML emails. */
+export function resolveOnboardEmailFooterLogoUrl(): string {
+  const fromEnv =
+    typeof process !== 'undefined' &&
+    process.env.NEXT_PUBLIC_EMAIL_FOOTER_ONBOARD_LOGO_URL?.trim();
+  return fromEnv || DEFAULT_ONBOARD_EMAIL_FOOTER_LOGO_FIREBASE_URL;
+}
+
+/** Centered FDX Onboard wordmark for HTML email footers. */
+function onboardWordmarkFooterMarkup(): string {
+  const src = encodeUrlForHtmlAttribute(resolveOnboardEmailFooterLogoUrl());
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 8px; border-collapse:collapse;">
+              <tr>
+                <td style="padding:0; line-height:0; text-align:center;">
+                  <img src="${src}" width="140" alt="FDX Onboard" style="display:block; margin:0 auto; max-width:210px; width:44%; height:auto; border:0; outline:none; text-decoration:none;">
+                </td>
+              </tr>
+            </table>`;
 }
 
 /** Resolve the From header for outbound mail. Required in production. */
@@ -132,8 +173,10 @@ function renderEmailHeader(): string {
 
 /** Shared 3-line footer used on every candidate email. */
 function renderEmailFooter(candidateEmail: string): string {
+  const wordmark = onboardWordmarkFooterMarkup();
   return `
   <div class="footer">
+    ${wordmark}
     <p>© 2026 FedEx. All rights reserved.</p>
     <p>This email was sent to ${candidateEmail} because you have expressed interest in joining FedEx.</p>
     <p>FedEx · 3131 Democrat Rd · Memphis, TN 38118</p>
@@ -227,7 +270,7 @@ export function buildFlowStartedEmail(
         <!-- Unified header image (branding + hero in one image; immune to Gmail iOS dark mode inversion) -->
         <tr>
           <td style="padding:0; line-height:0; font-size:0;">
-            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="fdxonboard.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
+            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&amp;token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="fdxonboard.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
           </td>
         </tr>
 
@@ -241,7 +284,7 @@ export function buildFlowStartedEmail(
 
                   <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Dear ${safeName},</p>
 
-                  <p class="email-muted-dark" style="font-size:16px; line-height:24px; color:#4b4452; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Your name remains on our list of people pursuing a FedEx pilot career opportunity. Visit our Onboard site and update your recent flight hours and work history.</p>
+                  <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Your name remains on our list of people pursuing a FedEx pilot career opportunity. Please visit our Onboard site and update your recent flight hours and work history.</p>
 
                   <!-- Important Dates banner -->
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; margin:0 0 24px;">
@@ -349,10 +392,11 @@ export function buildFlowStartedEmail(
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-divider" style="border-collapse:collapse; border-top:1px solid #e2e2e2;">
                     <tr>
                       <td style="padding-top:24px;">
-                        <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">If you have any questions, please email pilot_hiring@fedex.com" class="email-link-dark" style="color:#1a1d24; font-family:system-ui,Arial,sans-serif;">Help page</a>. Thank you for your continued interest in FedEx, and best wishes in your professional journey.</p>
+                        <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">If you have any questions, please visit our <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-family:system-ui,Arial,sans-serif;">Help page</a> or email <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-family:system-ui,Arial,sans-serif;">pilot_hiring@fedex.com</a>.</p>
+                        <p class="email-body-dark" style="font-size:16px; line-height:24px; color:#1a1c1c; margin:0 0 24px; font-family:system-ui,Arial,sans-serif;">Thank you for your continued interest in FedEx, and best wishes in your professional journey.</p>
                         <p class="email-body-dark" style="font-size:20px; font-weight:600; color:#1a1c1c; margin:0 0 4px; font-family:system-ui,Arial,sans-serif;">Captain Abegael Autry</p>
                         <p class="email-muted-dark" style="font-size:14px; color:#4b4452; margin:0 0 4px; font-family:system-ui,Arial,sans-serif;">Senior Manager Fleet Standardization and Pilot Recruitment</p>
-                        <a href="mailto:amautry@fedex.com" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-size:14px; text-decoration:none; font-family:system-ui,Arial,sans-serif;">Pilot_Hiring@fedex.com</a>
+                        <a href="${portal}/signup" class="email-link-dark" style="color:#1a1d24; font-weight:700; font-size:14px; text-decoration:none; font-family:system-ui,Arial,sans-serif;">Pilot_Hiring@fedex.com</a>
                       </td>
                     </tr>
                   </table>
@@ -364,21 +408,17 @@ export function buildFlowStartedEmail(
           </td>
         </tr>
 
-        <!-- Footer -->
+        <!-- Footer — FDX Onboard wordmark (PNG) -->
         <tr>
           <td class="email-card-bg email-divider" style="background-color:#ffffff; border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
-            <p style="font-size:18px; font-weight:700; margin:0 0 16px; font-family:system-ui,Arial,sans-serif;">
-              <span style="color:#4D148C;">Fed</span><span style="color:#FF6200;">Ex</span>
-            </p>
+            ${onboardWordmarkFooterMarkup()}
             <p class="email-muted-dark" style="font-size:12px; line-height:1.8; color:#4b4452; margin:0 0 20px; font-family:system-ui,Arial,sans-serif;">
               &copy; 2026 FedEx. All rights reserved.<br>
               This email was sent to <strong>${candidateEmail}</strong>.<br>
               FedEx &middot; 3131 Democrat Rd &middot; Memphis, TN 38118
             </p>
             <p style="margin:0; font-family:system-ui,Arial,sans-serif;">
-              <a href="${portal}/privacy" class="email-muted-dark" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px; font-family:system-ui,Arial,sans-serif;">Privacy Policy</a>
-              <a href="${portal}/help" class="email-muted-dark" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px; font-family:system-ui,Arial,sans-serif;">Contact Support</a>
-              <a href="${portal}/unsubscribe" class="email-muted-dark" style="color:#4b4452; text-decoration:none; font-size:12px; margin:0 8px; font-family:system-ui,Arial,sans-serif;">Unsubscribe</a>
+              <a href="${portal}/signup" class="email-muted-dark" style="color:#4b4452; text-decoration:none; font-size:12px; font-family:system-ui,Arial,sans-serif;">Contact Support</a>
             </p>
           </td>
         </tr>
@@ -447,7 +487,7 @@ export function buildSubmissionEmail(
         <!-- Unified header image (branding + hero in one image; immune to Gmail iOS dark mode inversion) -->
         <tr>
           <td style="padding:0; line-height:0; font-size:0;">
-            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="fdxonboard.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
+            <img src="https://firebasestorage.googleapis.com/v0/b/studio-3449665797-2559e.firebasestorage.app/o/email%20header.png?alt=media&amp;token=dcfa7c38-7e0c-4438-ae3e-e0ff0deb76bd" alt="fdxonboard.com — Pilot History Portal" width="600" style="max-width:100%; display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;">
           </td>
         </tr>
 
@@ -497,7 +537,7 @@ export function buildSubmissionEmail(
         <!-- Footer -->
         <tr>
           <td class="email-card-bg email-divider" style="background-color:#ffffff; border-top:1px solid #e2e2e2; padding:32px 24px 48px; text-align:center;">
-            <p class="email-body-dark" style="font-size:15px; font-weight:700; color:#1a1c1c; margin:0 0 16px;">FedEx</p>
+            ${onboardWordmarkFooterMarkup()}
             <p class="email-muted-dark" style="font-size:12px; line-height:1.8; color:#4b4452; margin:0 0 20px;">
               &copy; 2026 FedEx. All rights reserved.<br>
               This email was sent to <strong>${candidateEmail}</strong>.<br>

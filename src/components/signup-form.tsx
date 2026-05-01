@@ -122,7 +122,7 @@ export function SignupForm() {
     if (!skipCandidateVerify && values.candidateId.trim().length < 6) {
       form.setError('candidateId', {
         type: 'manual',
-        message: 'Please enter a valid Candidate ID',
+        message: 'Please enter a valid Legacy ID',
       });
       setLoading(false);
       return;
@@ -315,7 +315,7 @@ export function SignupForm() {
 
   const labelClassName = 'auth-field-label';
   const inputStyle =
-    'auth-inset-field h-14 rounded-2xl border-0 bg-white px-6 text-[15px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0';
+    'auth-inset-field h-[73px] rounded-2xl border-0 bg-white px-8 text-[20px] font-medium text-[#333333] shadow-none focus-visible:ring-2 focus-visible:ring-[#4D148C]/15 focus-visible:ring-offset-0';
 
   return (
     <Form {...form}>
@@ -387,7 +387,7 @@ export function SignupForm() {
                     padding: '10px 14px',
                   }}
                 >
-                  ✓ HR Staff account detected — no Candidate ID required. You will be directed to the admin portal
+                  ✓ HR Staff account detected — no Legacy ID required. You will be directed to the admin portal
                   after registration.
                 </div>
               ) : null}
@@ -426,12 +426,12 @@ export function SignupForm() {
             name="candidateId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className={labelClassName}>Candidate ID</FormLabel>
+                <FormLabel className={labelClassName}>Legacy ID</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. 12345678" className={inputStyle} autoComplete="off" {...field} />
                 </FormControl>
                 <FormDescription className="text-[13px] text-[#8E8E8E]">
-                  Enter your unique candidate ID.
+                  Enter your unique Legacy ID.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -476,7 +476,7 @@ export function SignupForm() {
               style={{ width: 18, height: 18, minWidth: 18, borderRadius: 4, accentColor: '#4D148C' }}
             />
             <span className="text-[13px] text-[#565656] leading-[1.5]">
-              I consent to FedEx Express collecting and processing my pilot application data for employment evaluation purposes.
+              I consent to fdxonboard.com to collect and process my pilot data for employment evaluation purposes.
             </span>
           </label>
 
@@ -492,17 +492,17 @@ export function SignupForm() {
           onClick={bothConsented ? undefined : () => setConsentError(true)}
           className={
             bothConsented
-              ? 'group fedex-btn-primary !mt-6 h-14 w-full text-base font-bold'
-              : '!mt-6 h-14 w-full cursor-not-allowed rounded-xl !bg-[#E3E3E3] text-base font-bold !text-[#8E8E8E] !shadow-none transition-all'
+              ? 'group fedex-btn-primary !mt-6 h-[73px] w-full text-[21px] font-bold'
+              : '!mt-6 h-[73px] w-full cursor-not-allowed rounded-xl !bg-[#E3E3E3] text-[21px] font-bold !text-[#8E8E8E] !shadow-none transition-all'
           }
           disabled={loading}
         >
           {loading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 className="h-6 w-6 animate-spin" />
           ) : bothConsented ? (
             <>
               <span>Create Account</span>
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-0.5" />
             </>
           ) : (
             <span>Create Account</span>
